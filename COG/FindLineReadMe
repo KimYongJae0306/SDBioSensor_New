@@ -1,0 +1,118 @@
+Step 0. Initialize
+  FINDLineResults[i].CrossPointList.Clear();
+  FINDLineResults[i].m_bInterSearched = false;
+  FINDLineResults[i].m_bInterResult = false;
+  FINDLineResults[i].m_bLoadingLimitOver_X = false;
+  FINDLineResults[i].m_bLoadingLimitOver_Y = false;
+  FINDLineResults[i].m_FoundSubLineNum = -1;
+
+  FINDLineResults[i].Pixel[DEFINE.X] = 0;
+  FINDLineResults[i].Pixel[DEFINE.Y] = 0;
+
+  FINDLineResults[i].SearchResult = false;
+  
+Step 1. Horizontal(0), Vertical(1) Line Search
+	FINDLineResults[i].m_FoundSubLineNum = 0;
+
+  FINDLineResults[i].SearchResult = true;
+  FINDLineResults[i].Pixel[DEFINE.X] = FINDLineTools[DEFINE.MAIN, i].Results.GetLineSegment().MidpointX;
+  FINDLineResults[i].Pixel[DEFINE.Y] = FINDLineTools[DEFINE.MAIN, i].Results.GetLineSegment().MidpointY;
+  
+Step 1-1. (Inspection) Save Glass Edge Point
+  InspectionPosRobot_X[i] = FINDLineResults[i].Pixel[DEFINE.X];    // Glass Line 좌표
+  InspectionPosRobot_Y[i] = FINDLineResults[i].Pixel[DEFINE.Y];
+  
+	// Inspection Seq
+  InspectionSizeRobot_X[i] = FINDLineTools[s, i].Results.GetLineSegment().DistanceToPoint(InspectionPosRobot_X[i], InspectionPosRobot_Y[i]);    // Cutting POL Line Gap Size
+
+Step 2. Find Intersection between H / V Lines
+	FINDLineResults[0].m_bInterSearched = true;		// 교점 찾기 시도했는지만 확인하는 바이너리
+	// 교점 성공하고 로딩 편차 수준 이내이면
+	Ret |= (ushort)AlignUnitTag.FindLineConstants.CrossXY;
+  FINDLineResults[0].m_bInterResult = true;
+  
+  DoublePoint Temp = new DoublePoint();
+  Temp.X = Pixel[DEFINE.X] = (LineLineTool[0].X);
+  Temp.Y = Pixel[DEFINE.Y] = (LineLineTool[0].Y);
+  FINDLineResults[0].CrossPointList.Add(Temp);
+  
+Step 3. Track and Search Diagonal Line
+  FINDLineResults[2].SearchResult = true;
+	FINDLineResults[2].Pixel[DEFINE.X] = FINDLineTools[DEFINE.MAIN, 2].Results.GetLineSegment().MidpointX;
+	FINDLineResults[2].Pixel[DEFINE.Y] = FINDLineTools[DEFINE.MAIN, 2].Results.GetLineSegment().MidpointY;
+	
+Step 3-1. (Inspection) Save Glass Edge Point (Diagonal)
+	// Align Seq
+	InspectionPosRobot_X[2] = FINDLineResults[2].Pixel[DEFINE.X];
+	InspectionPosRobot_Y[2] = FINDLineResults[2].Pixel[DEFINE.Y];
+
+	// Inspection Seq
+  InspectionSizeRobot_X[2] = FINDLineTools[DEFINE.MAIN, 2].Results.GetLineSegment().DistanceToPoint(InspectionPosRobot_X[2], InspectionPosRobot_Y[2]);    // Cutting POL Line Gap Size
+
+Step 4-1. (Shape C-Cut) Fine Intersection between H / D Lines
+	FINDLineResults[1].m_bInterSearched = true;	// 시도
+	// 성공
+  FINDLineResults[1].m_bInterResult = true;
+  Ret |= (ushort)AlignUnitTag.FindLineConstants.CrossXD;
+
+  DoublePoint Temp = new DoublePoint();
+  Temp.X = (LineLineTool[1].X);
+  Temp.Y = (LineLineTool[1].Y);
+  FINDLineResults[1].CrossPointList.Add(Temp);
+  
+Step 4-2. (Shape C-Cut) Find Intersection between V / D Lines
+	FINDLineResults[2].m_bInterSearched = true;	// 시도
+	// 성공
+  FINDLineResults[2].m_bInterResult = true;
+  Ret |= (ushort)AlignUnitTag.FindLineConstants.CrossYD;
+
+  DoublePoint Temp = new DoublePoint();
+  Temp.X = (LineLineTool[2].X);
+  Temp.Y = (LineLineTool[2].Y);
+  FINDLineResults[2].CrossPointList.Add(Temp);
+  
+Step 4-3. (Shape R-Cut) Find Circle(Arc)
+	CircleResults[0].Pixel[DEFINE.X] = 0;
+  CircleResults[0].Pixel[DEFINE.Y] = 0;
+  CircleResults[0].R = 0;
+  
+  // 성공 시
+  Ret |= (ushort)AlignUnitTag.FindLineConstants.CircleR;
+
+  CircleResults[0].SearchResult = true;
+
+  CircleResults[0].Pixel[Main.DEFINE.XPOS] = CircleTools[0].Results.GetCircle().CenterX + FixtureTrans.TranslationX;
+  CircleResults[0].Pixel[Main.DEFINE.YPOS] = CircleTools[0].Results.GetCircle().CenterY + FixtureTrans.TranslationY;
+  CircleResults[0].R = CircleTools[0].Results.GetCircle().Radius;
+  
+Step 5. Convert Vision To Real Coord.
+  // Inspection일 때
+  for (int i = 0; i < 3; i++)
+  {
+      V2RScalar(InspectionSizeRobot_X[i], ref nTempV2R_X);
+      InspectionSizeRobot_X[i] = nTempV2R_X;
+  }
+  
+  // Line
+  V2R(FINDLineResults[i].CrossPointList[0].X, FINDLineResults[i].CrossPointList[0].Y, ref nTempV2R_X, ref nTempV2R_Y);
+
+  if (m_PatNo == DEFINE.CAM_SELECT_INSPECT)
+  {
+      nTempV2R_X += (m_CamOffsetX);
+      nTempV2R_Y += (m_CamOffsetY);
+  }
+
+  FINDLineResults[i].CrossPointList[0].X2 = m_RobotPosX = nTempV2R_X;
+  FINDLineResults[i].CrossPointList[0].Y2 = m_RobotPosY = nTempV2R_Y;
+  
+  // Circle
+  V2R(CircleResults[0].Pixel[Main.DEFINE.XPOS], CircleResults[0].Pixel[Main.DEFINE.YPOS], ref nTempV2R_X, ref nTempV2R_Y);
+  CircleResults[0].m_RobotPosX = nTempV2R_X;
+  CircleResults[0].m_RobotPosY = nTempV2R_Y;
+
+  V2RScalar(CircleResults[0].R, ref CircleResults[0].m_RobotRadius);
+
+  if (Main.CCLink_IsBit(DEFINE.CCLINK_IN_STAGE1_INSPECTION_MODE))
+  {
+      InspectionSizeRobot_X[2] = CircleResults[0].m_RobotRadius;
+  }
