@@ -17,7 +17,7 @@ namespace Cog.Framework.Settings
 {
     public static partial class StaticConfig
     {
-        public const bool VirtualMode = false;
+        public const bool VirtualMode = true;
 
         public const string PROGRAM_TYPE = "ATT_AREA_PC1";
 #if GALO_PC1_MODE

@@ -8,29 +8,31 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace COG
+namespace Cog.Framework.UI.Forms
 {
-    public partial class Form_ProgressBar : Form
+    public partial class ProgressBarForm : Form
     {
-        public int nMaximum;
-        public string nMessage;
-        public Form_ProgressBar()
+        public int Maximum { get; set; }
+        public string Message { get; set; }
+
+        public ProgressBarForm()
         {
             InitializeComponent();
           
         }
-        private void Form_ProgressBar_Load(object sender, EventArgs e)
+        private void ProgressBarForm_Load(object sender, EventArgs e)
         {
 
         }
-        public void Form_ProgressMaxSet()
+
+        public void ProgressMaxSet()
         {
-            this.Text = nMessage + "Data Loading....";
-            progressBar1.Maximum = nMaximum;
+            this.Text = Message + "Data Loading....";
+            progressBar1.Maximum = Maximum;
             timer1.Enabled = true;
         }
+
         private void timer1_Tick(object sender, EventArgs e)
-        
         {
             if(progressBar1.Value == progressBar1.Maximum)
             {

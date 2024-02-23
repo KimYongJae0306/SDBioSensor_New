@@ -35,6 +35,10 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.CalibFix, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.CalibFix.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.Comm, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Comm.dll</HintPath>
@@ -58,6 +62,10 @@
     <Reference Include="Cognex.VisionPro.ImageFile, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.ImageFile.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageProcessing, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.ImageProcessing.dll</HintPath>
     </Reference>
     <Reference Include="Cognex.VisionPro.ImagingDevice, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -83,14 +91,13 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Device\Cameras\CameraHandler.cs" />
+    <Compile Include="CameraBufferManager.cs" />
     <Compile Include="Comm\MCProtocol.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="AppsStatus.cs" />
-    <Compile Include="Device\Cameras\Camera.cs" />
-    <Compile Include="Device\DeviceHandler.cs" />
-    <Compile Include="IDevice.cs" />
+    <Compile Include="Device\Cameras\CameraBuffer.cs" />
     <Compile Include="Helper\DataFileHelper.cs" />
+    <Compile Include="Helper\VisionProHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Settings\AppsConfig.cs" />
     <Compile Include="Settings\StaticConfig.cs" />
@@ -100,10 +107,20 @@
     <Compile Include="UI\Controls\DisplayControl.Designer.cs">
       <DependentUpon>DisplayControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="UI\Forms\ProgressBarForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\ProgressBarForm.designer.cs">
+      <DependentUpon>ProgressBarForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Vision.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Controls\DisplayControl.resx">
       <DependentUpon>DisplayControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\ProgressBarForm.resx">
+      <DependentUpon>ProgressBarForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
   <ItemGroup>

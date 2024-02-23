@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace Cog.Framework.UI.Forms
 {
-    partial class Form_ProgressBar
+    partial class ProgressBarForm
     {
         /// <summary>
         /// Required designer variable.
@@ -57,7 +57,7 @@
             this.Name = "Form_ProgressBar";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterParent;
             this.Text = "Data  Loading.......";
-            this.Load += new System.EventHandler(this.Form_ProgressBar_Load);
+            this.Load += new System.EventHandler(this.ProgressBarForm_Load);
             this.ResumeLayout(false);
 
         }

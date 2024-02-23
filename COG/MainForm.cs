@@ -16,6 +16,7 @@ using Cognex.VisionPro.Display;
 using Cognex.VisionPro.ToolBlock;
 using System.Net.NetworkInformation;
 using Cog.Framework.Settings;
+using Cog.Framework;
 
 namespace COG
 {
@@ -76,6 +77,11 @@ namespace COG
 
         //private int nModelChangeTime = 0;
 
+        public List<CogRecordDisplay> CogDisplayList = new List<CogRecordDisplay>();
+
+        public List<Button> CogDisplayButtonList = new List<Button>();
+
+
         public MainForm()
         {
             InitializeComponent();
@@ -96,6 +102,9 @@ namespace COG
             TAB_IMG_DISPLAY.ItemSize = new Size(0, 1); // TAB 우측 버튼부분 숨기려고 만듬
 
             StaticConfig.Initialize();
+            CameraBufferManager.Instance().Initialize();
+
+            InitializeUI();
         }
 
         private void AddSystemInfo()
@@ -111,6 +120,49 @@ namespace COG
 
             this.Text = message;
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
+        }
+
+        private void InitializeUI()
+        {
+            if(StaticConfig.VirtualMode)
+            {
+                BTN_CMDTEST.Visible = true;
+                TB_COMMANDTEST.Visible = true;
+                BTN_CCLINKTEST.Visible = true;
+                BTN_MXTEST.Visible = true;
+            }
+            else
+            {
+
+            }
+            int displayCount = StaticConfig.CAM_COUNT * StaticConfig.STAGE_COUNT;
+          
+            for (int i = 0; i < displayCount; i++)
+            {
+                int nNum = i + 1;
+                int tabNo = 0;
+                if (i < 8)
+                    tabNo = 0;
+                else
+                {
+                    if (i < 16)
+                        tabNo = 1;
+                    else
+                        tabNo = 2;
+                }
+
+                string tempName = "MA_Display" + nNum.ToString("00");
+                CogRecordDisplay display = (CogRecordDisplay)this.Controls["TAB_IMG_DISPLAY"].Controls["Tab_Num_" + tabNo.ToString()].Controls[tempName];
+                display.Visible = true;
+                CogDisplayList.Add(display); //TAB_IMG_DISPLAY
+
+                tempName = "BTN_DISNAME_" + nNum.ToString("00");
+                Button button = (Button)this.Controls["TAB_IMG_DISPLAY"].Controls["Tab_Num_" + tabNo.ToString()].Controls[tempName];
+                button.Visible = true;
+                CogDisplayButtonList.Add(button);
+            }
+
+            //DisplayViewLocation(StaticConfig.comm)
         }
 
         private void ReadModuleID()
@@ -141,136 +193,6 @@ namespace COG
 
         //    LogMsg = "Module_ID" + " <- " + Main.machine.m_strModuleID;
         //    Main.AlignUnit[0].LogdataDisplay(LogMsg, true);
-        }
-
-        private void Allocate_Array()
-        {
-            //int[,] nDefaultName = new int[Main.DEFINE.DISPLAY_MAX, 3];
-            //int nAlignUnit = 0;
-            //int nPatTag = 1;
-            //int nPat = 2;
-
-            //if (Main.DEFINE.OPEN_F || Main.DEFINE.OPEN_CAM)
-            //{
-            //    BTN_CMDTEST.Visible = true;
-            //    TB_COMMANDTEST.Visible = true;
-            //    BTN_CCLINKTEST.Visible = true;
-            //    BTN_MXTEST.Visible = true;
-            //}
-
-            ////            if (Main.DEFINE.PROGRAM_TYPE == "FOF_PC1" || Main.DEFINE.PROGRAM_TYPE == "TFOF_PC1") BTN_TRAY_VIEW.Visible = true;
-
-
-            //#region Allocate_Control
-            //int nTabNum = 0;
-            //cogDisplay.Clear();
-            //for (int i = 0; i < nDisMax; i++)
-            //{
-            //    string nTempName;
-            //    int nNum;
-            //    nNum = (i + 1);
-
-            //    if (i < 8)
-            //    {
-            //        nTabNum = 0;
-            //    }
-            //    else
-            //    {
-            //        if (i < 16)
-            //            nTabNum = 1;
-            //        else
-            //            nTabNum = 2;
-            //    }
-
-            //    nTempName = "MA_Display" + nNum.ToString("00");
-            //    CogRecordDisplay nType1 = (CogRecordDisplay)this.Controls["TAB_IMG_DISPLAY"].Controls["Tab_Num_" + nTabNum.ToString()].Controls[nTempName];
-            //    cogDisplay.Add(nType1); //TAB_IMG_DISPLAY
-
-            //    nNum = (i + 1);
-            //    nTempName = "BTN_DISNAME_" + nNum.ToString("00");
-
-            //    Button nButton = (Button)this.Controls["TAB_IMG_DISPLAY"].Controls["Tab_Num_" + nTabNum.ToString()].Controls[nTempName];
-            //    cogDisplayButton.Add(nButton);
-
-            //}
-
-            //for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
-            //{
-            //    string nTempName;
-            //    int nNum;
-            //    nNum = i + 1;
-
-            //    nTempName = "LB_Lisi_" + nNum.ToString("00");
-            //    ListBox nType1 = (ListBox)this.Controls["TAB_LOGDISPLAY"].Controls["tabPage" + i.ToString()].Controls[nTempName];
-            //    ListBox_Log.Add(nType1);
-
-            //    nTempName = "DG_VIEW_" + nNum.ToString("00");
-            //    DataGridView nType2 = (DataGridView)this.Controls["TAB_LOGDISPLAY"].Controls["tabPage" + i.ToString()].Controls[nTempName];
-            //    GridView_Log.Add(nType2);
-
-            //    nTempName = "LB_Lisi_LENGTH_" + nNum.ToString("00");
-            //    ListBox nType3 = (ListBox)this.Controls["TAB_LOGDISPLAY"].Controls["tabPage" + i.ToString()].Controls[nTempName];
-            //    ListBox_Length.Add(nType3);
-
-            //    FormManualSet[i] = new Form_ManualSet();
-            //}
-
-            //for (int i = 0; i < Main.DEFINE.DISPLAY_MAX; i++)
-            //{
-            //    cogDisplay[i].Visible = true;
-            //    cogDisplayButton[i].Visible = true;
-            //}
-
-            //TAB_LOGDISPLAY.TabPages[0].Text = "CAM 1 (INSPECTION 1,2)";
-            //TAB_LOGDISPLAY.TabPages[1].Text = "CAM 2 (INSPECTION 3,4)";
-
-            //while (true)
-            //{
-            //    if (TAB_LOGDISPLAY.Controls.Count == Main.DEFINE.AlignUnit_Max) break;
-            //    TAB_LOGDISPLAY.Controls.RemoveAt(TAB_LOGDISPLAY.Controls.Count - 1);
-            //}
-
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    LB_INSP[i] = new List<Label>();
-            //    switch (i)
-            //    {
-            //        case 0:
-            //            LB_INSP[0].Add(LB_INSPEC_0_00); LB_INSP[0].Add(LB_INSPEC_0_01); LB_INSP[0].Add(LB_INSPEC_0_02); LB_INSP[0].Add(LB_INSPEC_0_03); LB_INSP[0].Add(LB_INSPEC_0_04);
-            //            LB_INSP[0].Add(LB_INSPEC_0_05); LB_INSP[0].Add(LB_INSPEC_0_06); LB_INSP[0].Add(LB_INSPEC_0_07);
-            //            break;
-
-            //        case 1:
-            //            LB_INSP[1].Add(LB_INSPEC_1_00); LB_INSP[1].Add(LB_INSPEC_1_01); LB_INSP[1].Add(LB_INSPEC_1_02); LB_INSP[1].Add(LB_INSPEC_1_03); LB_INSP[1].Add(LB_INSPEC_1_04);
-            //            LB_INSP[1].Add(LB_INSPEC_1_05); LB_INSP[1].Add(LB_INSPEC_1_06); LB_INSP[1].Add(LB_INSPEC_1_07);
-            //            break;
-
-            //        case 2:
-            //            LB_INSP[2].Add(LB_INSPEC_2_00); LB_INSP[2].Add(LB_INSPEC_2_01); LB_INSP[2].Add(LB_INSPEC_2_02); LB_INSP[2].Add(LB_INSPEC_2_03); LB_INSP[2].Add(LB_INSPEC_2_04);
-            //            LB_INSP[2].Add(LB_INSPEC_2_05); LB_INSP[2].Add(LB_INSPEC_2_06); LB_INSP[2].Add(LB_INSPEC_2_07);
-            //            break;
-            //    }
-            //}
-
-            //if (Main.DEFINE.PROGRAM_TYPE == "ATT_AREA_PC1" || Main.DEFINE.PROGRAM_TYPE == "QD_LPA_PC2")
-            //{
-            //    LIST_LB_PROC_TIME.Add(LB_PROCTIME_1);
-            //    LIST_LB_PROC_TIME.Add(LB_PROCTIME_2);
-            //    LIST_LB_PROC_TIME.Add(LB_PROCTIME_3);
-            //    LIST_LB_PROC_TIME.Add(LB_PROCTIME_4);
-
-            //    LIST_LB_POINT_NG_CNT.Add(LB_NG_COUNT_P1);
-            //    LIST_LB_POINT_NG_CNT.Add(LB_NG_COUNT_P2);
-            //    LIST_LB_POINT_NG_CNT.Add(LB_NG_COUNT_P3);
-            //    LIST_LB_POINT_NG_CNT.Add(LB_NG_COUNT_P4);
-            //}
-            //#endregion
-
-            //#region DisplatButton Text Input
-            //for (int i = 0; i < Main.DEFINE.DISPLAY_MAX; i++)
-            //    cogDisplayButton[i].Text = Main.Common.VIEW_NAME[i];
-            //DisplayViewLocation(Main.Common.VIEW_Pos, Main.Common.VIEW_Size);
-            //#endregion
         }
 
         private void DisplayViewLocation(string[] Location, string[] nSize)

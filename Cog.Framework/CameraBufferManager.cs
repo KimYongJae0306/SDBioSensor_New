@@ -1,6 +1,7 @@
 ﻿using Cog.Framework.Device.Cameras;
 using Cog.Framework.Helper;
 using Cog.Framework.Settings;
+using Cog.Framework.UI.Forms;
 using Cognex.VisionPro;
 using Cognex.VisionPro.ToolBlock;
 using System;
@@ -32,6 +33,11 @@ namespace Cog.Framework
         public void Initialize()
         {
             var camCount = StaticConfig.CAM_COUNT;
+
+            ProgressBarForm form = new ProgressBarForm();
+            form.Maximum = camCount;
+            form.Message = "CAMERA";
+            form.Show();
 
             for (int i = 0; i < camCount; i++)
             {
@@ -72,8 +78,7 @@ namespace Cog.Framework
                 }
             }
 
+            form.Dispose();
         }
-
-     
     }
 }
