@@ -11,8 +11,6 @@ namespace Cog.Framework.Comm
     public class MCProtocol
     {
         #region 필드
-        private static MCProtocol _instance = null;
-
         private TcpClient[] _tcpClient;
 
         private IPAddress _ipAddress;
@@ -35,13 +33,6 @@ namespace Cog.Framework.Comm
         #endregion
 
         #region 메서드
-        public static MCProtocol Instance()
-        {
-            if (_instance == null)
-                _instance = new MCProtocol();
-
-            return _instance;
-        }
         #endregion
 
         #region 생성자
