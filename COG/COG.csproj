@@ -808,7 +808,14 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Settings\" />
     <Folder Include="UI\Controls\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Cog.Framework\Cog.Framework.csproj">
+      <Project>{BCFD170F-D9B8-4BDF-BCDB-4FC97D9BA3DD}</Project>
+      <Name>Cog.Framework</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
