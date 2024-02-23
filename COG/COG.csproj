@@ -634,7 +634,6 @@
   <ItemGroup>
     <Compile Include="AppsStatus.cs" />
     <Compile Include="Program.cs" />
-    <Compile Include="Settings\StaticConfig.cs" />
     <Compile Include="SystemManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -809,6 +808,7 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
+    <Folder Include="Settings\" />
     <Folder Include="UI\Controls\" />
   </ItemGroup>
   <ItemGroup>

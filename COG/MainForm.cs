@@ -16,7 +16,6 @@ using Cognex.VisionPro.Display;
 using Cognex.VisionPro.ToolBlock;
 using System.Net.NetworkInformation;
 using Cog.Framework.Settings;
-using Cog.Settings;
 
 namespace COG
 {
