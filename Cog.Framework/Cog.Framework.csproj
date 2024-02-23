@@ -59,7 +59,10 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppsStatus.cs" />
+    <Compile Include="Helper\DataFileHelper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings\AppsConfig.cs" />
     <Compile Include="UI\Controls\DisplayControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -72,8 +75,6 @@
       <DependentUpon>DisplayControl.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Settings\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
