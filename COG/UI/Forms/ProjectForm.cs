@@ -10,6 +10,7 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Runtime.InteropServices;
 using COG.Settings;
+using COG.Core;
 
 namespace COG.UI.Forms
 {
@@ -138,27 +139,31 @@ namespace COG.UI.Forms
         }
         private void BTN_LOAD_Click(object sender, EventArgs e)
         {
-            //string selectModel;
-            //string nName;
+            string selectModel;
+            string nName;
 
-            //DialogResult result = MessageBox.Show("Do you want to Load?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            //if (result == DialogResult.Yes)
-            //{
-            //    nName =  String.Format("{0:000}",listModel.SelectedItem.ToString().Substring(0,3));
-            //    selectModel = nName;
-            //    if (selectModel == AppsConfig.Instance().ProjectName)
-            //    {
-            //        MessageBox.Show("Current Model", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //        return;
-            //    }
-            //    GetModelList();
-            //    Main.ProjectLoad(selectModel);
-            //    DataUpdate();
-            //}
-            //else if (result == DialogResult.No)
-            //{
-            //    MessageBox.Show("Load Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //}
+            DialogResult result = MessageBox.Show("Do you want to Load?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                nName = String.Format("{0:000}", listModel.SelectedItem.ToString().Substring(0, 3));
+                selectModel = nName;
+                if (selectModel == AppsConfig.Instance().ProjectName)
+                {
+                    MessageBox.Show("Current Model", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                //GetModelList();
+
+                InspModel inspModel = new InspModel();
+
+                inspModel.Load(selectModel);
+
+                DataUpdate();
+            }
+            else if (result == DialogResult.No)
+            {
+                MessageBox.Show("Load Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
         private void BTN_SAVE_Click(object sender, EventArgs e)
         {
@@ -251,14 +256,14 @@ namespace COG.UI.Forms
             //        MessageBox.Show("Enter the Project name", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             //        return;
             //    }
-            //    if ( m_SaveInfo == m_SaveInfoBack)
+            //    if (m_SaveInfo == m_SaveInfoBack)
             //    {
             //        //전에 이름 이랑 같으면 리턴
             //        return;
             //    }
 
             //    bool nRet;
-            //    nRet =  Main.ProjectRename(m_SaveName, m_SaveInfo);
+            //    nRet = Main.ProjectRename(m_SaveName, m_SaveInfo);
             //    GetModelList();
 
             //    if ((m_SaveName == AppsConfig.Instance().ProjectName) && nRet)

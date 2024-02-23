@@ -20,14 +20,14 @@ namespace COG
 
             foreach (Process proc in Process.GetProcesses())
             {
-                if (proc.ProcessName == _Assemblyname)
-                {
-                    nCount++;
-                    if (nCount > 1)
-                    {
-                        return;
-                    }
-                }
+                //if (proc.ProcessName == _Assemblyname)
+                //{
+                //    nCount++;
+                //    if (nCount > 1)
+                //    {
+                //        return;
+                //    }
+                //}
             }
 
             Application.EnableVisualStyles();

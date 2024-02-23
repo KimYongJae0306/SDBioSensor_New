@@ -23,11 +23,13 @@ namespace COG.Settings
         public const string PROGRAM_TYPE = "ATT_AREA_PC1";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 2;
+        public const int LIGHT_COUNT = 1;
 #endif
 #if GALO_PC2_MODE
         public const string PROGRAM_TYPE = "ATT_AREA_PC2";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 1;
+        public const int LIGHT_COUNT = 1;
 #endif
 #if SDBIO_VENT
 
@@ -42,9 +44,11 @@ namespace COG.Settings
         public const string ERROR_DATADIR = "Error_Data\\";
         public const string CAM_SETDIR = "VPP_CAM\\";
 
-       
-
         public const string IMAGE_FILE = SYS_DATADIR + "1-1.bmp";//"QDIDB.idb";//"D:\\SystemData\\20.idb";
+
+        public const int M_1CAM2SHOT = 200;   // 1 camera 2 shot , Center Target      
+
+        public const int PATTERN_MAX = 6; // 0번은 MainMark, 나머지는 SubMark
     }
 
     public static partial class StaticConfig

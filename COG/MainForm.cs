@@ -1779,5 +1779,7 @@ namespace COG
                 BTN_PERMISSION.Text = "PERMISSON\r\nMAKER";
             }
         }
+
+     
     }
 }
