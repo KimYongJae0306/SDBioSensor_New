@@ -1,25 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
-using System.Threading;
-using System.IO;
-using System.Runtime.InteropServices;
-
+﻿using COG.Core;
+using COG.Helper;
+using COG.Settings;
+using COG.UI.Forms;
 using Cognex.VisionPro;
-using Cognex.VisionPro.Display;
-using Cognex.VisionPro.ToolBlock;
-using System.Net.NetworkInformation;
-using Cog.Framework.Settings;
-using Cog.Framework;
-using Cog.Framework.Core;
-using Cog.Framework.UI.Forms;
-using Cog.Framework.Helper;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
+using System.IO;
+using System.Linq;
+using System.Windows.Forms;
 
 namespace COG
 {

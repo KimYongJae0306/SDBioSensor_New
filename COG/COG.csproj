@@ -593,6 +593,7 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.CalibFix, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
     <Reference Include="Cognex.VisionPro.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Controls.dll</HintPath>
@@ -604,6 +605,12 @@
     <Reference Include="Cognex.VisionPro.Display.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Display.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.ImageFile, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
+    <Reference Include="Cognex.VisionPro.ImageProcessing, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
+    <Reference Include="Cognex.VisionPro.ToolGroup, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.ToolGroup.dll</HintPath>
     </Reference>
     <Reference Include="JAS.Calibration">
       <HintPath>dll\JAS.Calibration.dll</HintPath>
@@ -632,7 +639,24 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="AppsStatus.cs" />
+    <Compile Include="CameraBufferManager.cs" />
+    <Compile Include="Class\InspModel.cs" />
+    <Compile Include="Comm\MCProtocol.cs" />
+    <Compile Include="Comm\SocketComm.cs" />
+    <Compile Include="Core\UIDesign.cs" />
+    <Compile Include="Device\Cameras\CameraBuffer.cs" />
+    <Compile Include="Device\PLC\PlcAddressMap.cs" />
+    <Compile Include="Device\PLC\PlcControl.cs" />
+    <Compile Include="Device\PLC\PlcControlManager.cs" />
+    <Compile Include="Device\PLC\PlcScenarioManager.cs" />
+    <Compile Include="Helper\DataFileHelper.cs" />
+    <Compile Include="Helper\LogHelper.cs" />
+    <Compile Include="Helper\PasswordHelper.cs" />
+    <Compile Include="Helper\VisionProHelper.cs" />
     <Compile Include="Program.cs" />
+    <Compile Include="Settings\AppsConfig.cs" />
+    <Compile Include="Settings\StaticConfig.cs" />
     <Compile Include="SystemManager.cs" />
     <Compile Include="MainForm.cs">
       <SubType>Form</SubType>
@@ -641,6 +665,54 @@
       <DependentUpon>MainForm.cs</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="UI\Controls\DisplayControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\DisplayControl.Designer.cs">
+      <DependentUpon>DisplayControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\KeyBoardForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\KeyBoardForm.designer.cs">
+      <DependentUpon>KeyBoardForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\KeyPadForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\KeyPadForm.designer.cs">
+      <DependentUpon>KeyPadForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\MessageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\MessageForm.designer.cs">
+      <DependentUpon>MessageForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PasswordForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PasswordForm.designer.cs">
+      <DependentUpon>PasswordForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PermissionForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PermissionForm.designer.cs">
+      <DependentUpon>PermissionForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\ProgressBarForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\ProgressBarForm.designer.cs">
+      <DependentUpon>ProgressBarForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\ProjectForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\ProjectForm.designer.cs">
+      <DependentUpon>ProjectForm.cs</DependentUpon>
+    </Compile>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -648,6 +720,30 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Controls\DisplayControl.resx">
+      <DependentUpon>DisplayControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\KeyBoardForm.resx">
+      <DependentUpon>KeyBoardForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\KeyPadForm.resx">
+      <DependentUpon>KeyPadForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\MessageForm.resx">
+      <DependentUpon>MessageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PasswordForm.resx">
+      <DependentUpon>PasswordForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PermissionForm.resx">
+      <DependentUpon>PermissionForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\ProgressBarForm.resx">
+      <DependentUpon>ProgressBarForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\ProjectForm.resx">
+      <DependentUpon>ProjectForm.cs</DependentUpon>
     </EmbeddedResource>
     <None Include="Properties\app.manifest">
       <SubType>Designer</SubType>
@@ -806,16 +902,7 @@
       <Version>13.0.3</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Settings\" />
-    <Folder Include="UI\" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Cog.Framework\Cog.Framework.csproj">
-      <Project>{BCFD170F-D9B8-4BDF-BCDB-4FC97D9BA3DD}</Project>
-      <Name>Cog.Framework</Name>
-    </ProjectReference>
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
