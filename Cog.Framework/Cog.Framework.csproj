@@ -95,6 +95,7 @@
     <Compile Include="Comm\MCProtocol.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="AppsStatus.cs" />
+    <Compile Include="Core\UIDesign.cs" />
     <Compile Include="Device\Cameras\CameraBuffer.cs" />
     <Compile Include="Helper\DataFileHelper.cs" />
     <Compile Include="Helper\VisionProHelper.cs" />
@@ -113,7 +114,6 @@
     <Compile Include="UI\Forms\ProgressBarForm.designer.cs">
       <DependentUpon>ProgressBarForm.cs</DependentUpon>
     </Compile>
-    <Compile Include="Vision.cs" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="UI\Controls\DisplayControl.resx">

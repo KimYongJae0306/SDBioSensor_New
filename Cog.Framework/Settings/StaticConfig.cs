@@ -87,5 +87,10 @@ namespace Cog.Framework.Settings
 
             AppsStatus.Instance().MC_STATUS = MC_STATUS.STOP;
         }
+
+        //private void SetUIDesign()
+        //{
+        //    //GALO_PC1_MODE
+        //}
     }
 }
