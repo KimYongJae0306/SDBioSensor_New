@@ -17,6 +17,7 @@ using Cognex.VisionPro.ToolBlock;
 using System.Net.NetworkInformation;
 using Cog.Framework.Settings;
 using Cog.Framework;
+using Cog.Framework.Core;
 
 namespace COG
 {
@@ -135,8 +136,28 @@ namespace COG
             {
 
             }
+
+            InitDisplay();
+            InitTabControl();
+        }
+
+        private void InitTabControl()
+        {
+            while (true)
+            {
+                if (TAB_LOGDISPLAY.Controls.Count == StaticConfig.STAGE_COUNT)
+                    break;
+                TAB_LOGDISPLAY.Controls.RemoveAt(TAB_LOGDISPLAY.Controls.Count - 1);
+            }
+
+            for (int i = 0; i < TAB_LOGDISPLAY.Controls.Count; i++)
+                TAB_LOGDISPLAY.TabPages[i].Text = UIDesign.VIEW_TAB_NAME[i];
+        }
+
+        private void InitDisplay()
+        {
             int displayCount = StaticConfig.CAM_COUNT * StaticConfig.STAGE_COUNT;
-          
+
             for (int i = 0; i < displayCount; i++)
             {
                 int nNum = i + 1;
@@ -159,11 +180,14 @@ namespace COG
                 tempName = "BTN_DISNAME_" + nNum.ToString("00");
                 Button button = (Button)this.Controls["TAB_IMG_DISPLAY"].Controls["Tab_Num_" + tabNo.ToString()].Controls[tempName];
                 button.Visible = true;
+
+                button.Text = UIDesign.VIEW_NAME[i];
+
                 CogDisplayButtonList.Add(button);
             }
-
-            //DisplayViewLocation(StaticConfig.comm)
+            DisplayViewLocation(displayCount);
         }
+
 
         private void ReadModuleID()
         {
@@ -195,105 +219,111 @@ namespace COG
         //    Main.AlignUnit[0].LogdataDisplay(LogMsg, true);
         }
 
-        private void DisplayViewLocation(string[] Location, string[] nSize)
+        private void DisplayViewLocation(int totalDisplayCount)
         {
-            //if (Location.Length != Main.DEFINE.DISPLAY_MAX) MessageBox.Show("DisplayViewPosition Count Check");
+            int count = totalDisplayCount;
+            string[] location = UIDesign.VIEW_Pos;
+            string[] size = UIDesign.VIEW_Size;
 
-            //int[] SizeX = new int[Main.DEFINE.DISPLAY_MAX]; int[] SizeY = new int[Main.DEFINE.DISPLAY_MAX];
-            //int[] PosX = new int[Main.DEFINE.DISPLAY_MAX]; int[] PosY = new int[Main.DEFINE.DISPLAY_MAX];
+            int[] SizeX = new int[count];
+            int[] SizeY = new int[count];
+            int[] PosX = new int[count];
+            int[] PosY = new int[count];
 
-            //int[] nDisTabNo = new int[Main.DEFINE.DISPLAY_MAX];
+            int[] nDisTabNo = new int[count];
 
-            //int[] nTabNo = new int[Main.DEFINE.DISPLAY_MAX];
-            //int[] nDisNo = new int[Main.DEFINE.DISPLAY_MAX];
-            //int[] nSizeX = new int[Main.DEFINE.DISPLAY_MAX];
-            //int[] nSizeY = new int[Main.DEFINE.DISPLAY_MAX];
+            int[] nTabNo = new int[count];
+            int[] nDisNo = new int[count];
+            int[] nSizeX = new int[count];
+            int[] nSizeY = new int[count];
 
-            //int nTabAmt = 1;
+            int nTabAmt = 1;
 
-            //int TempTabNo = 0;
+            int TempTabNo = 0;
 
-            //for (int i = 0; i < Location.Length; i++)
-            //{
-            //    TempTabNo = Convert.ToInt16(Location[i].ToString().Substring(0, 1)) - 1;
-            //    nDisNo[i] = Convert.ToInt16(Location[i].ToString().Substring(Location[i].Length - 1, 1)) - 1;
+            for (int i = 0; i < location.Length; i++)
+            {
+                TempTabNo = Convert.ToInt16(location[i].ToString().Substring(0, 1)) - 1;
+                nDisNo[i] = Convert.ToInt16(location[i].ToString().Substring(location[i].Length - 1, 1)) - 1;
 
-            //    nSizeX[i] = Convert.ToInt16((nSize[i].ToString().Trim()).ToString().Substring(0, 1));
-            //    nSizeY[i] = Convert.ToInt16((nSize[i].ToString().Trim()).ToString().Substring(nSize[i].ToString().Trim().Count() - 1, 1));
+                nSizeX[i] = Convert.ToInt16((size[i].ToString().Trim()).ToString().Substring(0, 1));
+                nSizeY[i] = Convert.ToInt16((size[i].ToString().Trim()).ToString().Substring(size[i].ToString().Trim().Count() - 1, 1));
 
-            //    nDisTabNo[i] = TempTabNo;
+                nDisTabNo[i] = TempTabNo;
 
-            //    if (TempTabNo > 0) nTabAmt = 2;
-            //    if (TempTabNo > 1) nTabAmt = 3;
-            //}
+                if (TempTabNo > 0)
+                    nTabAmt = 2;
+                if (TempTabNo > 1)
+                    nTabAmt = 3;
+            }
 
-            //#region 각 View_Tab 에 따라 표시되는 갯수에따라 사이즈 조정, 위치 조정.
+            #region 각 View_Tab 에 따라 표시되는 갯수에따라 사이즈 조정, 위치 조정.
 
-            //Point[] nDisPos = new Point[Main.DEFINE.DISPLAY_MAX];
-            //Point[] nBtnPos = new Point[Main.DEFINE.DISPLAY_MAX];
+            Point[] nDisPos = new Point[count];
+            Point[] nBtnPos = new Point[count];
 
 
-            //int nWidth__Cnt = Main.Common.VIEW_WIDTH_CNT[0];
-            //int nHeight_Cnt = 2;
+            int nWidth__Cnt = UIDesign.VIEW_WIDTH_CNT[0];
+            int nHeight_Cnt = 2;
 
-            //int BtnGap = cogDisplayButton[0].Height;
+            int BtnGap = CogDisplayButtonList[0].Height;
 
-            ////실제 TAB_IMG_DISPLAY.Height 길이에서 12만큼은 밑단이 안보이기때문에 계산시 길이값 축소계산
+            //실제 TAB_IMG_DISPLAY.Height 길이에서 12만큼은 밑단이 안보이기때문에 계산시 길이값 축소계산
 
-            //int View_Width = ((TAB_IMG_DISPLAY.Width - 16)) / nWidth__Cnt;
-            //int ViewHeight = ((TAB_IMG_DISPLAY.Height - 12) - (BtnGap * nHeight_Cnt)) / nHeight_Cnt;
-            //int nTempCnt = 0;
+            int View_Width = ((TAB_IMG_DISPLAY.Width - 16)) / nWidth__Cnt;
+            int ViewHeight = ((TAB_IMG_DISPLAY.Height - 12) - (BtnGap * nHeight_Cnt)) / nHeight_Cnt;
+            int nTempCnt = 0;
 
-            //for (int i = 0; i < Main.DEFINE.DISPLAY_MAX; i++)
-            //{
-            //    nWidth__Cnt = Main.Common.VIEW_WIDTH_CNT[nDisTabNo[i]];
-            //    View_Width = ((TAB_IMG_DISPLAY.Width - 16)) / nWidth__Cnt;
+            for (int i = 0; i < count; i++)
+            {
+                nWidth__Cnt = UIDesign.VIEW_WIDTH_CNT[nDisTabNo[i]];
+                View_Width = ((TAB_IMG_DISPLAY.Width - 16)) / nWidth__Cnt;
 
-            //    PosX[i] = (View_Width + 1) * (nDisNo[i] % nWidth__Cnt);
-            //    PosY[i] = (ViewHeight + 1) * (nDisNo[i] / nWidth__Cnt);
+                PosX[i] = (View_Width + 1) * (nDisNo[i] % nWidth__Cnt);
+                PosY[i] = (ViewHeight + 1) * (nDisNo[i] / nWidth__Cnt);
 
-            //    SizeX[i] = View_Width * nSizeX[i];
+                SizeX[i] = View_Width * nSizeX[i];
 
-            //    if (nSizeY[i] == 2)
-            //        SizeY[i] = ViewHeight * nSizeY[i] + BtnGap + 1; // 세로가 갈때 버튼 길이만큼 늘려 줄라고.
-            //    else
-            //        SizeY[i] = ViewHeight * nSizeY[i];
+                if (nSizeY[i] == 2)
+                    SizeY[i] = ViewHeight * nSizeY[i] + BtnGap + 1; // 세로가 갈때 버튼 길이만큼 늘려 줄라고.
+                else
+                    SizeY[i] = ViewHeight * nSizeY[i];
 
-            //    nBtnPos[i].X = PosX[i];
-            //    nBtnPos[i].Y = PosY[i] + (BtnGap * (nDisNo[i] / nWidth__Cnt));
+                nBtnPos[i].X = PosX[i];
+                nBtnPos[i].Y = PosY[i] + (BtnGap * (nDisNo[i] / nWidth__Cnt));
 
-            //    nDisPos[i].X = PosX[i];
-            //    nDisPos[i].Y = PosY[i] + (BtnGap * (nDisNo[i] / nWidth__Cnt)) + BtnGap;
+                nDisPos[i].X = PosX[i];
+                nDisPos[i].Y = PosY[i] + (BtnGap * (nDisNo[i] / nWidth__Cnt)) + BtnGap;
 
-            //    cogDisplayButton[i].Location = nBtnPos[i];
-            //    cogDisplayButton[i].Width = SizeX[i];
+                CogDisplayButtonList[i].Location = nBtnPos[i];
+                CogDisplayButtonList[i].Width = SizeX[i];
 
-            //    cogDisplay[i].Location = nDisPos[i];
-            //    cogDisplay[i].Width = SizeX[i];
-            //    cogDisplay[i].Height = SizeY[i];// -BtnGap;
-            //}
-            //#endregion
+                CogDisplayList[i].Location = nDisPos[i];
+                CogDisplayList[i].Width = SizeX[i];
+                CogDisplayList[i].Height = SizeY[i];// -BtnGap;
+            }
+            #endregion
 
-            //#region 각 View_Tab 에 따라 표시되는 갯수에따라 Tab에 맞는 창 띄우기.
-            //for (int i = 0; i < nTabAmt; i++)
-            //{
-            //    for (int j = 0; j < Main.DEFINE.DISPLAY_MAX; j++)
-            //    {
-            //        if (nDisTabNo[j] == 1)                      // 두번째 TAB
-            //        {
-            //            RBTN_TAB_1.Visible = true;
-            //            Tab_Num_1.Controls.Add(cogDisplay[j]);
-            //            Tab_Num_1.Controls.Add(cogDisplayButton[j]);
-            //        }
-            //        if (nDisTabNo[j] == 2)   // 세번째 TAB
-            //        {
-            //            RBTN_TAB_2.Visible = true;
-            //            Tab_Num_2.Controls.Add(cogDisplay[j]);
-            //            Tab_Num_2.Controls.Add(cogDisplayButton[j]);
-            //        }
-            //    }
-            //}
-            //#endregion
+            #region 각 View_Tab 에 따라 표시되는 갯수에따라 Tab에 맞는 창 띄우기.
+            for (int i = 0; i < nTabAmt; i++)
+            {
+                for (int j = 0; j < count; j++)
+                {
+                    if (nDisTabNo[j] == 1)                      // 두번째 TAB
+                    {
+                        RBTN_TAB_1.Visible = true;
+                        Tab_Num_1.Controls.Add(CogDisplayList[j]);
+                        Tab_Num_1.Controls.Add(CogDisplayButtonList[j]);
+                    }
+                    if (nDisTabNo[j] == 2)   // 세번째 TAB
+                    {
+                        RBTN_TAB_2.Visible = true;
+                        Tab_Num_2.Controls.Add(CogDisplayList[j]);
+                        Tab_Num_2.Controls.Add(CogDisplayList[j]);
+                    }
+                }
+            }
+            #endregion
         }
         private void DisplayViewPosition(int Col, int Row)
         {
@@ -660,19 +690,22 @@ namespace COG
         }
         private void BTN_EXIT_Click(object sender, EventArgs e)
         {
-            //if (Main.Status.MC_STATUS != Main.DEFINE.MC_STOP) return;
-            //DialogResult result = MessageBox.Show("Do you want EXIT?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            //if (result == DialogResult.Yes)
-            //{
-            //    Save_SystemLog("PROGRAM END", Main.DEFINE.CMD);
-            //    Main.Thread_Stop();
-            //    Main.ThreadCAM_Stop();
-            //    if (ThreadProcM.IsAlive)
-            //        ThreadProcM.Abort();
-            //    _mUI_Info.DeInitialize();
+            
+            if (AppsStatus.Instance().MC_STATUS != MC_STATUS.STOP)
+                return;
 
-            //    this.Close();
-            //}
+            DialogResult result = MessageBox.Show("Do you want EXIT?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                LogHelper.Save_SystemLog("PROGRAM END", LogType.CMD);
+                //Main.Thread_Stop();
+                //Main.ThreadCAM_Stop();
+                //if (ThreadProcM.IsAlive)
+                //    ThreadProcM.Abort();
+                //_mUI_Info.DeInitialize();
+
+                this.Close();
+            }
         }
         private void Form_Main_FormClosed(object sender, FormClosedEventArgs e)
         {
@@ -1369,44 +1402,7 @@ namespace COG
             //    Main.Status.MC_LIGHT = Main.DEFINE.MC_LIGHT_OFF;
             //}
         }
-        object syncLock_Log = new object();
-        private void Save_SystemLog(string nMessage, string nType)
-        {
-            //string nFolder;
-            //string nFileName = "";
-            //nFolder = Main.LogdataPath + DateTime.Now.ToString("yyyyMMdd") + "\\";
-            //if (!Directory.Exists(Main.LogdataPath)) Directory.CreateDirectory(Main.LogdataPath);
-            //if (!Directory.Exists(nFolder)) Directory.CreateDirectory(nFolder);
-
-            //string Date;
-            //Date = DateTime.Now.ToString("[MM_dd HH:mm:ss:fff] ");
-
-            //lock (syncLock_Log)
-            //{
-            //    try
-            //    {
-            //        switch (nType)
-            //        {
-            //            case Main.DEFINE.CMD:
-            //                nFileName = "SystemLog.txt";
-            //                nMessage = Date + nMessage;
-            //                break;
-            //            case Main.DEFINE.LIGHTCTRL:
-            //                nFileName = "CommsLog.txt";
-            //                nMessage = Date + nMessage;
-            //                break;
-            //        }
-
-            //        StreamWriter SW = new StreamWriter(nFolder + nFileName, true, Encoding.Unicode);
-            //        SW.WriteLine(nMessage);
-            //        SW.Close();
-            //    }
-            //    catch
-            //    {
-
-            //    }
-            //}
-        }
+ 
 
         private void Save_ChangeParaLog(string nMessage, string nType)
         {

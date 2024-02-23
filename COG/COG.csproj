@@ -632,7 +632,6 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="AppsStatus.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="SystemManager.cs" />
     <Compile Include="MainForm.cs">

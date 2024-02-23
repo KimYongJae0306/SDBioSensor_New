@@ -5,6 +5,7 @@
 //#define SDBIO_PATH  //후면
 
 using Cog.Framework;
+using Cog.Framework.Core;
 using Cog.Framework.Helper;
 using System;
 using System.Collections.Generic;
@@ -19,12 +20,13 @@ namespace Cog.Framework.Settings
     {
         public const bool VirtualMode = true;
 
-        public const string PROGRAM_TYPE = "ATT_AREA_PC1";
 #if GALO_PC1_MODE
+        public const string PROGRAM_TYPE = "ATT_AREA_PC1";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 2;
 #endif
 #if GALO_PC2_MODE
+        public const string PROGRAM_TYPE = "ATT_AREA_PC2";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 1;
 #endif
@@ -62,6 +64,8 @@ namespace Cog.Framework.Settings
 
         public static void Initialize()
         {
+            SetUIDesign();
+
             SysDataPath = SYS_DATADIR;
             ModelPath = SYS_DATADIR + "MODEL_" + MODEL_DATADIR + "\\";
             LogDataPath = SYS_DATADIR + LOG_DATADIR;
@@ -88,9 +92,20 @@ namespace Cog.Framework.Settings
             AppsStatus.Instance().MC_STATUS = MC_STATUS.STOP;
         }
 
-        //private void SetUIDesign()
-        //{
-        //    //GALO_PC1_MODE
-        //}
+        private static void SetUIDesign()
+        {
+            if(StaticConfig.PROGRAM_TYPE == "ATT_AREA_PC1")
+            {
+                UIDesign.VIEW_NAME = new string[] { "INSPECTION 1", "INSPECTION 3", "INSPECTION 2", "INSPECTION 4" };
+                UIDesign.VIEW_Pos = new string[] { "1-1", "1-3", "1-2", "1-4" };
+                UIDesign.VIEW_Size = new string[] { "1*2", "1*2", "1*2", "1*2" };
+                UIDesign.VIEW_WIDTH_CNT = new int[] { 4, 2 };
+                UIDesign.VIEW_TAB_NAME = new string[] { "CAM 1 (INSPECTION 1,2)", "CAM 2 (INSPECTION 3,4)" };
+            }
+            else
+            {
+
+            }
+        }
     }
 }

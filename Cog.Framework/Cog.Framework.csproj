@@ -95,6 +95,7 @@
     <Compile Include="Comm\MCProtocol.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="AppsStatus.cs" />
+    <Compile Include="Core\LogHelper.cs" />
     <Compile Include="Core\UIDesign.cs" />
     <Compile Include="Device\Cameras\CameraBuffer.cs" />
     <Compile Include="Device\PLC\PlcAddressMap.cs" />
