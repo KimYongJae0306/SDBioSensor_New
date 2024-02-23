@@ -19,7 +19,11 @@ namespace Cog.Framework.Device.PLC
         #endregion
 
         #region 속성
-        private ManualResetEvent _plcSendResetEvent = new ManualResetEvent(true);
+        private ManualResetEvent PlcSendResetEvent = new ManualResetEvent(true);
+
+        public int ReadSize = 310;
+
+        public int[] ReadDatas { get; set; } = null;
         #endregion
 
         #region 이벤트
@@ -250,17 +254,17 @@ namespace Cog.Framework.Device.PLC
             this.SendBytes_MultiBlockWrite[6] = (byte)this.PCStationNO;
         }
 
-        public int[] ReadDeviceBlock(SubCommand subCommand, DeviceName deviceName, string _StartAddress, int _Length)
+        public int[] ReadDeviceBlock(DataType subCommand, DeviceName deviceName, string startAddress, int dataLength)
         {
             if (IsConnected() == false)
             {
-                this.WriteLogFile("Read DisConnect Port:" + Port.ToString());
-                this._client.Close();
+                WriteLogFile("Read DisConnect Port:" + Port.ToString());
+                _client.Close();
 
-                if (Open() == 0)
-                    this.WriteLogFile("ReConnect OK");
+                if (Open() == true)
+                    WriteLogFile("ReConnect OK");
                 else
-                    this.WriteLogFile("ReConnect NG");
+                    WriteLogFile("ReConnect NG");
             }
 
             int[] array = new int[0];
@@ -268,19 +272,19 @@ namespace Cog.Framework.Device.PLC
             if (_isConnected == false)
                 return array;
 
-            if (subCommand == SubCommand.Bit)
+            if (subCommand == DataType.Bit)
             {
                 if (deviceName == DeviceName.D || deviceName == DeviceName.R || (deviceName == DeviceName.W || deviceName == DeviceName.ZR))
                     throw new Exception("Word Device는 Bit단위 블락으로 읽을 수 없습니다.\r\n _Unit 또는 _DeviceName을 바꿔주시기 바랍니다.");
-                if (_Length % 2 == 1)
+                if (dataLength % 2 == 1)
                     throw new Exception("Bit Device의_Length는 항상짝수여야 합니다");
             }
-            if (subCommand == SubCommand.Bit)
+            if (subCommand == DataType.Bit)
             {
                 this.SendBytes_BlockRead[13] = (byte)1;
                 this.SendBytes_BlockRead[14] = (byte)0;
             }
-            else if (subCommand == SubCommand.Word)
+            else if (subCommand == DataType.Word)
             {
                 this.SendBytes_BlockRead[13] = (byte)0;
                 this.SendBytes_BlockRead[14] = (byte)0;
@@ -291,16 +295,16 @@ namespace Cog.Framework.Device.PLC
             this.SendBytes_BlockRead[12] = (byte)4;
             this.SendBytes_BlockRead[18] = (byte)deviceName;
             int num1 = 0;
-            if (subCommand == SubCommand.Word)
+            if (subCommand == DataType.Word)
             {
-                num1 = _Length / 960 + 1;
-                if (_Length % 960 == 0)
+                num1 = dataLength / 960 + 1;
+                if (dataLength % 960 == 0)
                     --num1;
             }
-            else if (subCommand == SubCommand.Bit)
+            else if (subCommand == DataType.Bit)
             {
-                num1 = _Length / 7168 + 1;
-                if (_Length % 7168 == 0)
+                num1 = dataLength / 7168 + 1;
+                if (dataLength % 7168 == 0)
                     --num1;
             }
             int num2 = num1;
@@ -317,12 +321,12 @@ namespace Cog.Framework.Device.PLC
                         int num3 = 0;
                         switch (subCommand)
                         {
-                            case SubCommand.Bit:
-                                num3 = Convert.ToInt32(_StartAddress) + index2 * 7168;
+                            case DataType.Bit:
+                                num3 = Convert.ToInt32(startAddress) + index2 * 7168;
                                 break;
 
-                            case SubCommand.Word:
-                                num3 = deviceName == DeviceName.L || deviceName == DeviceName.M ? Convert.ToInt32(_StartAddress) + index2 * 15360 : Convert.ToInt32(_StartAddress) + index2 * 960;
+                            case DataType.Word:
+                                num3 = deviceName == DeviceName.L || deviceName == DeviceName.M ? Convert.ToInt32(startAddress) + index2 * 15360 : Convert.ToInt32(startAddress) + index2 * 960;
                                 break;
                         }
                         this.SendBytes_BlockRead[15] = (byte)(num3 % 256);
@@ -336,12 +340,12 @@ namespace Cog.Framework.Device.PLC
                         int num4 = 0;
                         switch (subCommand)
                         {
-                            case SubCommand.Bit:
-                                num4 = int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 7168;
+                            case DataType.Bit:
+                                num4 = int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 7168;
                                 break;
 
-                            case SubCommand.Word:
-                                num4 = deviceName != DeviceName.W ? int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 15360 : int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 960;
+                            case DataType.Word:
+                                num4 = deviceName != DeviceName.W ? int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 15360 : int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 960;
                                 break;
                         }
                         this.SendBytes_BlockRead[15] = (byte)(num4 % 256);
@@ -353,14 +357,14 @@ namespace Cog.Framework.Device.PLC
                 {
                     switch (subCommand)
                     {
-                        case SubCommand.Bit:
-                            this.SendBytes_BlockRead[19] = (byte)((_Length - 7168 * index2) % 256);
-                            this.SendBytes_BlockRead[20] = (byte)((_Length - 7168 * index2) / 256);
+                        case DataType.Bit:
+                            this.SendBytes_BlockRead[19] = (byte)((dataLength - 7168 * index2) % 256);
+                            this.SendBytes_BlockRead[20] = (byte)((dataLength - 7168 * index2) / 256);
                             break;
 
-                        case SubCommand.Word:
-                            this.SendBytes_BlockRead[19] = (byte)((_Length - 960 * index2) % 256);
-                            this.SendBytes_BlockRead[20] = (byte)((_Length - 960 * index2) / 256);
+                        case DataType.Word:
+                            this.SendBytes_BlockRead[19] = (byte)((dataLength - 960 * index2) % 256);
+                            this.SendBytes_BlockRead[20] = (byte)((dataLength - 960 * index2) / 256);
                             break;
                     }
                 }
@@ -368,12 +372,12 @@ namespace Cog.Framework.Device.PLC
                 {
                     switch (subCommand)
                     {
-                        case SubCommand.Bit:
+                        case DataType.Bit:
                             this.SendBytes_BlockRead[19] = (byte)0;
                             this.SendBytes_BlockRead[20] = (byte)28;
                             break;
 
-                        case SubCommand.Word:
+                        case DataType.Word:
                             this.SendBytes_BlockRead[19] = (byte)192;
                             this.SendBytes_BlockRead[20] = (byte)3;
                             break;
@@ -382,7 +386,7 @@ namespace Cog.Framework.Device.PLC
                 if (this._client == null || this._client.Connection == null || !this._client.Connection.Connected)
                     return array;
 
-                _plcSendResetEvent.Reset();
+                PlcSendResetEvent.Reset();
                 this._isReceived = false;
 
                 Stopwatch receivedSW = new Stopwatch();
@@ -413,10 +417,11 @@ namespace Cog.Framework.Device.PLC
 
                 switch (subCommand)
                 {
-                    case SubCommand.Bit:
+                    case DataType.Bit:
                         int newSize1 = array.Length + this.ReceivedData.Length * 2;
-                        if (num1 == 1 && _Length % 2 == 1)
+                        if (num1 == 1 && dataLength % 2 == 1)
                             --newSize1;
+
                         int length = array.Length;
                         Array.Resize<int>(ref array, newSize1);
                         for (int index3 = 0; index3 < this.ReceivedData.Length; ++index3)
@@ -430,10 +435,12 @@ namespace Cog.Framework.Device.PLC
                             }
                         }
                         break;
-                    case SubCommand.Word:
+
+                    case DataType.Word:
                         int newSize2 = array.Length + this.ReceivedData.Length / 2;
                         Array.Resize<int>(ref array, newSize2);
                         int num5 = this.ReceivedData.Length / 2;
+
                         for (int index3 = 0; index3 < num5; ++index3)
                         {
                             array[index1] = (int)this.ReceivedData[index3 * 2 + 1] * 256 + (int)this.ReceivedData[index3 * 2];
@@ -448,14 +455,14 @@ namespace Cog.Framework.Device.PLC
             return array;
         }
 
-        public int WriteDeviceBlock(SubCommand _Unit, DeviceName _DeviceName, string _StartAddress, int[] _Data)
+        public int WriteDeviceBlock(DataType subCommand, DeviceName deviceName, string startAddress, int[] writeDatas)
         {
             if (IsConnected() == false)
             {
                 this.WriteLogFile("Write DisConnect Port:" + Port.ToString());
                 this._client.Close();
 
-                if (Open() == 0)
+                if (Open() == true)
                     this.WriteLogFile("ReConnect OK");
                 else
                     this.WriteLogFile("ReConnect NG");
@@ -464,22 +471,22 @@ namespace Cog.Framework.Device.PLC
             if (_isConnected == false)
                 return 1;
 
-            if (_Unit == SubCommand.Bit)
+            if (subCommand == DataType.Bit)
             {
-                if (_DeviceName == DeviceName.D || _DeviceName == DeviceName.R || (_DeviceName == DeviceName.W || _DeviceName == DeviceName.ZR))
+                if (deviceName == DeviceName.D || deviceName == DeviceName.R || (deviceName == DeviceName.W || deviceName == DeviceName.ZR))
                     throw new Exception("Word Device는 Bit단위 블락으로 쓸 수 없습니다.\r\n _Unit 또는 _DeviceName을 바꿔주시기 바랍니다.");
-                if (_Data.Length % 2 == 1)
+                if (writeDatas.Length % 2 == 1)
                     throw new Exception("Bit Device의 _Data길이 는 항상짝수여야 합니다");
             }
 
             Array.Resize<byte>(ref this.SendBytes_BlockWrite, 21);
 
-            if (_Unit == SubCommand.Bit)
+            if (subCommand == DataType.Bit)
             {
                 this.SendBytes_BlockWrite[13] = (byte)1;
                 this.SendBytes_BlockWrite[14] = (byte)0;
             }
-            else if (_Unit == SubCommand.Word)
+            else if (subCommand == DataType.Word)
             {
                 this.SendBytes_BlockWrite[13] = (byte)0;
                 this.SendBytes_BlockWrite[14] = (byte)0;
@@ -487,19 +494,19 @@ namespace Cog.Framework.Device.PLC
 
             this.SendBytes_BlockWrite[11] = (byte)1;
             this.SendBytes_BlockWrite[12] = (byte)20;
-            this.SendBytes_BlockWrite[18] = (byte)_DeviceName;
+            this.SendBytes_BlockWrite[18] = (byte)deviceName;
             int num1 = 0;
 
-            if (_Unit == SubCommand.Word)
+            if (subCommand == DataType.Word)
             {
-                num1 = _Data.Length / 960 + 1;
-                if (_Data.Length % 960 == 0)
+                num1 = writeDatas.Length / 960 + 1;
+                if (writeDatas.Length % 960 == 0)
                     --num1;
             }
-            else if (_Unit == SubCommand.Bit)
+            else if (subCommand == DataType.Bit)
             {
-                num1 = _Data.Length / 7168 + 1;
-                if (_Data.Length % 7168 == 0)
+                num1 = writeDatas.Length / 7168 + 1;
+                if (writeDatas.Length % 7168 == 0)
                     --num1;
             }
 
@@ -508,7 +515,7 @@ namespace Cog.Framework.Device.PLC
 
             for (int index2 = 0; index2 < num2; ++index2)
             {
-                switch (_DeviceName)
+                switch (deviceName)
                 {
                     case DeviceName.M:
                     case DeviceName.L:
@@ -516,13 +523,13 @@ namespace Cog.Framework.Device.PLC
                     case DeviceName.R:
                     case DeviceName.ZR:
                         int num3 = 0;
-                        switch (_Unit)
+                        switch (subCommand)
                         {
-                            case SubCommand.Bit:
-                                num3 = Convert.ToInt32(_StartAddress) + index2 * 7168;
+                            case DataType.Bit:
+                                num3 = Convert.ToInt32(startAddress) + index2 * 7168;
                                 break;
-                            case SubCommand.Word:
-                                num3 = _DeviceName == DeviceName.M || _DeviceName == DeviceName.L ? Convert.ToInt32(_StartAddress) + index2 * 15360 : Convert.ToInt32(_StartAddress) + index2 * 960;
+                            case DataType.Word:
+                                num3 = deviceName == DeviceName.M || deviceName == DeviceName.L ? Convert.ToInt32(startAddress) + index2 * 15360 : Convert.ToInt32(startAddress) + index2 * 960;
                                 break;
                         }
                         this.SendBytes_BlockWrite[15] = (byte)(num3 % 256);
@@ -540,13 +547,13 @@ namespace Cog.Framework.Device.PLC
                     case DeviceName.W:
                         int num4 = 0;
 
-                        switch (_Unit)
+                        switch (subCommand)
                         {
-                            case SubCommand.Bit:
-                                num4 = int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 7168;
+                            case DataType.Bit:
+                                num4 = int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 7168;
                                 break;
-                            case SubCommand.Word:
-                                num4 = _DeviceName != DeviceName.W ? int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 15360 : int.Parse(_StartAddress, NumberStyles.HexNumber) + index2 * 960;
+                            case DataType.Word:
+                                num4 = deviceName != DeviceName.W ? int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 15360 : int.Parse(startAddress, NumberStyles.HexNumber) + index2 * 960;
                                 break;
                         }
 
@@ -562,42 +569,42 @@ namespace Cog.Framework.Device.PLC
 
                 if (num1 == 1)
                 {
-                    switch (_Unit)
+                    switch (subCommand)
                     {
-                        case SubCommand.Bit:
-                            this.SendBytes_BlockWrite[19] = (byte)((_Data.Length - 7168 * index2) % 256);
-                            this.SendBytes_BlockWrite[20] = (byte)((_Data.Length - 7168 * index2) / 256);
+                        case DataType.Bit:
+                            this.SendBytes_BlockWrite[19] = (byte)((writeDatas.Length - 7168 * index2) % 256);
+                            this.SendBytes_BlockWrite[20] = (byte)((writeDatas.Length - 7168 * index2) / 256);
                             break;
 
-                        case SubCommand.Word:
-                            this.SendBytes_BlockWrite[19] = (byte)((_Data.Length - 960 * index2) % 256);
-                            this.SendBytes_BlockWrite[20] = (byte)((_Data.Length - 960 * index2) / 256);
-                            this.SendBytes_BlockWrite[19] = (byte)(_Data.Length & 0xFF);
-                            this.SendBytes_BlockWrite[20] = (byte)((_Data.Length >> 8) & 0xFF);
+                        case DataType.Word:
+                            this.SendBytes_BlockWrite[19] = (byte)((writeDatas.Length - 960 * index2) % 256);
+                            this.SendBytes_BlockWrite[20] = (byte)((writeDatas.Length - 960 * index2) / 256);
+                            this.SendBytes_BlockWrite[19] = (byte)(writeDatas.Length & 0xFF);
+                            this.SendBytes_BlockWrite[20] = (byte)((writeDatas.Length >> 8) & 0xFF);
                             break;
                     }
                 }
                 else
                 {
-                    switch (_Unit)
+                    switch (subCommand)
                     {
-                        case SubCommand.Bit:
+                        case DataType.Bit:
                             this.SendBytes_BlockWrite[19] = (byte)0;
                             this.SendBytes_BlockWrite[20] = (byte)28;
                             break;
 
-                        case SubCommand.Word:
+                        case DataType.Word:
                             this.SendBytes_BlockWrite[19] = (byte)192;
                             this.SendBytes_BlockWrite[20] = (byte)3;
                             break;
                     }
                 }
                 int num5 = 0;
-                if (_Unit == SubCommand.Word)
+                if (subCommand == DataType.Word)
                 {
                     if (num1 == 1)
                     {
-                        num5 = 12 + (_Data.Length - index2 * 960) * 2;
+                        num5 = 12 + (writeDatas.Length - index2 * 960) * 2;
                         //this.SendBytes_BlockWrite[7] = (byte)(num5 % 256);
                         //this.SendBytes_BlockWrite[8] = (byte)(num5 / 256);
 
@@ -611,11 +618,11 @@ namespace Cog.Framework.Device.PLC
                         this.SendBytes_BlockWrite[8] = (byte)(num5 / 256);
                     }
                 }
-                else if (_Unit == SubCommand.Bit)
+                else if (subCommand == DataType.Bit)
                 {
                     if (num1 == 1)
                     {
-                        num5 = 12 + (_Data.Length - index2 * 7168) / 2;
+                        num5 = 12 + (writeDatas.Length - index2 * 7168) / 2;
                         this.SendBytes_BlockWrite[7] = (byte)(num5 % 256);
                         this.SendBytes_BlockWrite[8] = (byte)(num5 / 256);
                     }
@@ -629,25 +636,25 @@ namespace Cog.Framework.Device.PLC
 
                 Array.Resize<byte>(ref this.SendBytes_BlockWrite, 9 + num5);
 
-                if (_Unit == SubCommand.Word)
+                if (subCommand == DataType.Word)
                 {
-                    int num6 = num1 != 1 ? 960 : (_Data.Length % 960 != 0 ? _Data.Length % 960 : 960);
+                    int num6 = num1 != 1 ? 960 : (writeDatas.Length % 960 != 0 ? writeDatas.Length % 960 : 960);
                     for (int index3 = 0; index3 < num6; ++index3)
                     {
                         // this.SendBytes_BlockWrite[21 + index3 * 2] = (byte)(_Data[index1] % 256);
                         // this.SendBytes_BlockWrite[22 + index3 * 2] = (byte)(_Data[index1] / 256);
 
-                        this.SendBytes_BlockWrite[21 + index3 * 2] = (byte)(_Data[index1] & 0xFF);
-                        this.SendBytes_BlockWrite[22 + index3 * 2] = (byte)((_Data[index1] >> 8) & 0xFF);
+                        this.SendBytes_BlockWrite[21 + index3 * 2] = (byte)(writeDatas[index1] & 0xFF);
+                        this.SendBytes_BlockWrite[22 + index3 * 2] = (byte)((writeDatas[index1] >> 8) & 0xFF);
                         ++index1;
                     }
                 }
-                else if (_Unit == SubCommand.Bit)
+                else if (subCommand == DataType.Bit)
                 {
-                    int num6 = num1 != 1 ? 7168 : (index2 != 0 ? _Data.Length % 7168 : _Data.Length);
+                    int num6 = num1 != 1 ? 7168 : (index2 != 0 ? writeDatas.Length % 7168 : writeDatas.Length);
                     for (int index3 = 0; index3 < num6 / 2; ++index3)
                     {
-                        this.SendBytes_BlockWrite[21 + index3] = (byte)(_Data[index1 * 2] * 16 + _Data[index1 * 2 + 1]);
+                        this.SendBytes_BlockWrite[21 + index3] = (byte)(writeDatas[index1 * 2] * 16 + writeDatas[index1 * 2 + 1]);
                         ++index1;
                     }
                 }
@@ -655,7 +662,7 @@ namespace Cog.Framework.Device.PLC
                     return 1;
 
                 //PlcSendResetEvent.WaitOne(100);
-                _plcSendResetEvent.Reset();
+                PlcSendResetEvent.Reset();
                 this._isReceived = false;
 
                 this._client.Send(this.SendBytes_BlockWrite);
@@ -681,44 +688,44 @@ namespace Cog.Framework.Device.PLC
             return _client.Connection.Connected;
         }
 
-        public int Open()
+        public bool Open()
         {
-            int num1 = 0;
+            bool isOpen = false;
 
             if (_isConnected == true)
-                return num1;
-
-            this._client = new AsyncSocketClient(this._socketId++);
-            this._client.OnConnet -= new AsyncSocketConnectEventHandler(this.client_OnConnet);
-            this._client.OnConnet += new AsyncSocketConnectEventHandler(this.client_OnConnet);
-
-            this._client.Connect(this.IP, this.Port);
-            int tickCount = Environment.TickCount;
-            int num2;
-
-            while (_isConnected == false)
+                isOpen = true;
+            else
             {
-                if (Environment.TickCount - tickCount > this.TimeOut)
+                this._client = new AsyncSocketClient(this._socketId++);
+                this._client.OnConnet -= new AsyncSocketConnectEventHandler(this.Client_OnConnect);
+                this._client.OnConnet += new AsyncSocketConnectEventHandler(this.Client_OnConnect);
+
+                this._client.Connect(this.IP, this.Port);
+                int tickCount = Environment.TickCount;
+
+                while (_isConnected == false)
                 {
-                    num2 = 3;
-                    break;
+                    if (Environment.TickCount - tickCount > this.TimeOut)
+                    {
+                        isOpen = false;
+                        break;
+                    }
                 }
             }
 
-            num2 = 0;
-            return num2;
+            return isOpen;
         }
 
-        private void client_OnConnet(object sender, AsyncSocketConnectionEventArgs e)
+        private void Client_OnConnect(object sender, AsyncSocketConnectionEventArgs e)
         {
-            this._client.OnReceive += new AsyncSocketReceiveEventHandler(this.client_OnReceive);
-            this._client.OnError += new AsyncSocketErrorEventHandler(this.client_OnError);
-            this._client.OnClose += new AsyncSocketCloseEventHandler(this.client_OnClose);
+            this._client.OnReceive += new AsyncSocketReceiveEventHandler(this.Client_OnReceive);
+            this._client.OnError += new AsyncSocketErrorEventHandler(this.Client_OnError);
+            this._client.OnClose += new AsyncSocketCloseEventHandler(this.Client_OnClose);
             this._client.Receive();
             _isConnected = true;
         }
 
-        private void client_OnReceive(object sender, AsyncSocketReceiveEventArgs e)
+        private void Client_OnReceive(object sender, AsyncSocketReceiveEventArgs e)
         {
             try
             {
@@ -730,14 +737,14 @@ namespace Cog.Framework.Device.PLC
             }
 
             _isReceived = true;
-            _plcSendResetEvent.Set();
+            PlcSendResetEvent.Set();
         }
 
-        private void client_OnClose(object sender, AsyncSocketConnectionEventArgs e)
+        private void Client_OnClose(object sender, AsyncSocketConnectionEventArgs e)
         {
         }
 
-        private void client_OnError(object sender, AsyncSocketErrorEventArgs e)
+        private void Client_OnError(object sender, AsyncSocketErrorEventArgs e)
         {
         }
 
@@ -764,24 +771,7 @@ namespace Cog.Framework.Device.PLC
         W = 180, // 0xB4
     }
 
-    public enum DeviceName_WORD : byte
-    {
-        D = 168, // 0xA8
-        R = 175, // 0xAF
-        ZR = 176, // 0xB0
-        W = 180, // 0xB4
-    }
-
-    public enum DeviceName_BIT : byte
-    {
-        M = 144, // 0x90
-        L = 146, // 0x92
-        X = 156, // 0x9C
-        Y = 157, // 0x9D
-        B = 160, // 0xA0
-    }
-
-    public enum SubCommand
+    public enum DataType
     {
         Bit,
         Word,

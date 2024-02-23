@@ -99,6 +99,10 @@
     <Compile Include="Helper\LogHelper.cs" />
     <Compile Include="Core\UIDesign.cs" />
     <Compile Include="Device\Cameras\CameraBuffer.cs" />
+    <Compile Include="Device\PLC\PlcAddressMap.cs" />
+    <Compile Include="Device\PLC\PlcControl.cs" />
+    <Compile Include="Device\PLC\PlcControlManager.cs" />
+    <Compile Include="Device\PLC\PlcScenarioManager.cs" />
     <Compile Include="Helper\DataFileHelper.cs" />
     <Compile Include="Helper\PasswordHelper.cs" />
     <Compile Include="Helper\VisionProHelper.cs" />
@@ -181,9 +185,7 @@
       <DependentUpon>ProjectForm.cs</DependentUpon>
     </EmbeddedResource>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Device\PLC\" />
-  </ItemGroup>
+  <ItemGroup />
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json">
       <Version>13.0.3</Version>
