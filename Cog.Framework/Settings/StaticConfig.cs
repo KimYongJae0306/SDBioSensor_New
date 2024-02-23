@@ -43,6 +43,8 @@ namespace Cog.Framework.Settings
         public const string ERROR_DATADIR = "Error_Data\\";
         public const string CAM_SETDIR = "VPP_CAM\\";
 
+       
+
         public const string IMAGE_FILE = SYS_DATADIR + "1-1.bmp";//"QDIDB.idb";//"D:\\SystemData\\20.idb";
     }
 
@@ -62,6 +64,8 @@ namespace Cog.Framework.Settings
 
         public static DataFileHelper OldLogCheckFile = new DataFileHelper();
 
+        public static DataFileHelper ModelFile = new DataFileHelper();
+
         public static void Initialize()
         {
             SetUIDesign();
@@ -78,6 +82,9 @@ namespace Cog.Framework.Settings
             buf = SysDataPath + "OLD_LOG_CHECK_FILE.dat";
             OldLogCheckFile.SetFileName(buf);
 
+            buf = ModelPath + AppsConfig.Instance().ProjectName + "\\Model.ini";
+            ModelFile.SetFileName(buf);
+
             if (!Directory.Exists(SysDataPath))
                 Directory.CreateDirectory(SysDataPath);
             if (!Directory.Exists(CamDataPath))
@@ -88,6 +95,8 @@ namespace Cog.Framework.Settings
                 Directory.CreateDirectory(LogDataPath);
             if (!Directory.Exists(ErrDataPath))
                 Directory.CreateDirectory(ErrDataPath);
+            if (!Directory.Exists(ModelPath))
+                Directory.CreateDirectory(ModelPath);
 
             AppsStatus.Instance().MC_STATUS = MC_STATUS.STOP;
         }

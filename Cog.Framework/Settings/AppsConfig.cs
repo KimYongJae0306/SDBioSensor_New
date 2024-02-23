@@ -10,8 +10,7 @@ namespace Cog.Framework.Settings
 {
     public partial class AppsConfig
     {
-
-
+       
     }
 
     public partial class AppsConfig
@@ -21,7 +20,13 @@ namespace Cog.Framework.Settings
         #endregion
 
         #region 속성
+        public string ProjectName { get; set; } = "";
 
+        public string ProjectInfo { get; set; } = ""; // 모델 이름
+
+        public string m_EngineerPassword { get; set; } = "";
+
+        public string m_MakerPassword { get; set; } = "";
         #endregion
 
         #region 이벤트
@@ -43,6 +48,38 @@ namespace Cog.Framework.Settings
 
             return _instance;
         }
+
+        public void Initialize()
+        {
+            Load();
+        }
+
+        private void Load()
+        {
+            var systemFile = StaticConfig.SystemFile;
+
+            ProjectName = systemFile.GetSData("SYSTEM", "LAST_PROJECT");
+
+            m_EngineerPassword = systemFile.GetSData("PERMISSION_ENGINEER", "PASSWORD");
+            m_MakerPassword = systemFile.GetSData("PERMISSION_MAKER", "PASSWORD");
+
+            var modelFile = StaticConfig.ModelFile;
+            ProjectInfo = modelFile.GetSData("PROJECT", "NAME");
+        }
+
+        public void Save()
+        {
+            var systemFile = StaticConfig.SystemFile;
+
+            systemFile.SetData("SYSTEM", "LAST_PROJECT", m_EngineerPassword);
+
+            systemFile.SetData("PERMISSION_ENGINEER", "PASSWORD", m_EngineerPassword);
+            systemFile.SetData("PERMISSION_MAKER", "PASSWORD", m_EngineerPassword);
+
+            var modelFile = StaticConfig.ModelFile;
+            modelFile.GetSData("PROJECT", "NAME");
+        }
+
         #endregion
     }
 }

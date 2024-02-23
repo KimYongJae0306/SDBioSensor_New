@@ -18,6 +18,8 @@ using System.Net.NetworkInformation;
 using Cog.Framework.Settings;
 using Cog.Framework;
 using Cog.Framework.Core;
+using Cog.Framework.UI.Forms;
+using Cog.Framework.Helper;
 
 namespace COG
 {
@@ -82,6 +84,9 @@ namespace COG
 
         public List<Button> CogDisplayButtonList = new List<Button>();
 
+        private MessageForm MessageForm = new MessageForm();
+
+        private PermissionForm PermissionForm = new PermissionForm();
 
         public MainForm()
         {
@@ -102,7 +107,15 @@ namespace COG
             TAB_IMG_DISPLAY.SizeMode = TabSizeMode.Fixed;
             TAB_IMG_DISPLAY.ItemSize = new Size(0, 1); // TAB 우측 버튼부분 숨기려고 만듬
 
+#if DEBUG
+            AppsStatus.Instance().CurrentUser = User.MAKER;
+#else
+            AppsStatus.Instance().CurrentUser = User.OPERATOR;
+#endif
+
+            AppsConfig.Instance().Initialize();
             StaticConfig.Initialize();
+
             CameraBufferManager.Instance().Initialize();
 
             InitializeUI();
@@ -474,21 +487,18 @@ namespace COG
 
         private void BTN_PROJECT_Click(object sender, EventArgs e)
         {
-            //if (!MessageShow()) return;
-            //if (!MessageShowPermission()) return;
+            if (CheckStopMachine() == false)
+                return;
 
-            //if (Main.DEFINE.PROGRAM_TYPE == "QD_LPA_PC2" && Main.MODEL_COPY == true)
-            //{
-            //    Main.ProjectRename(Main.MODEL_COPY_NAME, Main.MODEL_COPY_INFO);
-            //    Main.MODEL_COPY = false;
-            //}
+            if (MessageShowPermission() == false)
+                return;
 
-            //Form_Project formProject = new Form_Project();
-            //formProject.ShowDialog();
+            ProjectForm formProject = new ProjectForm();
+            formProject.ShowDialog();
         }
         private void BTN_TEACH_Click(object sender, EventArgs e)
         {
-            //if (!MessageShow())
+            //if (!CheckStopMachine())
             //    return;
 
             //LiveFormHide();
@@ -548,7 +558,7 @@ namespace COG
         }
         private void BTN_CAMERASET_Click(object sender, EventArgs e)
         {
-            //if (!MessageShow()) return;
+            //if (!CheckStopMachine()) return;
             //bool nResult = false;
             //Form_Password formpassword = new Form_Password(true);
             //formpassword.ShowDialog();
@@ -1334,28 +1344,26 @@ namespace COG
         {
 
         }
-        private bool MessageShow()
+        private bool CheckStopMachine()
         {
+            if (AppsStatus.Instance().MC_STATUS != MC_STATUS.STOP)
+            {
+                MessageForm.LB_MESSAGE.Text = "Machine STOP!!";
+                MessageForm.ShowDialog();
+                return false;
+            }
             return true;
-            //if (Main.Status.MC_STATUS != Main.DEFINE.MC_STOP)
-            //{
-            //    formMessage.LB_MESSAGE.Text = "Machine STOP!!";
-            //    formMessage.ShowDialog();
-            //    return false;
-            //}
-            //return true;
         }
 
         private bool MessageShowPermission()
         {
+            if (AppsStatus.Instance().CurrentUser == User.OPERATOR)
+            {
+                MessageForm.LB_MESSAGE.Text = "Operator는 접근 할 수 없습니다!!";
+                MessageForm.ShowDialog();
+                return false;
+            }
             return true;
-            //if (Main.machine.Permission == Main.ePermission.OPERATOR)
-            //{
-            //    formMessage.LB_MESSAGE.Text = "Operator는 접근 할 수 없습니다!!";
-            //    formMessage.ShowDialog();
-            //    return false;
-            //}
-            //return true;
         }
            
 
@@ -1760,26 +1768,27 @@ namespace COG
 
         public void BTN_PERMISSION_Click(object sender, EventArgs e)
         {
-            //if (!MessageShow()) return;
+            if (CheckStopMachine() == false)
+                return;
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.PERMISSIONFORM;
 
-            //Main.Status.MC_MODE = Main.DEFINE.MC_PERMISSIONFORM;
-            //FormPermission.ShowDialog();
-            //Main.Status.MC_MODE = Main.DEFINE.MC_MAINFORM;
+            PermissionForm.ShowDialog();
 
-            //if(Main.machine.Permission == Main.ePermission.OPERATOR)
-            //{
-            //    BTN_PERMISSION.Text = "PERMISSON\r\nOPERATOR";
-            //}
-            //else if(Main.machine.Permission == Main.ePermission.ENGINEER)
-            //{ 
-            //    BTN_PERMISSION.Text = "PERMISSON\r\nENGINEER";
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.MAINFORM;
 
-            //}
-            //else if(Main.machine.Permission == Main.ePermission.MAKER)
-            //{
-            //    BTN_PERMISSION.Text = "PERMISSON\r\nMAKER";
-            //}
+            if (AppsStatus.Instance().CurrentUser == User.OPERATOR)
+            {
+                BTN_PERMISSION.Text = "PERMISSON\r\nOPERATOR";
+            }
+            else if (AppsStatus.Instance().CurrentUser == User.ENGINEER)
+            {
+                BTN_PERMISSION.Text = "PERMISSON\r\nENGINEER";
+
+            }
+            else if (AppsStatus.Instance().CurrentUser == User.MAKER)
+            {
+                BTN_PERMISSION.Text = "PERMISSON\r\nMAKER";
+            }
         }
-
-    }//Form_Main : Form
-}// nameSpace
+    }
+}

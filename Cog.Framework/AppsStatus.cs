@@ -15,6 +15,11 @@ namespace Cog.Framework
 
         #region 속성
         public MC_STATUS MC_STATUS { get; set; } = MC_STATUS.STOP;
+
+        public UI_STATUS UI_STATUS { get; set; } = UI_STATUS.MAINFORM;
+
+        public User CurrentUser { get; set; } = User.OPERATOR;
+
         #endregion
 
         #region 메서드
@@ -27,8 +32,6 @@ namespace Cog.Framework
 
             return _instance;
         }
-
-   
         #endregion
     }
 
@@ -39,6 +42,17 @@ namespace Cog.Framework
         ERROR = 2,
         WARNING = 3,
         RESET = 4,
+        //TEACHFORM = 5,
+        //MAINFORM = 6,
+        //SETUPFORM = 7,
+        //LIVEFORM = 8,
+        //CAMERAFORM = 9,
+        //RCSFORM = 10,
+        //PERMISSIONFORM = 11,
+    }
+
+    public enum UI_STATUS
+    {
         TEACHFORM = 5,
         MAINFORM = 6,
         SETUPFORM = 7,
@@ -46,5 +60,12 @@ namespace Cog.Framework
         CAMERAFORM = 9,
         RCSFORM = 10,
         PERMISSIONFORM = 11,
+    }
+
+    public enum User
+    {
+        OPERATOR = 1,
+        ENGINEER = 2,
+        MAKER = 3,
     }
 }

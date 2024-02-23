@@ -808,7 +808,7 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Settings\" />
-    <Folder Include="UI\Controls\" />
+    <Folder Include="UI\" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\Cog.Framework\Cog.Framework.csproj">
