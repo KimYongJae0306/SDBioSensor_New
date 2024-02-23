@@ -18,6 +18,7 @@ namespace Cog.Framework.Core
         public static string[] VIEW_NAME;
         public static string[] VIEW_Pos;
         public static string[] VIEW_Size;
+        public static string[] VIEW_TAB_NAME;
         public static int[] VIEW_WIDTH_CNT;
 
         public static string HEAD_MODE;
