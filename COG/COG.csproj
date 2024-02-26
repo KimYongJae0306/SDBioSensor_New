@@ -597,10 +597,26 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Blob.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.Blob.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Blob.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.CalibFix, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
     <Reference Include="Cognex.VisionPro.Caliper, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Caliper.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.Caliper.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Caliper.Controls.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.CNLSearch, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.CNLSearch.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.CNLSearch.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.CNLSearch.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Cognex.VisionPro.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -610,15 +626,35 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Core.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.Dimensioning, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Dimensioning.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.Display.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Display.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Cognex.VisionPro.ImageFile, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
     <Reference Include="Cognex.VisionPro.ImageProcessing, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
+    <Reference Include="Cognex.VisionPro.LineMax, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.LineMax.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.PMAlign.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.PMAlign.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.PMAlign.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.SearchMax, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.SearchMax.dll</HintPath>
+    </Reference>
+    <Reference Include="Cognex.VisionPro.SearchMax.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.SearchMax.Controls.dll</HintPath>
     </Reference>
     <Reference Include="Cognex.VisionPro.ToolGroup, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
@@ -655,9 +691,17 @@
     <Compile Include="CameraBufferManager.cs" />
     <Compile Include="Class\InspModel.cs" />
     <Compile Include="Class\InspModelService.cs" />
+    <Compile Include="Class\TeachingData.cs" />
     <Compile Include="Class\Units\InspUnit.cs" />
     <Compile Include="Class\Units\MarkUnit.cs" />
+    <Compile Include="Class\Units\SDParameter.cs" />
     <Compile Include="Comm\SocketComm.cs" />
+    <Compile Include="Core\Display\Display.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Core\Display\Display.designer.cs">
+      <DependentUpon>Display.cs</DependentUpon>
+    </Compile>
     <Compile Include="Core\UIDesign.cs" />
     <Compile Include="Device\Cameras\CameraBuffer.cs" />
     <Compile Include="Device\PLC\PlcAddressMap.cs" />
@@ -692,6 +736,36 @@
     </Compile>
     <Compile Include="UI\Forms\CMDForm.designer.cs">
       <DependentUpon>CMDForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PatternMaskForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PatternMaskForm.designer.cs">
+      <DependentUpon>PatternMaskForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\ToolTeachForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\ToolTeachForm.designer.cs">
+      <DependentUpon>ToolTeachForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PatternTeachForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PatternTeachForm.designer.cs">
+      <DependentUpon>PatternTeachForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PatternTagSelectForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PatternTagSelectForm.designer.cs">
+      <DependentUpon>PatternTagSelectForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\PatternSelectForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\PatternSelectForm.designer.cs">
+      <DependentUpon>PatternSelectForm.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Forms\SetUpForm.cs">
       <SubType>Form</SubType>
@@ -753,6 +827,9 @@
     <Compile Include="UI\Forms\ProjectForm.designer.cs">
       <DependentUpon>ProjectForm.cs</DependentUpon>
     </Compile>
+    <EmbeddedResource Include="Core\Display\Display.resx">
+      <DependentUpon>Display.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="MainForm.resx">
       <DependentUpon>MainForm.cs</DependentUpon>
     </EmbeddedResource>
@@ -766,6 +843,21 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Forms\CMDForm.resx">
       <DependentUpon>CMDForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PatternMaskForm.resx">
+      <DependentUpon>PatternMaskForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\ToolTeachForm.resx">
+      <DependentUpon>ToolTeachForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PatternTeachForm.resx">
+      <DependentUpon>PatternTeachForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PatternTagSelectForm.resx">
+      <DependentUpon>PatternTagSelectForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\PatternSelectForm.resx">
+      <DependentUpon>PatternSelectForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Forms\SetUpForm.resx">
       <DependentUpon>SetUpForm.cs</DependentUpon>

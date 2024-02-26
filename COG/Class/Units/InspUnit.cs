@@ -15,27 +15,6 @@ namespace COG.Class.Units
 
         public CogFindCircleTool FindCircleTool { get; set; } = null;
 
-        public InspType InspType { get; set; }
-        public double CenterX { get; set; }
-        public double CenterY { get; set; }
-        public double LenthX { get; set; }
-        public double LenthY { get; set; }
-        public double dSpecDistance { get; set; }
-        public double dSpecDistanceMax { get; set; }
-        public int Distgnore { get; set; }
-
-        public int HistogramROICnt { get; set; }
-        public int[] HistogramSpec { get; set; }
-
-        public bool ThresholdUse { get; set; }
-        public int Threshold { get; set; } = 32;
-        public int TopCutPixel { get; set; } = 15;
-        public int IgnoreSize { get; set; } = 20;
-        public int BottomCutPixel { get; set; } = 10;
-        public int MaskingValue { get; set; } = 210;
-        public int EdgeCaliperThreshold { get; set; } = 55;
-        public int EdgeCaliperFilterSize { get; set; } = 10;
-
         public void Dispose()
         {
             FindLineTool?.Dispose();
@@ -43,6 +22,15 @@ namespace COG.Class.Units
 
             FindCircleTool?.Dispose();
             FindCircleTool = null;
+        }
+
+        public InspUnit DeepCopy()
+        {
+            InspUnit unit = new InspUnit();
+            unit.FindLineTool = new CogFitLineTool(FindLineTool);
+            unit.FindCircleTool = new CogFindCircleTool(FindCircleTool);
+
+            return unit;
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace COG.UI.Forms
 {
-    partial class Form_PatternMask
+    partial class PatternMaskForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_PatternMask));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PatternMaskForm));
             this.MaskEdit = new Cognex.VisionPro.CogImageMaskEditV2();
             this.BTN_SAVE = new System.Windows.Forms.Button();
             this.BTN_EXIT = new System.Windows.Forms.Button();

@@ -15,16 +15,24 @@ namespace COG.UI.Forms
 {
     public partial class SetUpForm : Form
     {
-        private bool bModLogCheckPeriod = false;
+        #region 필드
+        private bool _bModLogCheckPeriod = false;
+        #endregion
 
-        private string[] Option = new string[] { "OVERLAY IMG SAVE", "Image(Default JPG) BMP", "LOG DATA SAVE", "LENGTH CHECK USE" }; 
+        #region 속성
+        private string[] Option = new string[] { "OVERLAY IMG SAVE", "Image(Default JPG) BMP", "LOG DATA SAVE", "LENGTH CHECK USE" };
+        #endregion
+
+        #region 생성자
         public SetUpForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
             InitialDataGrid();
         }
+        #endregion
 
+        #region 메서드
         private void Form_SetUp_Load(object sender, EventArgs e)
         {
             LB_LANGUAGE.Visible = true;
@@ -43,15 +51,15 @@ namespace COG.UI.Forms
 
             ControlUpDate();
 
-            LB_RETRY_COUNT.Text =  AppsConfig.Instance().m_RetryCount.ToString();
+            LB_RETRY_COUNT.Text = AppsConfig.Instance().m_RetryCount.ToString();
             CKD_USE_RETRY.Checked = AppsConfig.Instance().m_RetryUse;
 
-            if (CKD_USE_RETRY.Checked == true) 
+            if (CKD_USE_RETRY.Checked == true)
                 LB_RETRY_COUNT.Visible = true;
             else
                 LB_RETRY_COUNT.Visible = false;
 
-             PN_USE_RETRY.Location = new System.Drawing.Point(5, 155);
+            PN_USE_RETRY.Location = new System.Drawing.Point(5, 155);
         }
 
         private void InitialDataGrid()
@@ -109,7 +117,7 @@ namespace COG.UI.Forms
                     }
                 }
             }
-                
+
             for (int j = 0; j < Option.Length; j++)
             {
                 DGV_SAVEOPTION_DATA[0, j].Style.ForeColor = System.Drawing.Color.Black;
@@ -144,7 +152,7 @@ namespace COG.UI.Forms
 
             InspModel inspModel = ModelManager.Instance().CurrentModel;
 
-            if(inspModel != null)
+            if (inspModel != null)
             {
                 for (int i = 0; i < StaticConfig.STAGE_MAX_COUNT; i++)
                 {
@@ -211,7 +219,7 @@ namespace COG.UI.Forms
             DataUpDate();
             AppsConfig.Instance().Save();
 
-            if (bModLogCheckPeriod)
+            if (_bModLogCheckPeriod)
                 StaticConfig.OldLogCheckFile.SetData("SYSTEM", "LAST_CHECK", DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss"));
 
             this.Hide();
@@ -222,7 +230,7 @@ namespace COG.UI.Forms
             AppsConfig.Instance().Load();
             this.Hide();
         }
-    
+
         private void RBTN_Button_Color_CheckedChanged(object sender, EventArgs e)
         {
             RadioButton TempBTN = (RadioButton)sender;
@@ -268,76 +276,6 @@ namespace COG.UI.Forms
             }
         }
 
-        private bool FileCopy(string strOriginFile, string strCopyFile) 
-        { 
-            System.IO.FileInfo fi = new System.IO.FileInfo(strOriginFile); 
-            long iSize = 0; 
-            long iTotalSize = fi.Length; //1024 버퍼 사이즈 임의로...
-            byte[] bBuf = new byte[104857600]; //동일 파일이 존재하면 삭제 하고 다시하기 위해... 
-
-            if (System.IO.File.Exists(strCopyFile)) 
-            {
-                System.IO.File.Delete(strCopyFile);
-            } //원본 파일 열기...
-            System.IO.FileStream fsIn = new System.IO.FileStream(strOriginFile, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.Read); //대상 파일 만들기...
-            System.IO.FileStream fsOut = new System.IO.FileStream(strCopyFile, System.IO.FileMode.Create, System.IO.FileAccess.Write);
-            while (iSize < iTotalSize) 
-            { 
-                try
-                {
-                    int iLen = fsIn.Read(bBuf, 0, bBuf.Length); iSize += iLen; fsOut.Write(bBuf, 0, iLen);
-                }
-                catch (Exception ex)
-                { //파일 연결 해제...
-                    fsOut.Flush();
-                    fsOut.Close();
-                    fsIn.Close(); //에러시 삭제... 
-                    if (System.IO.File.Exists(strCopyFile))
-                    {
-                        System.IO.File.Delete(strCopyFile); 
-                    }
-                } 
-                    return false; 
-            } 
-            //파일 연결 해제... 
-            fsOut.Flush(); 
-            fsOut.Close();
-            fsIn.Close();
-            return true;
-        
-        }
-
-        private bool FolderCopy(string strOriginFolder, string strCopyFolder)
-        { 
-            //폴더가 없으면 만듬...
-            if (!System.IO.Directory.Exists(strCopyFolder)) 
-            { 
-                System.IO.Directory.CreateDirectory(strCopyFolder); 
-            }
-            //파일 목록 불러오기...
-            string[] files = System.IO.Directory.GetFiles(strOriginFolder);
-            //폴더 목록 불러오기... 
-            string[] folders = System.IO.Directory.GetDirectories(strOriginFolder);
-
-            foreach (string file in files) 
-            {
-                string name = System.IO.Path.GetFileName(file); 
-                string dest = System.IO.Path.Combine(strCopyFolder, name);
-
-                FileCopy(file, dest);
-            } 
-            // foreach 안에서 재귀 함수를 통해서 폴더 복사 및 파일 복사 진행 완료  
-            foreach (string folder in folders) 
-            { 
-                string name = System.IO.Path.GetFileName(folder); 
-                string dest = System.IO.Path.Combine(strCopyFolder, name); 
-                
-                FolderCopy(folder, dest); 
-            } 
-
-            return true; 
-        }
-
         private void TB_LOG_CHECK_PERIOD_Click(object sender, EventArgs e)
         {
             TextBox TempTB = (TextBox)sender;
@@ -347,7 +285,7 @@ namespace COG.UI.Forms
             form_keypad.ShowDialog();
             TempTB.Text = Convert.ToInt32(form_keypad.m_data).ToString();
             if (nCurData != (int)form_keypad.m_data)
-                bModLogCheckPeriod = true;
+                _bModLogCheckPeriod = true;
         }
 
         private void LB_SETUP_LOADING_X_LIMIT_Click(object sender, EventArgs e)
@@ -372,16 +310,6 @@ namespace COG.UI.Forms
             TempLB.Text = nNewData.ToString();
         }
 
-        private void LB_SETUP_INSP_LOWER_LIMIT_Click(object sender, EventArgs e)
-        {
-
-        }
-
-        private void LB_SETUP_INSP_HIGHER_LIMIT_Click(object sender, EventArgs e)
-        {
-
-        }
-       
         private void TB_LOG_CHECK_SPACE_Click(object sender, EventArgs e)
         {
             TextBox TempTB = (TextBox)sender;
@@ -441,5 +369,6 @@ namespace COG.UI.Forms
             TempLB.Text = nNewData.ToString();
             AppsConfig.Instance().m_RetryCount = Convert.ToInt32(TempLB.Text);
         }
+        #endregion
     }
 }

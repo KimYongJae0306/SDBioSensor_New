@@ -83,7 +83,9 @@ namespace COG
         private LogViewForm LogViewForm { get; set; } = new LogViewForm();
 
         private SetUpForm SetUpForm { get; set; } = new SetUpForm();
-        
+
+        private PatternSelectForm PatternSelectForm { get; set; } = new PatternSelectForm();
+
         public InspModelService InspModelService = new InspModelService();
 
         public MainForm()
@@ -501,14 +503,16 @@ namespace COG
         }
         private void BTN_TEACH_Click(object sender, EventArgs e)
         {
-            //if (!CheckStopMachine())
-            //    return;
+            if (!CheckStopMachine())
+                return;
 
-            //LiveFormHide();
+            LiveFormHide();
 
-            //Main.Status.MC_MODE = Main.DEFINE.MC_TEACHFORM;
-            //Pattern_Select.ShowDialog();
-            //Main.Status.MC_MODE = Main.DEFINE.MC_MAINFORM;
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.TEACH_FORM;
+
+            PatternSelectForm.ShowDialog();
+
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.MAIN_FORM;
         }
         private void BTN_SETUP_Click(object sender, EventArgs e)
         {

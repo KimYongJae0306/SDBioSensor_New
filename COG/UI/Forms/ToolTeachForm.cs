@@ -1,31 +1,14 @@
-﻿using System;
+﻿using Cognex.VisionPro.Blob;
+using Cognex.VisionPro.Caliper;
+using Cognex.VisionPro.PMAlign;
+using Cognex.VisionPro.SearchMax;
+using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 
-using Cognex.VisionPro;
-using Cognex.VisionPro.ToolBlock;
-using Cognex.VisionPro.PMAlign;
-using Cognex.VisionPro.Caliper;
-using Cognex.VisionPro.Dimensioning;
-using Cognex.VisionPro.ImageProcessing;
-using Cognex.VisionPro.CalibFix;
-using Cognex.VisionPro.ImageFile;
-using Cognex.VisionPro.Blob;
-using System.IO;
-using System.Drawing.Imaging;
-using Cognex.VisionPro.CNLSearch;
-using Cognex.VisionPro.SearchMax;
-using Cognex.VisionPro.LineMax;
-
-namespace COG
+namespace COG.UI.Forms
 {
-    public partial class Form_ToolTeach : Form
+    public partial class ToolTeachForm : Form
     {
 
         public int m_AlignNo;
@@ -43,7 +26,7 @@ namespace COG
         private List<Label> nToolName = new List<Label>();
         
 
-       public Form_ToolTeach()
+       public ToolTeachForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
@@ -57,9 +40,9 @@ namespace COG
         }
         private void Form_ToolTeach_Load(object sender, EventArgs e)
         {
-            this.Text = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo ,m_PatNo].m_PatternName;
-            LB_CAMCENTER.Text = "Camera Center Position_ X:" + Main.vision.IMAGE_CENTER_X[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo].ToString() + " Y:" + Main.vision.IMAGE_CENTER_Y[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo,m_PatNo].m_CamNo].ToString();
-            Tool_Change();
+            //this.Text = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo ,m_PatNo].m_PatternName;
+            //LB_CAMCENTER.Text = "Camera Center Position_ X:" + Main.vision.IMAGE_CENTER_X[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo].ToString() + " Y:" + Main.vision.IMAGE_CENTER_Y[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo,m_PatNo].m_CamNo].ToString();
+            //Tool_Change();
         }
         private void Tool_Change()
         {
@@ -135,10 +118,8 @@ namespace COG
 
         private void BTN_ORIGIN_CENTER_Click(object sender, EventArgs e)
         {
-            TT_SearchMaxTool.Pattern.Origin.TranslationX = Main.vision.IMAGE_CENTER_X[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo];
-            TT_SearchMaxTool.Pattern.Origin.TranslationY = Main.vision.IMAGE_CENTER_Y[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo];
-            //             TT_PMAlign.Pattern.Origin.TranslationX = Main.vision.IMAGE_CENTER_X[Main.AlignUnit[m_PatTagNo,m_AlignNo].PAT[m_PatNo].m_CamNo];
-            //             TT_PMAlign.Pattern.Origin.TranslationY = Main.vision.IMAGE_CENTER_Y[Main.AlignUnit[m_PatTagNo,m_AlignNo].PAT[m_PatNo].m_CamNo];
+            //TT_SearchMaxTool.Pattern.Origin.TranslationX = Main.vision.IMAGE_CENTER_X[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo];
+            //TT_SearchMaxTool.Pattern.Origin.TranslationY = Main.vision.IMAGE_CENTER_Y[Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo];
         }
     }
 }

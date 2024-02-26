@@ -1,29 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using Cognex.VisionPro;
+using Cognex.VisionPro.PMAlign;
+using Cognex.VisionPro.SearchMax;
+using System;
 using System.Windows.Forms;
 
-using Cognex.VisionPro;
-using Cognex.VisionPro.Display;
-using Cognex.VisionPro.ImageFile;
-using Cognex.VisionPro.ToolBlock;
-using Cognex.VisionPro.PMAlign;
-using Cognex.VisionPro.Implementation.Internal;
-using Cognex.VisionPro.CNLSearch;
-using Cognex.VisionPro.Implementation;
-using Cognex.VisionPro.ImageProcessing;
-using Cognex.VisionPro.Dimensioning;
-using Cognex.VisionPro.SearchMax;
-using Cognex.VisionPro.LineMax;
-
-namespace COG
+namespace COG.UI.Forms
 {
-    public partial class Form_PatternMask : Form
+    public partial class PatternMaskForm : Form
     {
 
         private CogSearchMaxTool TempSearchMaxTool = new CogSearchMaxTool();
@@ -37,7 +20,7 @@ namespace COG
 
 
         public int CogDisplayNum;
-        public Form_PatternMask()
+        public PatternMaskForm()
         {
             InitializeComponent();
 

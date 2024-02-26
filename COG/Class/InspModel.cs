@@ -1,4 +1,5 @@
 ﻿using COG.Class.Units;
+using COG.Device.PLC;
 using COG.Settings;
 using COG.UI.Forms;
 using Cognex.VisionPro;
@@ -8,6 +9,7 @@ using Cognex.VisionPro.SearchMax;
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using System.Windows.Forms;
 
@@ -23,6 +25,13 @@ namespace COG.Core
 
         public List<StageUnit> StageUnitList = new List<StageUnit>();
 
+        public StageUnit GetStageUnit(string name)
+        {
+            var unit = StageUnitList.Where(x => x.Name == name).FirstOrDefault();
+
+            return unit;
+        }
+
         public void New()
         {
             // Todo : 모델 dispose
@@ -35,18 +44,18 @@ namespace COG.Core
 
                     #region Amp Mark
                     var leftAmpMark = CreateMark(stageUnit.Name + "_0_CAMERA___UP");
-                    stageUnit.LeftCamUnit.AmpMarkList.AddRange(leftAmpMark);
+                    stageUnit.LeftUnit.AmpMark = leftAmpMark;
 
                     var rightAmpMark = CreateMark(stageUnit.Name + "_1_CAMERA___UP");
-                    stageUnit.RightCamUnit.AmpMarkList.AddRange(rightAmpMark);
+                    stageUnit.RightUnit.AmpMark = rightAmpMark;
                     #endregion
 
                     #region Bonding Mark
                     var leftBondingMark = CreateMark("ROIFineAlign" + stageUnit.Name + "_0_CAMERA___UP");
-                    stageUnit.LeftCamUnit.BondingMarkList.AddRange(leftBondingMark);
+                    stageUnit.LeftUnit.BondingMark = leftBondingMark;
 
                     var rightBondingMark = CreateMark("ROIFineAlign" + stageUnit.Name + "_1_CAMERA___UP");
-                    stageUnit.RightCamUnit.BondingMarkList.AddRange(rightBondingMark);
+                    stageUnit.RightUnit.BondingMark = rightBondingMark;
                     #endregion
 
                     StageUnitList.Add(stageUnit);
@@ -114,10 +123,8 @@ namespace COG.Core
 
     public partial class InspModel
     {
-        private List<MarkUnit> CreateMark(string name)
+        private MarkUnit CreateMark(string name)
         {
-            List<MarkUnit> markList = new List<MarkUnit>();
-
             MarkUnit markUnit = new MarkUnit();
             markUnit.Name = name;
             markUnit.AlignType = StaticConfig.M_1CAM2SHOT;
@@ -128,128 +135,116 @@ namespace COG.Core
                 markTag.Index = subIndex;
                 markUnit.TagList.Add(markTag);
             }
-            markList.Add(markUnit);
 
-            return markList;
+            return markUnit;
         }
 
         private void LoadAmpMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            var stageUnit = StageUnitList[stageIndex];
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                var stageUnit = StageUnitList[stageIndex];
-                for (int i = 0; i < stageUnit.LeftCamUnit.AmpMarkList.Count; i++)
+                #region Left
+                var leftMarkUnit = stageUnit.LeftUnit.AmpMark;
+
+                var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i}.vpp");
+
+                if (File.Exists(leftVppFileName))
                 {
-                    #region Left
-                    var leftMarkUnit = stageUnit.LeftCamUnit.AmpMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex}.vpp");
-
-                    if (File.Exists(leftVppFileName))
-                    {
-                        var markTag = leftMarkUnit.TagList[subIndex];
-                        var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
-                        markTag.SetTool(tool);
-                    }
-                    #endregion
-
-                    #region Right
-                    var rightMarkUnit = stageUnit.RightCamUnit.AmpMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex}.vpp");
-
-                    if (File.Exists(rightVppFileName))
-                    {
-                        var markTag = rightMarkUnit.TagList[subIndex];
-                        var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
-                        markTag.SetTool(tool);
-                    }
-                    #endregion
+                    var markTag = leftMarkUnit.TagList[i];
+                    var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
+                    markTag.SetTool(tool);
                 }
+                #endregion
+
+                #region Right
+                var rightMarkUnit = stageUnit.RightUnit.AmpMark;
+                var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i}.vpp");
+
+                if (File.Exists(rightVppFileName))
+                {
+                    var markTag = rightMarkUnit.TagList[i];
+                    var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
+                    markTag.SetTool(tool);
+                }
+                #endregion
             }
         }
 
         private void LoadBondingMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            var stageUnit = StageUnitList[stageIndex];
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                var stageUnit = StageUnitList[stageIndex];
-                for (int i = 0; i < stageUnit.LeftCamUnit.BondingMarkList.Count; i++)
+                #region Left
+                var leftMarkUnit = stageUnit.LeftUnit.BondingMark;
+                var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i:D2}.vpp");
+
+                if (File.Exists(leftVppFileName))
                 {
-                    #region Left
-                    var leftMarkUnit = stageUnit.LeftCamUnit.BondingMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex:D2}.vpp");
-
-                    if (File.Exists(leftVppFileName))
-                    {
-                        var markTag = leftMarkUnit.TagList[subIndex];
-                        var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
-                        markTag.SetTool(tool);
-                    }
-                    #endregion
-
-                    #region Right
-                    var rightMarkUnit = stageUnit.RightCamUnit.BondingMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex:D2}.vpp");
-
-                    if (File.Exists(rightVppFileName))
-                    {
-                        var markTag = rightMarkUnit.TagList[subIndex];
-                        var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
-                        markTag.SetTool(tool);
-                    }
-                    #endregion
+                    var markTag = leftMarkUnit.TagList[i];
+                    var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
+                    markTag.SetTool(tool);
                 }
+                #endregion
+
+                #region Right
+                var rightMarkUnit = stageUnit.RightUnit.BondingMark;
+                var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i:D2}.vpp");
+
+                if (File.Exists(rightVppFileName))
+                {
+                    var markTag = rightMarkUnit.TagList[i];
+                    var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
+                    markTag.SetTool(tool);
+                }
+                #endregion
             }
         }
 
         private void SaveAmpMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            var stageUnit = StageUnitList[stageIndex];
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                var stageUnit = StageUnitList[stageIndex];
-                for (int i = 0; i < stageUnit.LeftCamUnit.AmpMarkList.Count; i++)
-                {
-                    #region Left
-                    var leftMarkUnit = stageUnit.LeftCamUnit.AmpMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex}.vpp");
+                #region Left
+                var leftMarkUnit = stageUnit.LeftUnit.AmpMark;
+                var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i}.vpp");
 
-                    var leftMarkTag = leftMarkUnit.TagList[subIndex];
-                    leftMarkTag.SaveTool(leftVppFileName);
-                    #endregion
+                var leftMarkTag = leftMarkUnit.TagList[i];
+                leftMarkTag.SaveTool(leftVppFileName);
+                #endregion
 
-                    #region Right
-                    var rightMarkUnit = stageUnit.RightCamUnit.AmpMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex}.vpp");
+                #region Right
+                var rightMarkUnit = stageUnit.RightUnit.AmpMark;
+                var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i}.vpp");
 
-                    var rightMarkTag = rightMarkUnit.TagList[subIndex];
-                    rightMarkTag.SaveTool(rightVppFileName);
-                    #endregion
-                }
+                var rightMarkTag = rightMarkUnit.TagList[i];
+                rightMarkTag.SaveTool(rightVppFileName);
+                #endregion
             }
         }
 
         private void SaveBondingMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            var stageUnit = StageUnitList[stageIndex];
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                var stageUnit = StageUnitList[stageIndex];
-                for (int i = 0; i < stageUnit.LeftCamUnit.BondingMarkList.Count; i++)
-                {
-                    #region Left
-                    var leftMarkUnit = stageUnit.LeftCamUnit.BondingMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex:D2}.vpp");
+                #region Left
+                var leftMarkUnit = stageUnit.LeftUnit.BondingMark;
+                var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i:D2}.vpp");
 
-                    var leftMarkTag = leftMarkUnit.TagList[subIndex];
-                    leftMarkTag.SaveTool(leftVppFileName);
-                    #endregion
+                var leftMarkTag = leftMarkUnit.TagList[i];
+                leftMarkTag.SaveTool(leftVppFileName);
+                #endregion
 
-                    #region Right
-                    var rightMarkUnit = stageUnit.RightCamUnit.BondingMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex:D2}.vpp");
+                #region Right
+                var rightMarkUnit = stageUnit.RightUnit.BondingMark;
+                var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i:D2}.vpp");
 
-                    var rightMarkTag = rightMarkUnit.TagList[subIndex];
-                    rightMarkTag.SaveTool(rightVppFileName);
-                    #endregion
-                }
+                var rightMarkTag = rightMarkUnit.TagList[i];
+                rightMarkTag.SaveTool(rightVppFileName);
+                #endregion
             }
         }
 
@@ -314,32 +309,57 @@ namespace COG.Core
 
         public bool m_NG_ImageSave_Use { get; set; }
 
-        public Unit LeftCamUnit { get; set; } = new Unit();
+        public Unit LeftUnit { get; set; } = new Unit();
 
-        public Unit RightCamUnit { get; set; } = new Unit();
+        public Unit RightUnit { get; set; } = new Unit();
+
+        public StageUnit DeepCopy()
+        {
+            StageUnit unit = new StageUnit();
+            unit.Name = Name;
+            unit.m_GD_ImageSave_Use = m_GD_ImageSave_Use;
+            unit.m_NG_ImageSave_Use = m_NG_ImageSave_Use;
+            unit.LeftUnit = LeftUnit.DeepCopy();
+            unit.RightUnit = RightUnit.DeepCopy();
+
+            return unit;
+        }
 
         public void Dispose()
         {
-            LeftCamUnit.Dispose();
-            RightCamUnit.Dispose();
+            LeftUnit.Dispose();
+            RightUnit.Dispose();
         }
     }
 
     public class Unit
     {
-        public List<MarkUnit> AmpMarkList = new List<MarkUnit>();
+        public MarkUnit AmpMark = new MarkUnit();
 
-        public List<MarkUnit> BondingMarkList = new List<MarkUnit>();
+        public MarkUnit BondingMark = new MarkUnit();
 
         public List<InspUnit> InspParamList = new List<InspUnit>();
 
+        public Unit DeepCopy()
+        {
+            Unit unit = new Unit();
+
+            unit.AmpMark = AmpMark.DeepCopy();
+            unit.BondingMark = BondingMark.DeepCopy();
+
+            foreach (var param in InspParamList)
+                unit.InspParamList.Add(param.DeepCopy());
+
+            return unit;
+        }
+
         public void Dispose()
         {
-            AmpMarkList.ForEach(x => x.Dispose());
-            AmpMarkList.Clear();
+            //AmpMarkList.ForEach(x => x.Dispose());
+            //AmpMarkList.Clear();
 
-            BondingMarkList.ForEach(x => x.Dispose());
-            BondingMarkList.Clear();
+            //BondingMarkList.ForEach(x => x.Dispose());
+            //BondingMarkList.Clear();
 
             InspParamList.ForEach(x => x.Dispose());
             InspParamList.Clear();

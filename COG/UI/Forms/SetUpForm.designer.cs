@@ -654,7 +654,6 @@
             this.LB_SETUP_INSP_HIGHER_LIMIT.TabIndex = 244;
             this.LB_SETUP_INSP_HIGHER_LIMIT.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.LB_SETUP_INSP_HIGHER_LIMIT.Visible = false;
-            this.LB_SETUP_INSP_HIGHER_LIMIT.Click += new System.EventHandler(this.LB_SETUP_INSP_HIGHER_LIMIT_Click);
             // 
             // label39
             // 
@@ -679,7 +678,6 @@
             this.LB_SETUP_INSP_LOWER_LIMIT.TabIndex = 242;
             this.LB_SETUP_INSP_LOWER_LIMIT.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.LB_SETUP_INSP_LOWER_LIMIT.Visible = false;
-            this.LB_SETUP_INSP_LOWER_LIMIT.Click += new System.EventHandler(this.LB_SETUP_INSP_LOWER_LIMIT_Click);
             // 
             // label41
             // 

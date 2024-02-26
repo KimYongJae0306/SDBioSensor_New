@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace COG.UI.Forms
 {
-    partial class Form_PatternSelect
+    partial class PatternSelectForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_PatternSelect));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PatternSelectForm));
             this.BTN_EXIT = new System.Windows.Forms.Button();
             this.BTN_UNIT_07 = new System.Windows.Forms.Button();
             this.BTN_UNIT_04 = new System.Windows.Forms.Button();

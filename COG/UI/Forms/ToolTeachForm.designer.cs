@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace COG.UI.Forms
 {
-    partial class Form_ToolTeach
+    partial class ToolTeachForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_ToolTeach));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(ToolTeachForm));
             this.tabControl1 = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
             this.cogPMAlignEditV_0 = new Cognex.VisionPro.PMAlign.CogPMAlignEditV2();

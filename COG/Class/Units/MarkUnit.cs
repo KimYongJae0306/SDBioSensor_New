@@ -23,6 +23,19 @@ namespace COG.Class.Units
             TagList.ForEach(x => x.Dispose());
             TagList.Clear();
         }
+
+        public MarkUnit DeepCopy()
+        {
+            MarkUnit unit = new MarkUnit();
+            unit.Name = Name;
+            unit.CamNo = CamNo;
+            unit.AlignType = AlignType;
+
+            foreach (var tag in TagList)
+                unit.TagList.Add(tag.DeepCopy());
+
+            return unit;
+        }
     }
 
     public class MarkTag
@@ -59,6 +72,18 @@ namespace COG.Class.Units
         {
             Tool?.Dispose();
             Tool = null;
+        }
+
+        public MarkTag DeepCopy()
+        {
+            MarkTag tag = new MarkTag();
+            tag.Index = Index;
+            tag.Score = Score;
+            if(Tool!=null)
+            {
+                tag.Tool = new CogSearchMaxTool(Tool);
+            }
+            return tag;
         }
     }
 }

@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace COG.UI.Forms
 {
-    partial class Form_PatternTagSelect
+    partial class PatternTagSelectForm
     {
         /// <summary>
         /// Required designer variable.
@@ -28,11 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_PatternTagSelect));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PatternTagSelectForm));
             this.BTN_PATTERN_TAG_00 = new System.Windows.Forms.Button();
             this.BTN_PATTERN_TAG_01 = new System.Windows.Forms.Button();
-            this.BTN_PATTERN_TAG_02 = new System.Windows.Forms.Button();
-            this.BTN_PATTERN_TAG_03 = new System.Windows.Forms.Button();
             this.BTN_EXIT = new System.Windows.Forms.Button();
             this.SuspendLayout();
             // 
@@ -49,7 +47,7 @@
             this.BTN_PATTERN_TAG_00.Text = "STAGE 0";
             this.BTN_PATTERN_TAG_00.UseVisualStyleBackColor = false;
             this.BTN_PATTERN_TAG_00.Visible = false;
-            this.BTN_PATTERN_TAG_00.Click += new System.EventHandler(this.BTN_PATTERN_TAG_Click);
+            this.BTN_PATTERN_TAG_00.Click += new System.EventHandler(this.BTN_PATTERN_TAG_00_Click);
             // 
             // BTN_PATTERN_TAG_01
             // 
@@ -64,37 +62,7 @@
             this.BTN_PATTERN_TAG_01.Text = "STAGE 1";
             this.BTN_PATTERN_TAG_01.UseVisualStyleBackColor = false;
             this.BTN_PATTERN_TAG_01.Visible = false;
-            this.BTN_PATTERN_TAG_01.Click += new System.EventHandler(this.BTN_PATTERN_TAG_Click);
-            // 
-            // BTN_PATTERN_TAG_02
-            // 
-            this.BTN_PATTERN_TAG_02.BackColor = System.Drawing.Color.Silver;
-            this.BTN_PATTERN_TAG_02.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.BTN_PATTERN_TAG_02.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_PATTERN_TAG_02.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.BTN_PATTERN_TAG_02.Location = new System.Drawing.Point(712, 370);
-            this.BTN_PATTERN_TAG_02.Name = "BTN_PATTERN_TAG_02";
-            this.BTN_PATTERN_TAG_02.Size = new System.Drawing.Size(374, 102);
-            this.BTN_PATTERN_TAG_02.TabIndex = 57;
-            this.BTN_PATTERN_TAG_02.Text = "STAGE 2";
-            this.BTN_PATTERN_TAG_02.UseVisualStyleBackColor = false;
-            this.BTN_PATTERN_TAG_02.Visible = false;
-            this.BTN_PATTERN_TAG_02.Click += new System.EventHandler(this.BTN_PATTERN_TAG_Click);
-            // 
-            // BTN_PATTERN_TAG_03
-            // 
-            this.BTN_PATTERN_TAG_03.BackColor = System.Drawing.Color.Silver;
-            this.BTN_PATTERN_TAG_03.BackgroundImageLayout = System.Windows.Forms.ImageLayout.Center;
-            this.BTN_PATTERN_TAG_03.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_PATTERN_TAG_03.ForeColor = System.Drawing.SystemColors.ActiveCaptionText;
-            this.BTN_PATTERN_TAG_03.Location = new System.Drawing.Point(712, 512);
-            this.BTN_PATTERN_TAG_03.Name = "BTN_PATTERN_TAG_03";
-            this.BTN_PATTERN_TAG_03.Size = new System.Drawing.Size(374, 102);
-            this.BTN_PATTERN_TAG_03.TabIndex = 58;
-            this.BTN_PATTERN_TAG_03.Text = "STAGE 3";
-            this.BTN_PATTERN_TAG_03.UseVisualStyleBackColor = false;
-            this.BTN_PATTERN_TAG_03.Visible = false;
-            this.BTN_PATTERN_TAG_03.Click += new System.EventHandler(this.BTN_PATTERN_TAG_Click);
+            this.BTN_PATTERN_TAG_01.Click += new System.EventHandler(this.BTN_PATTERN_TAG_01_Click);
             // 
             // BTN_EXIT
             // 
@@ -111,7 +79,7 @@
             this.BTN_EXIT.UseVisualStyleBackColor = false;
             this.BTN_EXIT.Click += new System.EventHandler(this.BTN_EXIT_Click);
             // 
-            // Form_PatternTagSelect
+            // PatternTagSelectForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
@@ -119,11 +87,9 @@
             this.ClientSize = new System.Drawing.Size(1904, 1042);
             this.ControlBox = false;
             this.Controls.Add(this.BTN_EXIT);
-            this.Controls.Add(this.BTN_PATTERN_TAG_03);
-            this.Controls.Add(this.BTN_PATTERN_TAG_02);
             this.Controls.Add(this.BTN_PATTERN_TAG_01);
             this.Controls.Add(this.BTN_PATTERN_TAG_00);
-            this.Name = "Form_PatternTagSelect";
+            this.Name = "PatternTagSelectForm";
             this.StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             this.Text = "Form_PatternTagSelect";
             this.Load += new System.EventHandler(this.Form_PatternTagSelect_Load);
@@ -135,8 +101,6 @@
 
         private System.Windows.Forms.Button BTN_PATTERN_TAG_00;
         private System.Windows.Forms.Button BTN_PATTERN_TAG_01;
-        private System.Windows.Forms.Button BTN_PATTERN_TAG_02;
-        private System.Windows.Forms.Button BTN_PATTERN_TAG_03;
         private System.Windows.Forms.Button BTN_EXIT;
     }
 }
