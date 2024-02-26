@@ -1,10 +1,12 @@
 ﻿using COG.Settings;
+using JAS.Interface.localtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using static JAS.Interface.localtime.SetlocalTime;
 
 namespace COG.Device.PLC
 {
@@ -140,9 +142,35 @@ namespace COG.Device.PLC
                 if (command.Count() > 0)
                 {
                     int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Time);
-                    dateTime = command[address];
+
+                    SetlocalTime.SYSTEMTIME systemTime = new SetlocalTime.SYSTEMTIME();
+                    systemTime.wYear = (ushort)command[address];
+                    systemTime.wMonth = (ushort)command[address + 1];
+                    systemTime.wDay = (ushort)command[address + 2];
+                    systemTime.wHour = (ushort)command[address + 3];
+                    systemTime.wMinute = (ushort)command[address + 4];
+                    systemTime.wSecond = (ushort)command[address + 5];
+
+                    string logMessage = string.Empty;
+                    int errorCode = 0;
+                    if (SetlocalTime.SetLocalTime_(systemTime, ref errorCode))
+                    {
+                        logMessage = "LocalTiem Changed OK";
+                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change);
+                    }
+                    else
+                    {
+                        logMessage = $"LocalTime Changed NG, Error Code : {errorCode}";
+                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
+                    }
+
+                    PlcControlManager.Instance().ClearPlcCommand();
                 }
+                else
+                    PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
             }
+            else
+                PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
         }
 
         private void ChangeModel()
@@ -155,8 +183,22 @@ namespace COG.Device.PLC
                 {
                     int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
                     modelNo = command[address];
+
+                    // TODO : 용재형 ㄱㄱ
+                    if (true) // model change
+                    {
+                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change);
+                        PlcControlManager.Instance().ClearPlcCommand();
+                    }
+                    else
+                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
+
                 }
+                else
+                    PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
             }
+            else
+                PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
         }
 
         private void StartInspection()
