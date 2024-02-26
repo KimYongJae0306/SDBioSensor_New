@@ -18,7 +18,9 @@ namespace COG.Device.PLC
         #endregion
 
         #region 속성
-        private PlcControl _plcControl = new PlcControl();
+        private PlcControl MCClient_READ = new PlcControl();
+
+        private PlcControl MCClient_WRITE = new PlcControl();
 
         public Task PlcActionTask { get; set; }
 
@@ -66,10 +68,10 @@ namespace COG.Device.PLC
             //    lplData = returnValue;
             //}
 
-            if (_plcControl == null)
+            if (MCClient_READ == null)
                 return null;
 
-            return _plcControl.ReadDeviceBlock(DataType.Word, _deviceName, BaseAddressMap.PLC_BaseAddress.ToString(), size);
+            return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, BaseAddressMap.PLC_BaseAddress.ToString(), size);
         }
 
         private void WriteDevice(int device, int lplData)
@@ -79,7 +81,7 @@ namespace COG.Device.PLC
                 int[] Data = new int[1];
                 Data[0] = lplData;
 
-                _plcControl.WriteDeviceBlock(DataType.Word, _deviceName, device.ToString(), Data);
+                MCClient_READ.WriteDeviceBlock(DataType.Word, _deviceName, device.ToString(), Data);
             }
             catch (Exception ex)
             {
@@ -118,9 +120,9 @@ namespace COG.Device.PLC
                 {
                     try
                     {
-                        var readData = ReadDevice(_plcControl.ReadSize);
+                        var readData = ReadDevice(MCClient_READ.ReadSize);
 
-                        if (readData.Length == _plcControl.ReadSize)
+                        if (readData.Length == MCClient_READ.ReadSize)
                         {
                             //_plcControl.ReadDatas = readData;
                             PlcScenarioManager.Instance().AddCommand(readData);
@@ -136,18 +138,22 @@ namespace COG.Device.PLC
             }
         }
 
-        public void Open(int _intReadLocalPort, int _intReadRemotePort, string _strRemoteIP, int _intReadRecTimeOut, int _intWriteLocalPort, int _intWriteRemotePort)
+        public void Open(int readLocalPort, int writeLocalPort, string remoteIp, int timeOut)
         {
             if (StaticConfig.VirtualMode == true /*false*/)
             {
                 try
                 {
-                    _plcControl.SetPLCProperties(_strRemoteIP, _intReadLocalPort, _intReadRecTimeOut);
+                    MCClient_READ.SetPLCProperties(remoteIp, readLocalPort, timeOut);
 
-                    if (_plcControl.Open() == false)
-                        MessageBox.Show("PORT OPEN ERROR:" + _intReadLocalPort.ToString());
+                    if (MCClient_READ.Open() == false)
+                        MessageBox.Show("READ PORT OPEN ERROR:" + readLocalPort.ToString());
 
-                    _plcControl.SetPLCProperties(_strRemoteIP, _intWriteLocalPort, _intReadRecTimeOut);
+
+                    MCClient_WRITE.SetPLCProperties(remoteIp, writeLocalPort, timeOut);
+
+                    if (MCClient_WRITE.Open() == false)
+                        MessageBox.Show("WRITE PORT OPEN ERROR:" + writeLocalPort.ToString());
                 }
                 catch (Exception ex)
                 {
@@ -158,7 +164,7 @@ namespace COG.Device.PLC
 
         public void Close()
         {
-            _plcControl.Close();
+            MCClient_READ.Close();
         }
 
         public void WriteCurrentModel(string modelName)
