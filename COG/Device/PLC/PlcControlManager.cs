@@ -71,7 +71,7 @@ namespace COG.Device.PLC
             if (MCClient_READ == null)
                 return null;
 
-			return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, BaseAddressMap.PLC_BaseAddress.ToString(), size);
+			return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, StaticConfig.PLC_BaseAddress.ToString(), size);
         }
 
         public void WriteDevice(int device, int lplData)
@@ -81,7 +81,7 @@ namespace COG.Device.PLC
                 int[] Data = new int[1];
                 Data[0] = lplData;
 
-                MCClient_READ.WriteDeviceBlock(DataType.Word, _deviceName, device.ToString(), Data);
+                MCClient_WRITE.WriteDeviceBlock(DataType.Word, _deviceName, device.ToString(), Data);
             }
             catch (Exception ex)
             {
@@ -122,7 +122,7 @@ namespace COG.Device.PLC
                     {
                         var readData = ReadDevice(StaticConfig.PLC_READ_SIZE);
 
-                        if (readData.Length == _plcControl.ReadSize)
+                        if (readData.Length == StaticConfig.PLC_READ_SIZE)
                         {
                             //_plcControl.ReadDatas = readData;
                             PlcScenarioManager.Instance().AddCommand(readData);

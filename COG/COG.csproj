@@ -657,7 +657,6 @@
     <Compile Include="Class\InspModelService.cs" />
     <Compile Include="Class\Units\InspUnit.cs" />
     <Compile Include="Class\Units\MarkUnit.cs" />
-    <Compile Include="Comm\MCProtocol.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="Core\UIDesign.cs" />
     <Compile Include="Device\Cameras\CameraBuffer.cs" />
