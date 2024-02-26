@@ -593,7 +593,15 @@
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.dll</HintPath>
     </Reference>
+    <Reference Include="Cognex.VisionPro.Blob, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Blob.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.CalibFix, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
+    <Reference Include="Cognex.VisionPro.Caliper, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Caliper.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.Controls, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.Controls.dll</HintPath>
@@ -608,6 +616,10 @@
     </Reference>
     <Reference Include="Cognex.VisionPro.ImageFile, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
     <Reference Include="Cognex.VisionPro.ImageProcessing, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=x86" />
+    <Reference Include="Cognex.VisionPro.SearchMax, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.SearchMax.dll</HintPath>
+    </Reference>
     <Reference Include="Cognex.VisionPro.ToolGroup, Version=71.2.0.0, Culture=neutral, PublicKeyToken=ef0f902af9dee505, processorArchitecture=AMD64">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>C:\Program Files (x86)\Cognex\VisionPro\ReferencedAssemblies\Cognex.VisionPro.ToolGroup.dll</HintPath>
@@ -642,6 +654,9 @@
     <Compile Include="AppsStatus.cs" />
     <Compile Include="CameraBufferManager.cs" />
     <Compile Include="Class\InspModel.cs" />
+    <Compile Include="Class\InspModelService.cs" />
+    <Compile Include="Class\Units\InspUnit.cs" />
+    <Compile Include="Class\Units\MarkUnit.cs" />
     <Compile Include="Comm\MCProtocol.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="Core\UIDesign.cs" />
@@ -654,6 +669,7 @@
     <Compile Include="Helper\LogHelper.cs" />
     <Compile Include="Helper\PasswordHelper.cs" />
     <Compile Include="Helper\VisionProHelper.cs" />
+    <Compile Include="ModelManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Settings\AppsConfig.cs" />
     <Compile Include="Settings\StaticConfig.cs" />
@@ -670,6 +686,18 @@
     </Compile>
     <Compile Include="UI\Controls\DisplayControl.Designer.cs">
       <DependentUpon>DisplayControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\CMDForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\CMDForm.designer.cs">
+      <DependentUpon>CMDForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Forms\MelsecForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="UI\Forms\MelsecForm.designer.cs">
+      <DependentUpon>MelsecForm.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Forms\KeyBoardForm.cs">
       <SubType>Form</SubType>
@@ -723,6 +751,12 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\DisplayControl.resx">
       <DependentUpon>DisplayControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\CMDForm.resx">
+      <DependentUpon>CMDForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Forms\MelsecForm.resx">
+      <DependentUpon>MelsecForm.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Forms\KeyBoardForm.resx">
       <DependentUpon>KeyBoardForm.cs</DependentUpon>

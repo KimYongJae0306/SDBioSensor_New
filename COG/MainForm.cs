@@ -1,4 +1,5 @@
-﻿using COG.Core;
+﻿using COG.Class;
+using COG.Core;
 using COG.Helper;
 using COG.Settings;
 using COG.UI.Forms;
@@ -77,6 +78,10 @@ namespace COG
 
         private PermissionForm PermissionForm = new PermissionForm();
 
+        private MelsecForm MelsecForm = new MelsecForm();
+
+        public InspModelService InspModelService = new InspModelService();
+
         public MainForm()
         {
             InitializeComponent();
@@ -102,9 +107,10 @@ namespace COG
             AppsStatus.Instance().CurrentUser = User.OPERATOR;
 #endif
 
-            AppsConfig.Instance().Initialize();
             StaticConfig.Initialize();
+            AppsConfig.Instance().Initialize();
 
+            SystemManager.Instance().Initialize();
             CameraBufferManager.Instance().Initialize();
 
             InitializeUI();
@@ -508,17 +514,17 @@ namespace COG
         }
         private void BTN_MELSEC_Click(object sender, EventArgs e)
         {
-            //try
-            //{
-            //    Melsec.BTN_EXIT_Click(null, null);
-            //    Melsec.Show();
-            //    Melsec.Form_Melsec_Load();
-            //}
-            //catch
-            //{
-            //    //FormCCLink = new Form_CCLink();
-            //    Melsec = new Form_Melsec();
-            //}
+            try
+            {
+                MelsecForm.BTN_EXIT_Click(null, null);
+                MelsecForm.Show();
+                MelsecForm.Form_Melsec_Load();
+            }
+            catch
+            {
+                //FormCCLink = new Form_CCLink();
+                MelsecForm = new MelsecForm();
+            }
         }
         private void BTN_LOGVIEW_Click(object sender, EventArgs e)
         {
@@ -1779,5 +1785,7 @@ namespace COG
                 BTN_PERMISSION.Text = "PERMISSON\r\nMAKER";
             }
         }
+
+     
     }
 }

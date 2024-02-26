@@ -1,4 +1,5 @@
-﻿using JAS.Interface.localtime;
+﻿using COG.Settings;
+using JAS.Interface.localtime;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +68,7 @@ namespace COG.Device.PLC
                 {
                     if (command.Count() > 0)
                     {
-                        int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Command);
+                        int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Command);
                         PlcCommandReceived((PlcCommand)command[address]);
                     }
                 }
@@ -140,7 +141,7 @@ namespace COG.Device.PLC
             {
                 if (command.Count() > 0)
                 {
-                    int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Time);
+                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Time);
 
                     SetlocalTime.SYSTEMTIME systemTime = new SetlocalTime.SYSTEMTIME();
                     systemTime.wYear = (ushort)command[address];
@@ -180,7 +181,7 @@ namespace COG.Device.PLC
             {
                 if (command.Count() > 0)
                 {
-                    int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
+                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
                     modelNo = command[address];
 
                     // TODO : 용재형 ㄱㄱ

@@ -1,0 +1,219 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="richTextBox1.Text" xml:space="preserve">
+    <value>    public class CMD
+    {
+        public const int TAR_SEARCH_LEFT                    	= 1001;
+        public const int TAR_SEARCH_RIGHT                   	= 1002;
+        public const int TAR_SEARCH_ALL                     	= 1003;
+
+        public const int OBJ_SEARCH_LEFT                    	= 1011;
+        public const int OBJ_SEARCH_RIGHT                   	= 1012;
+        public const int OBJ_SEARCH_ALL                     	= 1013;
+
+        public const int LEFT_SEARCH_ALL                    	= 1014;
+        public const int RIGHT_SEARCH_ALL                   	= 1015;
+        public const int OBJTAR_SEARCH_ALL                  	= 1016;
+
+        public const int ALIGN_OBJECT                       	= 1031;
+        public const int ALIGN_OBJECT_REALIGN               	= 1032;
+
+        public const int ALIGN_CENTER                       	= 1033;
+        public const int ALIGN_CENTER_REALIGN               	= 1034;
+
+        public const int ALIGN_TARGET                       	= 1035;
+        public const int ALIGN_TARGET_REALIGN               	= 1036;
+
+        public const int ALIGN_OBJTAR_ALL                   	= 1037;
+        public const int ALIGN_OBJTAR_ALL_REALIGN   	= 1038;
+
+        public const int ALIGN_1CAM_2SHOT_LEFT             	= 1043;
+        public const int ALIGN_1CAM_2SHOT_RIGHT    	= 1044;
+
+        public const int ALIGN_1CAM_4SHOT_LEFT              	= 1053;
+        public const int ALIGN_1CAM_4SHOT_RIGHT		= 1054;
+        public const int REEL_ALIGN                         	= 1061;
+
+        public const int CRD_ALIGN_LEFT                     	= 1071;
+        public const int CRD_ALIGN_RIGHT                    	= 1072;
+
+        public const int ACF_BLOB_TAR_LEFT                  	= 1159;
+        public const int ACF_BLOB_TAR_RIGHT                 	= 1160;
+
+        public const int ACF_BLOB_LEFT                      	= 1161;
+        public const int ACF_BLOB_RIGHT                     	= 1162;
+        public const int ACF_BLOB_OBJ_ALL                   	= 1163;
+
+        public const int CALIPER_SEARCH_LEFT                	= 1165;
+        public const int CALIPER_SEARCH_RIGHT               	= 1166;
+        public const int CALIPER_OBJ_SEARCH_ALL 	= 1164;
+
+        public const int CALIPER_ALIGN_1CAM_2SHOT_LEFT     = 1167;
+        public const int CALIPER_ALIGN_1CAM_2SHOT_RIGHT   = 1168;
+        public const int CALIPER_ALIGN_CENTER               	= 1169;
+
+        public const int DOPO_INSPECT_LEFT                  	= 1171;
+        public const int DOPO_INSPECT_RIGHT                 	= 1172;
+
+        public const int CIRCLE_OBJ_SEARCH_LEFT    	= 1174;
+        public const int CIRCLE_OBJ_SEARCH_RIGHT 	= 1175;
+        public const int CIRCLE_OBJ_SEARCH_ALL              	= 1176;
+
+        public const int CIRCLE_TAR_SEARCH_LEFT 	= 1177;
+        public const int CIRCLE_TAR_SEARCH_RIGHT 	= 1178;
+        public const int CIRCLE_TAR_SEARCH_ALL              	= 1179;
+
+        public const int ACF_FLOW_LEFT                      	= 1181;
+        public const int ACF_FLOW_RIGHT                    	= 1182;
+
+   
+
+        public const int ALIGN_INSPECT_LEFT                 	= 1261;
+        public const int ALIGN_INSPECT_RIGHT                	= 1262;
+
+        public const int ALIGN_CIRCLE_INSPECT_LEFT          	= 1274;
+        public const int ALIGN_CIRCLE_INSPECT_RIGHT         	= 1275;
+
+        public const int OBJ_CALRIBRATION_LEFT              	= 1091;
+        public const int OBJ_CALRIBRATION_RIGHT             	= 1092;
+        public const int TAR_CALRIBRATION_LEFT              	= 1093;
+        public const int TAR_CALRIBRATION_RIGHT             	= 1094;
+
+        public const int OBJ_CAL_POS_LEFT 		= 1095;
+        public const int OBJ_CAL_POS_RIGHT 		= 1096;
+    }</value>
+  </data>
+  <assembly alias="System.Drawing" name="System.Drawing, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a" />
+  <data name="BTN_EXIT.BackgroundImage" type="System.Drawing.Bitmap, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+    <value>
+        iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAABHNCSVQICAgIfAhkiAAAAAFzUkdCAK7O
+        HOkAAAAEZ0FNQQAAsY8L/GEFAAAACXBIWXMAAAsMAAALDAE/QCLIAAACB0lEQVR4XuWa200DQRAE/U0o
+        REEmkBmEQhAQCt+wB7J17m0zPk/N+R4llYT3brut0S5fPjS+VyaOK1myOK5kyeK4kiWL40rGvjefmvdC
+        vw+OFlzyXoPQ74GjBZFzD0L7cbTgWucahPbiaMFUqwehfThacKtVg9AeHC3ISg9C83G0gJIahObiaAFt
+        lijvrfnw9+dtaAFtlihvWPtsPv5+ugEtoM0S5R3Xv5ovw8JUxuEVZony9PnkK6EBtNW4zklXwgWQVuM6
+        B6++Em4zaTWuc2x4Jdwm0mpcp/rvlXAbSCPcngovXgn3MmmE21NpdyXcS6QRbk+1Z1fCvUAa4fbM4elK
+        uIekEW7PHA4DeG7ah6QRbk+1H83dXoHX5i7/CZ6OvOJeJq3GdapnR15xG0ircZ1juyOvuE2k1bjOwYtH
+        XnGbSatxnf8eecUFkGaJ8vR5eOQVDaDNEuUd168+8so4vMIsUd6wNunIK1pAmyXKm3zkFS2gzULndWgB
+        bRY6r0MLaLPQeR1aQJuFzuvQAtosdF6HFtBmofM6tIA2C53XoQW0Wei8Di2gzULndWgBbRY6r0MLaLPQ
+        eR1aQJuFzuvQgqWL40qWLI4rWbI4rmTJ4gw/Zhx+1OjKCFdD1SBWBz2I1UINYvVkB7EZbh3E5pg6iM1y
+        7SA2TzSI3XBpELtDB7FbjoNYMIfDD0aiePqoX6ENAAAAAElFTkSuQmCC
+</value>
+  </data>
+</root>

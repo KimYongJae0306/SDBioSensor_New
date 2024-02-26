@@ -18,22 +18,30 @@ namespace COG.Settings
     public static partial class StaticConfig
     {
         public const bool VirtualMode = true;
+        public const int STAGE_MAX_COUNT = 2;
+        public const int PATTERN_MAX_COUNT = 6; // 0번은 MainMark, 나머지는 SubMark
+
+        public const int PLC_READ_SIZE = 310;
 
 #if GALO_PC1_MODE
         public const string PROGRAM_TYPE = "ATT_AREA_PC1";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 2;
+        public const int LIGHT_COUNT = 1;
 #endif
 #if GALO_PC2_MODE
         public const string PROGRAM_TYPE = "ATT_AREA_PC2";
         public const int CAM_COUNT  = 2;
         public const int STAGE_COUNT = 1;
+        public const int LIGHT_COUNT = 1;
 #endif
 #if SDBIO_VENT
-
+        public const int PLC_BaseAddress = 27000;
+        public const int PC_BaseAddress = 27000;
 #endif
 #if SDBIO_PATH
-
+        public const int PLC_BaseAddress = 28000;
+        public const int PC_BaseAddress = 28000;
 #endif
 
         public const string SYS_DATADIR = "D:\\Systemdata_" + PROGRAM_TYPE + "\\";
@@ -42,13 +50,16 @@ namespace COG.Settings
         public const string ERROR_DATADIR = "Error_Data\\";
         public const string CAM_SETDIR = "VPP_CAM\\";
 
-       
-
         public const string IMAGE_FILE = SYS_DATADIR + "1-1.bmp";//"QDIDB.idb";//"D:\\SystemData\\20.idb";
+
+        public const int M_1CAM2SHOT = 200;   // 1 camera 2 shot , Center Target      
     }
+
 
     public static partial class StaticConfig
     {
+        public static PLCTag PLCTag { get; set; } = new PLCTag();
+
         public static string SysDataPath { get; set; }
 
         public static string ModelPath { get; set; }
@@ -77,6 +88,8 @@ namespace COG.Settings
 
             string buf = SysDataPath + "SYSTEM_" + MODEL_DATADIR + ".ini";
             SystemFile.SetFileName(buf);
+
+            AppsConfig.Instance().ProjectName = SystemFile.GetSData("SYSTEM", "LAST_PROJECT");
 
             buf = SysDataPath + "OLD_LOG_CHECK_FILE.dat";
             OldLogCheckFile.SetFileName(buf);
@@ -116,4 +129,14 @@ namespace COG.Settings
             }
         }
     }
+
+    public class PLCTag
+    {
+        public int[] BData = new int[StaticConfig.PLC_READ_SIZE];
+
+        public Int16[] RData = new Int16[StaticConfig.PLC_READ_SIZE];
+
+        public int[] SData = new int[StaticConfig.PLC_READ_SIZE];
+    }
+
 }

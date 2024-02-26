@@ -16,7 +16,7 @@ namespace COG.Helper
         private static extern long WritePrivateProfileString(String section, String key, String val, String filePath);
 
         #region 속성
-        private string FileName { get; set; } = "";
+        public string FileName { get; private set; } = "";
         #endregion
 
         #region 생성자

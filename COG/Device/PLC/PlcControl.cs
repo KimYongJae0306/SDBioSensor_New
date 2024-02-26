@@ -16,9 +16,7 @@ namespace COG.Device.PLC
         #region 속성
         private ManualResetEvent PlcSendResetEvent = new ManualResetEvent(true);
 
-        public int ReadSize = 310;
-
-        public int[] ReadDatas { get; set; } = null;
+        //public int[] ReadDatas { get; set; } = null;
         #endregion
 
         #region 이벤트

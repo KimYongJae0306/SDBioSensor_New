@@ -1,6 +1,6 @@
-﻿namespace COG
+﻿namespace COG.UI.Forms
 {
-    partial class Form_Melsec
+    partial class MelsecForm
     {
         /// <summary>
         /// Required designer variable.
@@ -29,7 +29,7 @@
         private void InitializeComponent()
         {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form_Melsec));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(MelsecForm));
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.LABEL_0_99 = new System.Windows.Forms.Label();
             this.LABEL_100_199 = new System.Windows.Forms.Label();

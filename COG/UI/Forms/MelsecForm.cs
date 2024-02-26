@@ -1,4 +1,7 @@
-﻿using System;
+﻿using COG.Core;
+using COG.Device.PLC;
+using COG.Settings;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -8,44 +11,32 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
-namespace COG
+namespace COG.UI.Forms
 {
-    public partial class Form_Melsec : Form
+    public partial class MelsecForm : Form
     {
-        public Form_Melsec()
+        public MelsecForm()
         {
             InitializeComponent();
             Allocate_Array();
         }
-        Form_CMD formCmd = new Form_CMD();
-        Label[] nLavel_UNIT = new Label[Main.DEFINE.AlignUnit_Max];
 
-        Label[] nLavel = new Label[PLCDataTag.ReadSize];
-        Label[] nLavel_Dis = new Label[PLCDataTag.ReadSize];
+        CMDForm formCmd = new CMDForm();
+        Label[] nLavel_UNIT = new Label[StaticConfig.STAGE_MAX_COUNT];
+
+        Label[] nLavel = new Label[StaticConfig.PLC_READ_SIZE];
+        Label[] nLavel_Dis = new Label[StaticConfig.PLC_READ_SIZE];
         private List<Label> nLavel_Mode = new List<Label>();
         public void Form_Melsec_Load(object sender, EventArgs e)
         {
-            for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
+            for (int i = 0; i < StaticConfig.STAGE_MAX_COUNT; i++)
             {
-                nLavel_UNIT[i].Text = Main.AlignUnit[i].m_AlignName;
+                InspModel inspModel = ModelManager.Instance().CurrentModel;
+                if (inspModel != null)
+                {
+                    nLavel_UNIT[i].Text = inspModel.StageUnitList[i].Name;
+                }
             }
-
-            if (Main.DEFINE.PROGRAM_TYPE == "FOF_PC3")
-            {
-                //                 label843.Text = label620.Text = label659.Text = "PANEL Length(L)";
-                //                 label862.Text = label621.Text = label660.Text = "PANEL Length(H)";
-                // 
-                //                 label863.Text = label710.Text = label650.Text = "FPC Length(L)";
-                //                 label864.Text = label711.Text = label651.Text = "FPC Length(H)";
-            }
-            //if (Main.DEFINE.PROGRAM_TYPE == "OLB_PC2")
-            //{
-            //    label683.Text = "PBD LENGTH Y";
-            //    label638.Text = "PBD ReAlign Y";
-            //}
-
-
-
         }
         private void BTN_TEACH_Click(object sender, EventArgs e)
         {
@@ -56,30 +47,29 @@ namespace COG
             int nAddress;
             int nValue;
 
-            Form_KeyPad form_keypad = new Form_KeyPad();
-            form_keypad.ShowDialog();
+            KeyPadForm keypadForm = new KeyPadForm();
+            keypadForm.ShowDialog();
 
-            nValue = Convert.ToInt16(form_keypad.m_data);
-            nAddress = PLCDataTag.BASE_RW_ADDR + m_Number;
+            nValue = Convert.ToInt16(keypadForm.m_data);
+            nAddress = StaticConfig.PC_BaseAddress + m_Number;
 
             //2022 05 09 YSH
-            Main.WriteDevice(nAddress, nValue);
-            //int[] setValue = new int[1];
-            //setValue[0] = nValue;
-            //Main.PLCsocket.WriteDevice_W(nAddress.ToString(), 1, setValue);
+            PlcControlManager.Instance().WriteDevice(nAddress, nValue);
         }
+
         private void timer1_Tick(object sender, EventArgs e)
         {
             MemDisplay();
             Application.DoEvents();
         }
+
         public void BTN_EXIT_Click(object sender, EventArgs e)
         {
             timer1.Enabled = false;
             formCmd.Hide();
             this.Hide();
-
         }
+
         private void Allocate_Array()
         {
             Point point;
@@ -88,7 +78,7 @@ namespace COG
             nTempLabel = LABEL_0_99;
             point = LABEL_0_99.Location;
 
-            for (int i = 0; i < PLCDataTag.ReadSize; i++)
+            for (int i = 0; i < StaticConfig.PLC_READ_SIZE; i++)
             {
 
                 nLavel_Dis[i] = new Label();
@@ -128,12 +118,9 @@ namespace COG
 
                 m_Number = i;
 
-                nLavel_Dis[i].Text = (PLCDataTag.BASE_RW_ADDR + m_Number).ToString();
+                nLavel_Dis[i].Text = (StaticConfig.PLC_BaseAddress + m_Number).ToString();
                 nLavel_Dis[i].AutoSize = false;
                 nLavel_Dis[i].BorderStyle = BorderStyle.None;
-                //                 if((i%10) == 0)
-                //                     nLavel_Dis[i].BackColor = Color.DarkGray;
-                //                 else
                 nLavel_Dis[i].BackColor = Color.DarkGray;
                 nLavel_Dis[i].Font = new Font("맑은 고딕", 12F);
                 nLavel_Dis[i].TextAlign = ContentAlignment.TopCenter;
@@ -145,7 +132,7 @@ namespace COG
             point = nTempLabel.Location;
             point.X = nTempLabel.Location.X + 70;
 
-            for (int i = 0; i < PLCDataTag.ReadSize; i++)
+            for (int i = 0; i < StaticConfig.PLC_READ_SIZE; i++)
             {
 
                 nLavel[i] = new Label();
@@ -195,7 +182,7 @@ namespace COG
 
             }
 #endif
-            for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
+            for (int i = 0; i < StaticConfig.STAGE_MAX_COUNT; i++)
             {
 
                 nLavel_UNIT[i] = new Label();
@@ -220,7 +207,7 @@ namespace COG
             }
 
 
-            for (int i = 0; i < PLCDataTag.ReadSize; i++)
+            for (int i = 0; i < StaticConfig.PLC_READ_SIZE; i++)
             {
                 int nNum;
                 nNum = i + 1;
@@ -228,15 +215,14 @@ namespace COG
                 Label TempLabel = (Label)this.Controls[nLabel];
                 nLavel_Mode.Add(TempLabel);
             }
-
-
         }
+
         private void MemDisplay()
         {
             string nMode;
             int m_Number;
 
-            for (int i = 0; i < PLCDataTag.ReadSize; i++)
+            for (int i = 0; i < StaticConfig.PLC_READ_SIZE; i++)
             {
 
                 nMode = nLavel_Mode[i].Text;
@@ -244,31 +230,16 @@ namespace COG
                 m_Number = i;
 
                 int ndata;
-                ndata = PLCDataTag.BData[m_Number];
+                ndata = StaticConfig.PLCTag.BData[m_Number];
                 nLavel[i].Text = ndata.ToString();
-
-                /*if (nMode == "L")
-                {
-                    int ndata;
-                    ndata = (PLCDataTag.RData[m_Number + 1] << 16 | PLCDataTag.RData[m_Number] & 0x0000ffff);
-                    nLavel[i].Text = ndata.ToString();
-                }
-                else
-                {
-                    Int16 ndata;
-                    ndata = PLCDataTag.RData[m_Number];
-                    nLavel[i].Text = ndata.ToString();
-                }
-                if (nMode == "H")
-                {
-                    nLavel[i].Text = "--";
-                }*/
             }
         }
+
         public void Form_Melsec_Load()
         {
             timer1.Enabled = true;
         }
+
         private void Form_Melsec_MouseDoubleClick(object sender, MouseEventArgs e)
         {
             formCmd.Show();

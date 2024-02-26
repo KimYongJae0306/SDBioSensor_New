@@ -296,7 +296,7 @@
             this.AutoScaleDimensions = new System.Drawing.SizeF(7F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.Color.DarkGray;
-            this.ClientSize = new System.Drawing.Size(589, 452);
+            this.ClientSize = new System.Drawing.Size(589, 291);
             this.ControlBox = false;
             this.Controls.Add(this.CB_PW_VIEW);
             this.Controls.Add(this.LB_PWFORMAT);

@@ -71,10 +71,10 @@ namespace COG.Device.PLC
             if (MCClient_READ == null)
                 return null;
 
-            return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, BaseAddressMap.PLC_BaseAddress.ToString(), size);
+			return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, BaseAddressMap.PLC_BaseAddress.ToString(), size);
         }
 
-        private void WriteDevice(int device, int lplData)
+        public void WriteDevice(int device, int lplData)
         {
             try
             {
@@ -112,7 +112,7 @@ namespace COG.Device.PLC
                 if (alive.ElapsedMilliseconds > 1000)
                 {
                     _alive = !_alive;
-                    int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.Alive);
+                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.Alive);
                     WriteVisionAlive(_alive);
                     alive.Restart();
                 }
@@ -120,9 +120,9 @@ namespace COG.Device.PLC
                 {
                     try
                     {
-                        var readData = ReadDevice(MCClient_READ.ReadSize);
+                        var readData = ReadDevice(StaticConfig.PLC_READ_SIZE);
 
-                        if (readData.Length == MCClient_READ.ReadSize)
+                        if (readData.Length == _plcControl.ReadSize)
                         {
                             //_plcControl.ReadDatas = readData;
                             PlcScenarioManager.Instance().AddCommand(readData);
@@ -169,7 +169,7 @@ namespace COG.Device.PLC
 
         public void WriteCurrentModel(string modelName)
         {
-            int address = Convert.ToInt16(BaseAddressMap.PC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PC_Model_No);
+            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PC_Model_No);
             WriteDevice(address, Convert.ToInt16(modelName));
         }
 
@@ -182,26 +182,26 @@ namespace COG.Device.PLC
             else
                 value = 0;
 
-            int address = Convert.ToInt16(BaseAddressMap.PC_BaseAddress) + Convert.ToInt16(PlcCommonMap.Vision_Ready);
+            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.Vision_Ready);
 
             WriteDevice(address, value);
         }
 
         public void WriteVisionStatus(int command)
         {
-            int address = Convert.ToInt16(BaseAddressMap.PC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PC_Status);
+            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PC_Status);
             WriteDevice(address, command);
         }
 
         public void WriteVisionAlive(bool isAlive)
         {
-            int address = Convert.ToInt16(BaseAddressMap.PC_BaseAddress) + Convert.ToInt16(PlcCommonMap.Alive);
+            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.Alive);
             WriteDevice(address, isAlive == true ? 1 : 0);
         }
 
         public void ClearPlcCommand()
         {
-            int address = Convert.ToInt16(BaseAddressMap.PC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Command);
+            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Command);
             WriteDevice(address, 0);
         }
         #endregion
