@@ -1,5 +1,6 @@
 ﻿using COG.Settings;
 using COG.UI.Forms;
+using Microsoft.Win32;
 using System;
 using System.Collections.Generic;
 using System.IO;

@@ -80,6 +80,10 @@ namespace COG
 
         private MelsecForm MelsecForm = new MelsecForm();
 
+        private LogViewForm LogViewForm { get; set; } = new LogViewForm();
+
+        private SetUpForm SetUpForm { get; set; } = new SetUpForm();
+        
         public InspModelService InspModelService = new InspModelService();
 
         public MainForm()
@@ -470,14 +474,18 @@ namespace COG
 
         public void SetTimerDirInterval(int nDays)
         {
-            //// Log Check Period를 설정할 당시 시간을 저장한 파일 로드
-            //FileInfo info = new FileInfo(Main.DEFINE.SYS_DATADIR + "OLD_LOG_CHECK_FILE.dat");
-            //int nRestSeconds = (int)((DateTime.Now.Ticks - info.LastWriteTime.Ticks) / 10000000); // Ticks to Seconds
+            if (nDays <= 0)
+                return;
 
-            //if (nRestSeconds > nDays * 24 * 60 * 60)
-            //    timer_Directory.Interval = nDays * 24 * 60 * 60;
-            //else
-            //    timer_Directory.Interval = (nDays * 24 * 60 * 60 - nRestSeconds);
+            // Log Check Period를 설정할 당시 시간을 저장한 파일 로드
+            FileInfo info = new FileInfo(StaticConfig.SYS_DATADIR + "OLD_LOG_CHECK_FILE.dat");
+
+            int nRestSeconds = (int)((DateTime.Now.Ticks - info.LastWriteTime.Ticks) / 10000000); // Ticks to Seconds
+
+            if (nRestSeconds > nDays * 24 * 60 * 60)
+                timer_Directory.Interval = nDays * 24 * 60 * 60;
+            else
+                timer_Directory.Interval = (nDays * 24 * 60 * 60 - nRestSeconds);
         }
 
         private void BTN_PROJECT_Click(object sender, EventArgs e)
@@ -504,13 +512,18 @@ namespace COG
         }
         private void BTN_SETUP_Click(object sender, EventArgs e)
         {
-            //if (!MessageShowPermission()) return;
-            //Main.Status.MC_MODE = Main.DEFINE.MC_SETUPFORM;
-            //timer_Directory.Enabled = false;
-            //form_setup.ShowDialog();
-            //SetTimerDirInterval(Main.machine.m_nOldLogCheckPeriod);
-            //timer_Directory.Enabled = true;
-            //Main.Status.MC_MODE = Main.DEFINE.MC_MAINFORM;
+            if (!MessageShowPermission())
+                return;
+
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.SETUP_FORM;
+            timer_Directory.Enabled = false;
+            SetUpForm.ShowDialog();
+
+            SetTimerDirInterval(AppsConfig.Instance().m_OldLogCheckPeriod);
+
+            timer_Directory.Enabled = true;
+
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.MAIN_FORM;
         }
         private void BTN_MELSEC_Click(object sender, EventArgs e)
         {
@@ -522,21 +535,20 @@ namespace COG
             }
             catch
             {
-                //FormCCLink = new Form_CCLink();
                 MelsecForm = new MelsecForm();
             }
         }
         private void BTN_LOGVIEW_Click(object sender, EventArgs e)
         {
-            //try
-            //{
-            //    Formlogview.Show();
-            //    Formlogview.ControlUpDate();
-            //}
-            //catch
-            //{
-            //    Formlogview = new Form_LogView();
-            //}
+            try
+            {
+                LogViewForm.Show();
+                LogViewForm.ControlUpDate();
+            }
+            catch
+            {
+                LogViewForm = new LogViewForm();
+            }
         }
         private void BTN_CALDIS_Click(object sender, EventArgs e)
         {
@@ -1765,11 +1777,11 @@ namespace COG
         {
             if (CheckStopMachine() == false)
                 return;
-            AppsStatus.Instance().UI_STATUS = UI_STATUS.PERMISSIONFORM;
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.PERMISSION_FORM;
 
             PermissionForm.ShowDialog();
 
-            AppsStatus.Instance().UI_STATUS = UI_STATUS.MAINFORM;
+            AppsStatus.Instance().UI_STATUS = UI_STATUS.MAIN_FORM;
 
             if (AppsStatus.Instance().CurrentUser == User.OPERATOR)
             {

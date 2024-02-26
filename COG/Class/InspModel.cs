@@ -84,6 +84,7 @@ namespace COG.Core
             string modelDir = modelPath + AppsConfig.Instance().ProjectName;
             for (int stageIndex = 0; stageIndex < StaticConfig.STAGE_COUNT; stageIndex++)
             {
+                LoadUnitParam(stageIndex);
                 LoadAmpMark(modelDir, stageIndex);
                 LoadBondingMark(modelDir, stageIndex);
 
@@ -104,6 +105,7 @@ namespace COG.Core
             {
                 SaveAmpMark(modelDir, i);
                 SaveBondingMark(modelDir, i);
+                SaveUnitParam(StageUnitList[i]);
             }
 
             return true;
@@ -250,6 +252,20 @@ namespace COG.Core
                 }
             }
         }
+
+        private void LoadUnitParam(int stageIndex)
+        {
+            var stageUnit = StageUnitList[stageIndex];
+
+            stageUnit.m_GD_ImageSave_Use = StaticConfig.ModelFile.GetBData(stageUnit.Name, "GD_IMAGE");
+            stageUnit.m_NG_ImageSave_Use = StaticConfig.ModelFile.GetBData(stageUnit.Name, "NG_IMAGE");
+        }
+
+        private void SaveUnitParam(StageUnit stageUnit)
+        {
+            StaticConfig.ModelFile.SetData(stageUnit.Name, "GD_IMAGE", stageUnit.m_GD_ImageSave_Use);
+            StaticConfig.ModelFile.SetData(stageUnit.Name, "NG_IMAGE", stageUnit.m_NG_ImageSave_Use);
+        }
     }
   
     public class LightCtrlParamemter
@@ -293,6 +309,10 @@ namespace COG.Core
     public class StageUnit 
     {
         public string Name { get; set; }
+
+        public bool m_GD_ImageSave_Use { get; set; }
+
+        public bool m_NG_ImageSave_Use { get; set; }
 
         public Unit LeftCamUnit { get; set; } = new Unit();
 

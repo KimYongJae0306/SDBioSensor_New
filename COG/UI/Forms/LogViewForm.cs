@@ -17,15 +17,13 @@ using System.Diagnostics.PerformanceData;
 using System.Diagnostics;
 using System.Collections;
 using System.Management;
+using COG.Settings;
 
-
-namespace COG
+namespace COG.UI.Forms
 {
-    public partial class Form_LogView : Form
+    public partial class LogViewForm : Form
     {
 
-//         PerformanceCounter CPUCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
-//         PerformanceCounter MemoryCounter = new PerformanceCounter("Memory", "Available MBytes");
         DriveInfo CDriveInfo;
 
         int nCpuTemp = 0, maxMem = 0;
@@ -34,13 +32,12 @@ namespace COG
         private List<TextBox>[] TB_AlignData = new List<TextBox>[3];
 
 
-        public Form_LogView()
+        public LogViewForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
             tabControl1.Controls.RemoveAt(4);
             tabControl1.Controls.RemoveAt(3);
-          //  tabControl1.Controls.RemoveAt(2);
 
             for (int i = 0; i < 3; i++)
             {
@@ -78,9 +75,6 @@ namespace COG
         }
         public void ControlUpDate()
         {
-            //             LV_DisplayToolbar01.Display = LV_Display01;
-            //             LV_DisplayStatusBar01.Display = LV_Display01;
-            //             LV_MonthCalendar01.SelectionStart = System.DateTime.Now;
             dataGridView1.Rows.Clear();
             timer1.Enabled = true;
         }
@@ -94,17 +88,16 @@ namespace COG
 
             DateTime date;
             date  = LV_MonthCalendar01.SelectionStart;   
-            DirectoryInfo nSelectDir = new DirectoryInfo(Main.DEFINE.SYS_DATADIR + Main.DEFINE.LOG_DATADIR + date.ToString("yyyyMMdd"));
+            DirectoryInfo nSelectDir = new DirectoryInfo(StaticConfig.SYS_DATADIR + StaticConfig.LOG_DATADIR + date.ToString("yyyyMMdd"));
 
             if (Directory.Exists(nSelectDir.FullName))
             {
                 TreeNode nNode = new TreeNode(nSelectDir.Name);
                 LV_TreeView01.Nodes.Add(nNode);
                 SubDir(nSelectDir, nNode);
-        //        LV_TreeView01.ExpandAll();
             }
-
         }
+
         private void SubDir(DirectoryInfo dir, TreeNode n)
         {
             try
@@ -152,19 +145,9 @@ namespace COG
         }
         private void LV_TreeView01_NodeMouseClick(object sender, TreeNodeMouseClickEventArgs e)
         {
-            string nType = "null";
             try
             {
-//                 if (LV_TreeView01.SelectedNode.Text.Length > 3)
-//                     nType = LV_TreeView01.SelectedNode.Text.ToString().Substring(LV_TreeView01.SelectedNode.Text.Length - 3, 3);
-//                     DisplayNode(nType , LV_TreeView01.SelectedNode.FullPath);
-
                     DisplayNode(Path.GetExtension(LV_TreeView01.SelectedNode.FullPath), LV_TreeView01.SelectedNode.FullPath);
-
-//                 if (nType == "bmp" || nType == "jpg" || nType == "Png" || nType == "peg")                   
-//                 {
-//                     LB_NAME.Text = LV_TreeView01.SelectedNode.Parent.Text;
-//                 }
             }
             catch
             {
@@ -182,13 +165,13 @@ namespace COG
                     case ".Png":
                     case ".peg":
                         LB_PATH_IMAGE_FILE.Text = "";
-                        LogFileLoad_Image(Main.DEFINE.SYS_DATADIR + Main.DEFINE.LOG_DATADIR + nFullPath);
+                        LogFileLoad_Image(StaticConfig.SYS_DATADIR + StaticConfig.LOG_DATADIR + nFullPath);
                         LB_PATH_IMAGE_FILE.Text = nFullPath;
                           tabControl1.SelectedIndex = 0;
                         break;
                     case ".txt":
                         LB_PATH_COMMAND_FILE.Text = "";
-                        LogFileLoad_Command(Main.DEFINE.SYS_DATADIR + Main.DEFINE.LOG_DATADIR + nFullPath);
+                        LogFileLoad_Command(StaticConfig.SYS_DATADIR + StaticConfig.LOG_DATADIR + nFullPath);
                         LB_PATH_COMMAND_FILE.Text = nFullPath;
                          tabControl1.SelectedIndex = 1;
                         break;
@@ -196,13 +179,13 @@ namespace COG
                         if(tabControl1.SelectedIndex == 3)
                         {
                             LB_PATH_COMMAND_FILE.Text = "";
-                            AlignFileLoad_Command(Main.DEFINE.SYS_DATADIR + Main.DEFINE.LOG_DATADIR + nFullPath);
+                            AlignFileLoad_Command(StaticConfig.SYS_DATADIR + StaticConfig.LOG_DATADIR + nFullPath);
                             LB_PATH_COMMAND_FILE.Text = nFullPath;
                         }
                         else
                         {
                             LB_PATH_COMMAND_FILE.Text = "";
-                            InspcetionFileLoad_Command(Main.DEFINE.SYS_DATADIR + Main.DEFINE.LOG_DATADIR + nFullPath);
+                            InspcetionFileLoad_Command(StaticConfig.SYS_DATADIR + StaticConfig.LOG_DATADIR + nFullPath);
                             LB_PATH_COMMAND_FILE.Text = nFullPath;
                         }
                         tabControl1.SelectedIndex = 2;
@@ -561,10 +544,7 @@ namespace COG
         private List<DataGridView> DGB_ALIGN = new List<DataGridView>();
         private void button1_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
-            {
-         //       AlignData_Dispaly(i);
-            }
+
         }
 
         private void AlignData_Dispaly(int nAlignUnitNum)
@@ -632,20 +612,12 @@ namespace COG
 
         private void button2_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
-            {
-          //      Main.AlignUnit[i].Aligndata.Clear();
-            }
             button1_Click(null, null);
 
         }
 
         private void button3_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
-            {
-           //     Main.AlignUnit[i].Aligndata.RemoveAt();
-            }
             button1_Click(null, null);
 
         }

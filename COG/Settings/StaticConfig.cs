@@ -53,6 +53,7 @@ namespace COG.Settings
         public const string IMAGE_FILE = SYS_DATADIR + "1-1.bmp";//"QDIDB.idb";//"D:\\SystemData\\20.idb";
 
         public const int M_1CAM2SHOT = 200;   // 1 camera 2 shot , Center Target      
+
     }
 
 

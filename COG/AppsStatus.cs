@@ -16,7 +16,7 @@ namespace COG
         #region 속성
         public MC_STATUS MC_STATUS { get; set; } = MC_STATUS.STOP;
 
-        public UI_STATUS UI_STATUS { get; set; } = UI_STATUS.MAINFORM;
+        public UI_STATUS UI_STATUS { get; set; } = UI_STATUS.MAIN_FORM;
 
         public User CurrentUser { get; set; } = User.OPERATOR;
 
@@ -53,13 +53,13 @@ namespace COG
 
     public enum UI_STATUS
     {
-        TEACHFORM = 5,
-        MAINFORM = 6,
-        SETUPFORM = 7,
-        LIVEFORM = 8,
-        CAMERAFORM = 9,
-        RCSFORM = 10,
-        PERMISSIONFORM = 11,
+        TEACH_FORM = 5,
+        MAIN_FORM = 6,
+        SETUP_FORM = 7,
+        LIVE_FORM = 8,
+        CAMERA_FORM = 9,
+        RCS_FORM = 10,
+        PERMISSION_FORM = 11,
     }
 
     public enum User

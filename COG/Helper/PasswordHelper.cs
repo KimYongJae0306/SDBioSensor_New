@@ -5,7 +5,7 @@ namespace COG.Helper
 {
     public static class PasswordHelper
     {
-        public const string PASSWORD_DIR = "Software\\JAStech";
+        public const string PASSWORD_DIR = "Software\\JAStech"; //Regedit : HKEY_CURRENT_USER-> SOFTWARE-> JASTECHJAS_DAWIN
 
         public static void WriteRegistry(string _Mode, string _Password)
         {
