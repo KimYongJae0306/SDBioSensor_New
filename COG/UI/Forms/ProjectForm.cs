@@ -16,22 +16,30 @@ namespace COG.UI.Forms
 {
     public partial class ProjectForm : Form
     {
+        [DllImport("kernel32.dll")]
+        private static extern int GetPrivateProfileString(String section, String key, String def, StringBuilder retVal, int size, String filePath);
+        #region 필드
+        #endregion
+
+        #region 생성자
         public ProjectForm()
         {
             InitializeComponent();
         }
+        #endregion
 
+        #region 메서드
         private void ProjectForm_Load(object sender, EventArgs e)
         {
             GetModelList();
-           
+
         }
+
         private void DataUpdate()
         {
             LB_DISPLAY_CURRENT.Text = AppsConfig.Instance().ProjectName + " - " + AppsConfig.Instance().ProjectInfo;
         }
-        [DllImport("kernel32.dll")]
-        private static extern int GetPrivateProfileString(String section, String key, String def, StringBuilder retVal, int size, String filePath);
+
         private void GetModelList()
         {
             int index;
@@ -58,8 +66,6 @@ namespace COG.UI.Forms
             DataUpdate();
         }
 
- 
-
         private void BTN_EXIT_Click(object sender, EventArgs e)
         {
             this.Close();
@@ -72,7 +78,6 @@ namespace COG.UI.Forms
 
         private void BTN_DELETE_Click(object sender, EventArgs e)
         {
-
             PasswordForm formpassword = new PasswordForm(false);
             formpassword.ShowDialog();
 
@@ -117,6 +122,7 @@ namespace COG.UI.Forms
 
             }
         }
+
         private void FileDeleteAll(string _modelName)
         {
 
@@ -135,8 +141,8 @@ namespace COG.UI.Forms
                 MessageBox.Show("Source Or Dest Path  Not Exist", "Error");
                 return;
             }
-
         }
+
         private void BTN_LOAD_Click(object sender, EventArgs e)
         {
             string selectModel;
@@ -152,12 +158,9 @@ namespace COG.UI.Forms
                     MessageBox.Show("Current Model", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                     return;
                 }
-                //GetModelList();
-
                 InspModel inspModel = new InspModel();
 
-                inspModel.Load(selectModel);
-
+                var ret = SystemManager.Instance().LoadModel(selectModel);
                 DataUpdate();
             }
             else if (result == DialogResult.No)
@@ -165,56 +168,68 @@ namespace COG.UI.Forms
                 MessageBox.Show("Load Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
             }
         }
+
         private void BTN_SAVE_Click(object sender, EventArgs e)
         {
-            //DialogResult result = MessageBox.Show("Do you want to Save?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            //if (result == DialogResult.Yes)
-            //{
-            //    string m_SaveName;
-            //    string m_SaveInfo;
-            //    KeyBoardForm formkeyboard_Name = new KeyBoardForm("INPUT PROJECT CODE( 0 ~ 999)", 0);
-            //    formkeyboard_Name.ShowDialog();
-            //    if (formkeyboard_Name.m_ResultString != "")
-            //    {
-            //        m_SaveName = string.Format("{0:000}", Convert.ToInt16(formkeyboard_Name.m_ResultString));
-            //    }
-            //    else
-            //    {
-            //        m_SaveName = "";
-            //    }
-            //    if (m_SaveName == "" || m_SaveName == AppsConfig.Instance().ProjectName)
-            //    {
-            //        if (m_SaveName == AppsConfig.Instance().ProjectName)
-            //        {
-            //            MessageBox.Show("Project name Exist", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //            return;
-            //        }
-            //        MessageBox.Show("Enter the Project name", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //        return;
-            //    }
+            DialogResult result = MessageBox.Show("Do you want to Save?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                string _saveProjectName;
+                string _saveProjectInfo;
+                KeyBoardForm formkeyboard_Name = new KeyBoardForm("INPUT PROJECT CODE( 0 ~ 999)", 0);
+                formkeyboard_Name.ShowDialog();
+                if (formkeyboard_Name.m_ResultString != "")
+                {
+                    var value = Convert.ToInt32(formkeyboard_Name.m_ResultString);
+                    if (value < 0 || value > 999)
+                    {
+                        MessageBox.Show("Check Value!!");
+                        return;
+                    }
+                    _saveProjectName = string.Format("{0:000}", Convert.ToInt16(formkeyboard_Name.m_ResultString));
+                }
+                else
+                {
+                    _saveProjectName = "";
+                }
+                if (_saveProjectName == "" || _saveProjectName == AppsConfig.Instance().ProjectName)
+                {
+                    if (_saveProjectName == AppsConfig.Instance().ProjectName)
+                    {
+                        MessageBox.Show("Project name Exist", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    MessageBox.Show("Enter the Project name", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
 
-            //    KeyBoardForm formkeyboard_Info = new KeyBoardForm("INPUT PROJECT NAME");
-            //    formkeyboard_Info.ShowDialog();
-            //    m_SaveInfo = formkeyboard_Info.m_ResultString;
-            //    m_SaveInfo = "_" + m_SaveInfo;
+                KeyBoardForm formkeyboard_Info = new KeyBoardForm("INPUT PROJECT NAME");
+                formkeyboard_Info.ShowDialog();
+                _saveProjectInfo = formkeyboard_Info.m_ResultString;
+                _saveProjectInfo = "_" + _saveProjectInfo;
+
+                AppsConfig.Instance().ProjectName = _saveProjectName;
+                AppsConfig.Instance().ProjectInfo = _saveProjectInfo;
+
+                string newModelPath = Path.Combine(StaticConfig.ModelPath, _saveProjectName, "Model.ini");
+                StaticConfig.ModelFile.SetFileName(newModelPath);
+                StaticConfig.SystemFile.SetData("SYSTEM", "LAST_PROJECT", _saveProjectName);
+
+                SystemManager.Instance().SaveModel(_saveProjectName, _saveProjectInfo);
 
 
-            //    Main.ProjectSave(m_SaveName, m_SaveInfo);
+                // ToDo : 
+                //int[] setValue = new int[1];
+                //setValue[0] = Convert.ToInt16(Main.ProjectName);
+                //Main.PLCsocket.WriteDevice_W((PLCDataTag.BASE_RW_ADDR + Main.DEFINE.CURRENT_MODEL_CODE).ToString(), 1, setValue);
 
-            //    //2022 05 09 YSH
-            //    //Main.WriteDevice(PLCDataTag.BASE_RW_ADDR + Main.DEFINE.CURRENT_MODEL_CODE, Convert.ToInt16(Main.ProjectName));
+                GetModelList();
 
-            //    int[] setValue = new int[1];
-            //    setValue[0] = Convert.ToInt16(Main.ProjectName);
-            //    Main.PLCsocket.WriteDevice_W((PLCDataTag.BASE_RW_ADDR + Main.DEFINE.CURRENT_MODEL_CODE).ToString(), 1, setValue);
-
-            //    GetModelList();
-
-            //}
-            //else if (result == DialogResult.No)
-            //{
-            //    MessageBox.Show("Save Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //}
+            }
+            else if (result == DialogResult.No)
+            {
+                MessageBox.Show("Save Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
 
         private void BTN_UP_Click(object sender, EventArgs e)
@@ -239,44 +254,59 @@ namespace COG.UI.Forms
 
         private void BTN_RENAME_Click(object sender, EventArgs e)
         {
-            //DialogResult result = MessageBox.Show("Do you want to Rename?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            //if (result == DialogResult.Yes)
-            //{
-            //    string m_SaveName;
-            //    string m_SaveInfo;
-            //    string m_SaveInfoBack;
-            //    m_SaveName = LB_DISPLAY_SELECTE.Text.Substring(0, 3);
-            //    m_SaveInfo = m_SaveInfoBack = LB_DISPLAY_SELECTE.Text.Substring(3, LB_DISPLAY_SELECTE.Text.Length - 3);
-            //    KeyBoardForm formkeyboard_Info = new KeyBoardForm("INPUT PROJECT NAME", 1, m_SaveInfo);
-            //    formkeyboard_Info.ShowDialog();
-            //    m_SaveInfo = formkeyboard_Info.m_ResultString;
+            DialogResult result = MessageBox.Show("Do you want to Rename?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                string m_SaveInfoBack;
+                string saveName = LB_DISPLAY_SELECTE.Text.Substring(0, 3);
+                string saveInfo = m_SaveInfoBack = LB_DISPLAY_SELECTE.Text.Substring(3, LB_DISPLAY_SELECTE.Text.Length - 3);
+                KeyBoardForm formkeyboard_Info = new KeyBoardForm("INPUT PROJECT NAME", 1, saveInfo);
+                formkeyboard_Info.ShowDialog();
+                saveInfo = formkeyboard_Info.m_ResultString;
 
-            //    if (m_SaveInfo == "" || AppsConfig.Instance().ProjectName == "")
-            //    {
-            //        MessageBox.Show("Enter the Project name", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //        return;
-            //    }
-            //    if (m_SaveInfo == m_SaveInfoBack)
-            //    {
-            //        //전에 이름 이랑 같으면 리턴
-            //        return;
-            //    }
+                if (saveInfo == "" || AppsConfig.Instance().ProjectName == "")
+                {
+                    MessageBox.Show("Enter the Project name", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                    return;
+                }
+                if (saveInfo == m_SaveInfoBack)
+                {
+                    //전에 이름 이랑 같으면 리턴
+                    return;
+                }
 
-            //    bool nRet;
-            //    nRet = Main.ProjectRename(m_SaveName, m_SaveInfo);
-            //    GetModelList();
+                bool nRet;
+                nRet = ModelRename(saveName, saveInfo);
 
-            //    if ((m_SaveName == AppsConfig.Instance().ProjectName) && nRet)
-            //    {
-            //        AppsConfig.Instance().ProjectInfo = m_SaveInfo;
-            //        DataUpdate();
-            //    }
+                GetModelList();
 
-            //}
-            //else if (result == DialogResult.No)
-            //{
-            //    MessageBox.Show("Rename Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-            //}
+                if ((saveName == AppsConfig.Instance().ProjectName) && nRet)
+                {
+                    AppsConfig.Instance().ProjectInfo = saveInfo;
+                    DataUpdate();
+                }
+
+            }
+            else if (result == DialogResult.No)
+            {
+                MessageBox.Show("Rename Cancel", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+            }
         }
+
+        private bool ModelRename(string newMoelName, string newModelInfo)
+        {
+            string modelPath = StaticConfig.ModelPath;
+            if (!Directory.Exists(modelPath))
+                return false;
+
+            if (!Directory.Exists(modelPath + newMoelName))
+                return false;
+
+            string buf = modelPath + newMoelName + "\\Model.ini";
+            StaticConfig.ModelFile.SetData("PROJECT", "NAME", newModelInfo, buf);
+
+            return true;
+        }
+        #endregion
     }
 }

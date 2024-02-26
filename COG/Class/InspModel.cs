@@ -1,4 +1,5 @@
-﻿using COG.Settings;
+﻿using COG.Class.Units;
+using COG.Settings;
 using COG.UI.Forms;
 using Cognex.VisionPro;
 using Cognex.VisionPro.Blob;
@@ -14,14 +15,20 @@ namespace COG.Core
 {
     public partial class InspModel
     {
+        public string ModelName { get; set; } = "";
+
+        public string ModelInfo { get; set; } = "";
+
+        public string ModelPath { get; set; } = "";
+
         public List<StageUnit> StageUnitList = new List<StageUnit>();
-       
+
         public void New()
         {
             // Todo : 모델 dispose
             if (StaticConfig.PROGRAM_TYPE == "ATT_AREA_PC1")
             {
-                for (int i = 0; i < StaticConfig.STAGE_COUNT; i++)
+                for (int i = 0; i < StaticConfig.STAGE_MAX_COUNT; i++)
                 {
                     StageUnit stageUnit = new StageUnit();
                     stageUnit.Name = "INSPECTION_" + (i + 1).ToString();
@@ -51,112 +58,107 @@ namespace COG.Core
             }
         }
 
-        public void Load()
-        {
-            New();
-        }
-    }
-
-    public partial class InspModel
-    {
         public bool Load(string newModelName)
         {
             string modelPath = StaticConfig.ModelPath;
-            string buf;
-            if (!Directory.Exists(modelPath))
-            {
-                MessageBox.Show(modelPath + "not Directory", "Information", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                return false;
-            }
-            if (!Directory.Exists(modelPath + newModelName))
-            {
-                return false;
-            }
-            if (AppsConfig.Instance().ProjectName == newModelName)
-            {
-                return true;
-            }
+
             New();
 
             AppsConfig.Instance().ProjectName = newModelName;
             StaticConfig.SystemFile.SetData("SYSTEM", "LAST_PROJECT", AppsConfig.Instance().ProjectName);
 
-      
-            buf = modelPath + AppsConfig.Instance().ProjectName + "\\Model.ini";
+            ModelName = newModelName;
+
+            string buf = modelPath + AppsConfig.Instance().ProjectName + "\\Model.ini";
             StaticConfig.ModelFile.SetFileName(buf);
             AppsConfig.Instance().ProjectInfo = StaticConfig.ModelFile.GetSData("PROJECT", "NAME");
+            ModelInfo = AppsConfig.Instance().ProjectInfo;
+
+            ModelPath = buf;
 
             //ToDo: PLC
             //Main.WriteDevice(PLCDataTag.BASE_RW_ADDR + DEFINE.CURRENT_MODEL_CODE, Convert.ToInt16(Main.ProjectName));
-
-            ProgressBarForm form = new ProgressBarForm();
-
-            form.Message = "Unit";
-            form.Maximum = 2;
-            form.Show();
-            form.ProgressMaxSet();
 
             SystemManager.Instance().ShowProgerssBar(StaticConfig.STAGE_COUNT, true, 0);
 
             string modelDir = modelPath + AppsConfig.Instance().ProjectName;
             for (int stageIndex = 0; stageIndex < StaticConfig.STAGE_COUNT; stageIndex++)
             {
-
                 LoadAmpMark(modelDir, stageIndex);
                 LoadBondingMark(modelDir, stageIndex);
 
                 SystemManager.Instance().ShowProgerssBar(StaticConfig.STAGE_COUNT, true, stageIndex + 1);
             }
+
+            ModelManager.Instance().CurrentModel = this;
+
             return true;
         }
 
-        public List<PatternUnit> CreateMark(string name)
+        public bool Save(string modelDir)
         {
-            List<PatternUnit> markList = new List<PatternUnit>();
+            StaticConfig.SystemFile.SetData("SYSTEM", "LAST_PROJECT", ModelName);
+            StaticConfig.ModelFile.SetData("PROJECT", "NAME", ModelInfo);
 
-            PatternUnit patternUnit = new PatternUnit();
-            patternUnit.Name = name;
-            patternUnit.AlignType = StaticConfig.M_1CAM2SHOT;
-
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX; subIndex++)
+            for (int i = 0; i < StageUnitList.Count; i++)
             {
-                PatternTag patternTag = new PatternTag();
-                patternTag.Index = subIndex;
-                patternUnit.TagList.Add(patternTag);
+                SaveAmpMark(modelDir, i);
+                SaveBondingMark(modelDir, i);
             }
-            markList.Add(patternUnit);
+
+            return true;
+        }
+    }
+
+    public partial class InspModel
+    {
+        private List<MarkUnit> CreateMark(string name)
+        {
+            List<MarkUnit> markList = new List<MarkUnit>();
+
+            MarkUnit markUnit = new MarkUnit();
+            markUnit.Name = name;
+            markUnit.AlignType = StaticConfig.M_1CAM2SHOT;
+
+            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            {
+                MarkTag markTag = new MarkTag();
+                markTag.Index = subIndex;
+                markUnit.TagList.Add(markTag);
+            }
+            markList.Add(markUnit);
 
             return markList;
         }
 
-        private void LoadAmpMark(string modelDir,int stageIndex)
+        private void LoadAmpMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX; subIndex++)
+            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
             {
                 var stageUnit = StageUnitList[stageIndex];
                 for (int i = 0; i < stageUnit.LeftCamUnit.AmpMarkList.Count; i++)
                 {
                     #region Left
-                    var patternLeftUnit = stageUnit.LeftCamUnit.AmpMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{patternLeftUnit.Name}_{subIndex}.vpp");
+                    var leftMarkUnit = stageUnit.LeftCamUnit.AmpMarkList[i];
+                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex}.vpp");
 
                     if (File.Exists(leftVppFileName))
                     {
-                        var leftTag = patternLeftUnit.TagList[subIndex];
+                        var markTag = leftMarkUnit.TagList[subIndex];
                         var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
-                        leftTag.SetTool(tool);
+                        markTag.SetTool(tool);
                     }
                     #endregion
 
                     #region Right
-                    var patternRightUnit = stageUnit.RightCamUnit.AmpMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{patternRightUnit.Name}_{subIndex}.vpp");
+                    var rightMarkUnit = stageUnit.RightCamUnit.AmpMarkList[i];
+                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex}.vpp");
 
                     if (File.Exists(rightVppFileName))
                     {
-                        var rightTag = patternRightUnit.TagList[subIndex];
+                        var markTag = rightMarkUnit.TagList[subIndex];
                         var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
-                        rightTag.SetTool(tool);
+                        markTag.SetTool(tool);
                     }
                     #endregion
                 }
@@ -165,39 +167,91 @@ namespace COG.Core
 
         private void LoadBondingMark(string modelDir, int stageIndex)
         {
-            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX; subIndex++)
+            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
             {
                 var stageUnit = StageUnitList[stageIndex];
                 for (int i = 0; i < stageUnit.LeftCamUnit.BondingMarkList.Count; i++)
                 {
                     #region Left
-                    var patternLeftUnit = stageUnit.LeftCamUnit.BondingMarkList[i];
-                    var leftVppFileName = Path.Combine(modelDir, $"{patternLeftUnit.Name}_{subIndex:D2}.vpp");
+                    var leftMarkUnit = stageUnit.LeftCamUnit.BondingMarkList[i];
+                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex:D2}.vpp");
 
                     if (File.Exists(leftVppFileName))
                     {
-                        var leftTag = patternLeftUnit.TagList[subIndex];
+                        var markTag = leftMarkUnit.TagList[subIndex];
                         var tool = CogSerializer.LoadObjectFromFile(leftVppFileName) as CogSearchMaxTool;
-                        leftTag.SetTool(tool);
+                        markTag.SetTool(tool);
                     }
                     #endregion
 
                     #region Right
-                    var patternRightUnit = stageUnit.RightCamUnit.BondingMarkList[i];
-                    var rightVppFileName = Path.Combine(modelDir, $"{patternRightUnit.Name}_{subIndex:D2}.vpp");
+                    var rightMarkUnit = stageUnit.RightCamUnit.BondingMarkList[i];
+                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex:D2}.vpp");
 
                     if (File.Exists(rightVppFileName))
                     {
-                        var rightTag = patternRightUnit.TagList[subIndex];
+                        var markTag = rightMarkUnit.TagList[subIndex];
                         var tool = CogSerializer.LoadObjectFromFile(rightVppFileName) as CogSearchMaxTool;
-                        rightTag.SetTool(tool);
+                        markTag.SetTool(tool);
                     }
                     #endregion
                 }
             }
         }
-    }
 
+        private void SaveAmpMark(string modelDir, int stageIndex)
+        {
+            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            {
+                var stageUnit = StageUnitList[stageIndex];
+                for (int i = 0; i < stageUnit.LeftCamUnit.AmpMarkList.Count; i++)
+                {
+                    #region Left
+                    var leftMarkUnit = stageUnit.LeftCamUnit.AmpMarkList[i];
+                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex}.vpp");
+
+                    var leftMarkTag = leftMarkUnit.TagList[subIndex];
+                    leftMarkTag.SaveTool(leftVppFileName);
+                    #endregion
+
+                    #region Right
+                    var rightMarkUnit = stageUnit.RightCamUnit.AmpMarkList[i];
+                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex}.vpp");
+
+                    var rightMarkTag = rightMarkUnit.TagList[subIndex];
+                    rightMarkTag.SaveTool(rightVppFileName);
+                    #endregion
+                }
+            }
+        }
+
+        private void SaveBondingMark(string modelDir, int stageIndex)
+        {
+            for (int subIndex = 0; subIndex < StaticConfig.PATTERN_MAX_COUNT; subIndex++)
+            {
+                var stageUnit = StageUnitList[stageIndex];
+                for (int i = 0; i < stageUnit.LeftCamUnit.BondingMarkList.Count; i++)
+                {
+                    #region Left
+                    var leftMarkUnit = stageUnit.LeftCamUnit.BondingMarkList[i];
+                    var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{subIndex:D2}.vpp");
+
+                    var leftMarkTag = leftMarkUnit.TagList[subIndex];
+                    leftMarkTag.SaveTool(leftVppFileName);
+                    #endregion
+
+                    #region Right
+                    var rightMarkUnit = stageUnit.RightCamUnit.BondingMarkList[i];
+                    var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{subIndex:D2}.vpp");
+
+                    var rightMarkTag = rightMarkUnit.TagList[subIndex];
+                    rightMarkTag.SaveTool(rightVppFileName);
+                    #endregion
+                }
+            }
+        }
+    }
+  
     public class LightCtrlParamemter
     {
     }
@@ -236,74 +290,40 @@ namespace COG.Core
         }
     }
 
-    public class PatternUnit
-    {
-        public string Name { get; set; } = "";
-
-        public int CamNo { get; set; } = 0;
-
-        public int AlignType { get; set; } = 0;
-
-        public List<PatternTag> TagList = new List<PatternTag>();
-    }
-
-    public class PatternTag
-    {
-        public int Index { get; set; }
-
-        public CogSearchMaxTool Tool { get; private set; } = null;
-
-        public void SetTool(CogSearchMaxTool tool)
-        {
-            Tool?.Dispose();
-            Tool = null;
-            Tool = tool;
-        }
-    }
-
     public class StageUnit 
     {
         public string Name { get; set; }
 
-        public InspUnit LeftCamUnit { get; set; } = new InspUnit();
+        public Unit LeftCamUnit { get; set; } = new Unit();
 
-        public InspUnit RightCamUnit { get; set; } = new InspUnit();
+        public Unit RightCamUnit { get; set; } = new Unit();
+
+        public void Dispose()
+        {
+            LeftCamUnit.Dispose();
+            RightCamUnit.Dispose();
+        }
     }
 
-    public class InspUnit
+    public class Unit
     {
-        public List<PatternUnit> AmpMarkList = new List<PatternUnit>();
+        public List<MarkUnit> AmpMarkList = new List<MarkUnit>();
 
-        public List<PatternUnit> BondingMarkList = new List<PatternUnit>();
+        public List<MarkUnit> BondingMarkList = new List<MarkUnit>();
 
-        public List<InspParamUnit> InspParamList = new List<InspParamUnit>();
-    }
+        public List<InspUnit> InspParamList = new List<InspUnit>();
 
-    public class InspParamUnit
-    {
-        public CogFitLineTool FindLineTool { get; set; } = null;
-        public CogFindCircleTool FindCircleTool { get; set; } = null;
+        public void Dispose()
+        {
+            AmpMarkList.ForEach(x => x.Dispose());
+            AmpMarkList.Clear();
 
-        public InspType InspType { get; set; }
-        public double CenterX { get; set; }
-        public double CenterY { get; set; }
-        public double LenthX { get; set; }
-        public double LenthY { get; set; }
-        public double dSpecDistance { get; set; }
-        public double dSpecDistanceMax { get; set; }
-        public int Distgnore { get; set; }
+            BondingMarkList.ForEach(x => x.Dispose());
+            BondingMarkList.Clear();
 
-        public int HistogramROICnt { get; set; }
-        public int[] HistogramSpec { get; set; }
-
-        public bool ThresholdUse { get; set; }
-        public int Threshold { get; set; } = 32;
-        public int TopCutPixel { get; set; } = 15;
-        public int IgnoreSize { get; set; } = 20;
-        public int BottomCutPixel { get; set; } = 10;
-        public int MaskingValue { get; set; } = 210;
-        public int EdgeCaliperThreshold { get; set; } = 55;
-        public int EdgeCaliperFilterSize { get; set; } = 10;
+            InspParamList.ForEach(x => x.Dispose());
+            InspParamList.Clear();
+        }
     }
 
     public enum CamDirection

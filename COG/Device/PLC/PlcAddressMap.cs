@@ -12,15 +12,7 @@ namespace COG.Device.PLC
 
     public enum BaseAddressMap
     {
-#if !SDBIO_VENT
-        PLC_BaseAddress = 27000,
-        PC_BaseAddress = 27000,
-#endif
 
-#if SDBIO_PATH
-        PLC_BaseAddress = 28000,
-        PC_BaseAddress = 28000,
-#endif
     }
 
     public enum PlcCommonMap

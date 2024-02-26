@@ -1,4 +1,5 @@
-﻿using System;
+﻿using COG.Settings;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -65,7 +66,7 @@ namespace COG.Device.PLC
                 {
                     if (command.Count() > 0)
                     {
-                        int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Command);
+                        int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Command);
                         PlcCommandReceived((PlcCommand)command[address]);
                     }
                 }
@@ -138,7 +139,7 @@ namespace COG.Device.PLC
             {
                 if (command.Count() > 0)
                 {
-                    int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Time);
+                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Time);
                     dateTime = command[address];
                 }
             }
@@ -152,7 +153,7 @@ namespace COG.Device.PLC
             {
                 if (command.Count() > 0)
                 {
-                    int address = Convert.ToInt16(BaseAddressMap.PLC_BaseAddress) + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
+                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
                     modelNo = command[address];
                 }
             }

@@ -1,6 +1,8 @@
-﻿using COG.UI.Forms;
+﻿using COG.Settings;
+using COG.UI.Forms;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -75,6 +77,22 @@ namespace COG
                     ProgressBarForm.Hide();
                 }
             }
+        }
+
+        public void Initialize()
+        {
+            string modelName = AppsConfig.Instance().ProjectName;
+            LoadModel(modelName, true);
+        }
+
+        public bool LoadModel(string modelName, bool forceLoading = false)
+        {
+            return _mainForm.InspModelService.LoadModel(modelName, forceLoading);
+        }
+
+        public bool SaveModel(string newModelName, string newModelInfo)
+        {
+            return _mainForm.InspModelService.SaveModel(newModelName, newModelInfo);
         }
         #endregion
     }
