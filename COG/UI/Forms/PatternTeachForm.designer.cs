@@ -31,7 +31,7 @@
             this.components = new System.ComponentModel.Container();
             System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(PatternTeachForm));
             this.BTN_IMAGE_OPEN = new System.Windows.Forms.Button();
-            this.openFileDialog1 = new System.Windows.Forms.OpenFileDialog();
+            this.openFileDlg = new System.Windows.Forms.OpenFileDialog();
             this.BTN_PATTERN_RUN = new System.Windows.Forms.Button();
             this.groupBoxLightSetting = new System.Windows.Forms.GroupBox();
             this.LB_LIGHT_0 = new System.Windows.Forms.Label();
@@ -1331,7 +1331,7 @@
             this.PT_SubDisplay_09.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_09.TabIndex = 130;
             this.PT_SubDisplay_09.Visible = false;
-            this.PT_SubDisplay_09.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_09.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_08
             // 
@@ -1350,7 +1350,7 @@
             this.PT_SubDisplay_08.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_08.TabIndex = 129;
             this.PT_SubDisplay_08.Visible = false;
-            this.PT_SubDisplay_08.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_08.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_07
             // 
@@ -1369,7 +1369,7 @@
             this.PT_SubDisplay_07.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_07.TabIndex = 128;
             this.PT_SubDisplay_07.Visible = false;
-            this.PT_SubDisplay_07.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_07.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // LB_PATTERN_06
             // 
@@ -1427,7 +1427,7 @@
             this.PT_SubDisplay_06.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_06.TabIndex = 124;
             this.PT_SubDisplay_06.Visible = false;
-            this.PT_SubDisplay_06.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_06.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_05
             // 
@@ -1446,7 +1446,7 @@
             this.PT_SubDisplay_05.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_05.TabIndex = 123;
             this.PT_SubDisplay_05.Visible = false;
-            this.PT_SubDisplay_05.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_05.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_04
             // 
@@ -1465,7 +1465,7 @@
             this.PT_SubDisplay_04.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_04.TabIndex = 122;
             this.PT_SubDisplay_04.Visible = false;
-            this.PT_SubDisplay_04.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_04.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // LB_PATTERN_03
             // 
@@ -1534,7 +1534,7 @@
             this.PT_SubDisplay_03.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_03.TabIndex = 67;
             this.PT_SubDisplay_03.Visible = false;
-            this.PT_SubDisplay_03.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_03.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_02
             // 
@@ -1553,7 +1553,7 @@
             this.PT_SubDisplay_02.Size = new System.Drawing.Size(192, 168);
             this.PT_SubDisplay_02.TabIndex = 66;
             this.PT_SubDisplay_02.Visible = false;
-            this.PT_SubDisplay_02.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_02.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // PT_SubDisplay_01
             // 
@@ -1572,7 +1572,7 @@
             this.PT_SubDisplay_01.Size = new System.Drawing.Size(192, 166);
             this.PT_SubDisplay_01.TabIndex = 65;
             this.PT_SubDisplay_01.Visible = false;
-            this.PT_SubDisplay_01.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_01.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // BTN_PATTERN_ORIGIN
             // 
@@ -1729,7 +1729,7 @@
             this.PT_SubDisplay_00.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("PT_SubDisplay_00.OcxState")));
             this.PT_SubDisplay_00.Size = new System.Drawing.Size(221, 185);
             this.PT_SubDisplay_00.TabIndex = 54;
-            this.PT_SubDisplay_00.Click += new System.EventHandler(this.PT_SubDisplay_00_Click_1);
+            this.PT_SubDisplay_00.Click += new System.EventHandler(this.CogMarkDisplay_Click);
             // 
             // BTN_APPLY
             // 
@@ -4342,7 +4342,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1921, 973);
+            this.ClientSize = new System.Drawing.Size(1930, 965);
             this.ControlBox = false;
             this.Controls.Add(this.pnlDisplay);
             this.Controls.Add(this.groupBox5);
@@ -4443,7 +4443,7 @@
 
         private System.Windows.Forms.Button BTN_EXIT;
         private System.Windows.Forms.Button BTN_IMAGE_OPEN;
-        private System.Windows.Forms.OpenFileDialog openFileDialog1;
+        private System.Windows.Forms.OpenFileDialog openFileDlg;
         private System.Windows.Forms.Button BTN_PATTERN_RUN;
         private System.Windows.Forms.Button BTN_SAVE;
         private System.Windows.Forms.GroupBox groupBoxLightSetting;

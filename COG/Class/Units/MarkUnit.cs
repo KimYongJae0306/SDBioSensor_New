@@ -1,7 +1,9 @@
-﻿using Cognex.VisionPro;
+﻿using COG.Settings;
+using Cognex.VisionPro;
 using Cognex.VisionPro.SearchMax;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -16,7 +18,31 @@ namespace COG.Class.Units
 
         public int AlignType { get; set; } = 0;
 
+        public double Score { get; set; }
+
         public List<MarkTag> TagList = new List<MarkTag>();
+
+        public void Load()
+        {
+            Score = StaticConfig.ModelFile.GetFData(Name, "ACCEPT_SCORE");
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
+            {
+                TagList[i].Index = i;
+                string key = "PATUSE" + i.ToString();
+                TagList[i].Use = StaticConfig.ModelFile.GetBData(Name, key);
+            }
+              
+        }
+
+        public void Save()
+        {
+            StaticConfig.ModelFile.SetData(Name, "ACCEPT_SCORE", Score);
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
+            {
+                string key = "PATUSE" + i.ToString();
+                StaticConfig.ModelFile.SetData(Name, key, TagList[i].Use);
+            }
+        }
 
         public void Dispose()
         {
@@ -30,6 +56,7 @@ namespace COG.Class.Units
             unit.Name = Name;
             unit.CamNo = CamNo;
             unit.AlignType = AlignType;
+            unit.Score = Score;
 
             foreach (var tag in TagList)
                 unit.TagList.Add(tag.DeepCopy());
@@ -42,7 +69,9 @@ namespace COG.Class.Units
     {
         public int Index { get; set; }
 
-        public double Score { get; set; }
+        public bool Use { get; set; }
+
+       
 
         public CogSearchMaxTool Tool { get; private set; } = null;
 
@@ -68,6 +97,38 @@ namespace COG.Class.Units
             }
         }
 
+        public void SetTrainRegion(CogRectangle roi)
+        {
+            if (Tool == null)
+                return;
+
+            CogRectangle rect = new CogRectangle(roi);
+
+            Tool.Pattern.Origin.TranslationX = rect.CenterX;
+            Tool.Pattern.Origin.TranslationY = rect.CenterY;
+            Tool.Pattern.TrainRegion = rect;
+        }
+
+        public void SetSearchRegion(CogRectangle roi)
+        {
+            if (Tool == null)
+                return;
+
+            CogRectangle rect = new CogRectangle(roi);
+            rect.Color = CogColorConstants.Green;
+            rect.LineStyle = CogGraphicLineStyleConstants.Dot;
+            Tool.SearchRegion = new CogRectangle(rect);
+        }
+
+        public void SetOrginMark(CogPointMarker originMarkPoint)
+        {
+            if (Tool == null)
+                return;
+
+            Tool.Pattern.Origin.TranslationX = originMarkPoint.X;
+            Tool.Pattern.Origin.TranslationY = originMarkPoint.Y;
+        }
+
         public void Dispose()
         {
             Tool?.Dispose();
@@ -78,12 +139,14 @@ namespace COG.Class.Units
         {
             MarkTag tag = new MarkTag();
             tag.Index = Index;
-            tag.Score = Score;
-            if(Tool!=null)
+            tag.Use = Use;
+            if(Tool != null)
             {
                 tag.Tool = new CogSearchMaxTool(Tool);
             }
             return tag;
         }
+
+     
     }
 }

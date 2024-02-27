@@ -28,6 +28,17 @@ namespace COG.Helper
             }
         }
 
+        public static CogRectangle CreateRectangle(double centerX, double centerY, double width, double height, bool interactive = true, CogRectangleDOFConstants constants = CogRectangleDOFConstants.All)
+        {
+            CogRectangle roi = new CogRectangle();
+
+            roi.SetCenterWidthHeight(centerX, centerY, width, height);
+            roi.Interactive = interactive;
+            roi.GraphicDOFEnable = constants;
+
+            return roi;
+        }
+
         public static void GetCamSetValue(ref CameraBuffer cameraBuffer)
         {
             cameraBuffer.CogImageBlock = new CogToolBlock();

@@ -145,8 +145,9 @@ namespace COG.Core
             for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
                 #region Left
-                var leftMarkUnit = stageUnit.LeftUnit.AmpMark;
 
+                stageUnit.LeftUnit.AmpMark.Load();
+                var leftMarkUnit = stageUnit.LeftUnit.AmpMark;
                 var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i}.vpp");
 
                 if (File.Exists(leftVppFileName))
@@ -158,6 +159,8 @@ namespace COG.Core
                 #endregion
 
                 #region Right
+
+                stageUnit.RightUnit.AmpMark.Load();
                 var rightMarkUnit = stageUnit.RightUnit.AmpMark;
                 var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i}.vpp");
 
@@ -177,6 +180,8 @@ namespace COG.Core
             for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
                 #region Left
+
+                stageUnit.LeftUnit.BondingMark.Load();
                 var leftMarkUnit = stageUnit.LeftUnit.BondingMark;
                 var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i:D2}.vpp");
 
@@ -189,6 +194,7 @@ namespace COG.Core
                 #endregion
 
                 #region Right
+                stageUnit.RightUnit.BondingMark.Load();
                 var rightMarkUnit = stageUnit.RightUnit.BondingMark;
                 var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i:D2}.vpp");
 

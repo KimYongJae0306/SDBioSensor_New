@@ -695,6 +695,7 @@
     <Compile Include="Class\Units\InspUnit.cs" />
     <Compile Include="Class\Units\MarkUnit.cs" />
     <Compile Include="Class\Units\SDParameter.cs" />
+    <Compile Include="Class\Vision.cs" />
     <Compile Include="Comm\SocketComm.cs" />
     <Compile Include="Core\Display\Display.cs">
       <SubType>UserControl</SubType>

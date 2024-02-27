@@ -20,6 +20,7 @@ namespace COG
 
         public User CurrentUser { get; set; } = User.OPERATOR;
 
+        public bool LiveStop { get; set; } = true;
         #endregion
 
         #region 메서드

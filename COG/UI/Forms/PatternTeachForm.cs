@@ -1,10 +1,15 @@
 ﻿using COG.Class;
+using COG.Class.Units;
 using COG.Core;
+using COG.Helper;
 using COG.Settings;
 using Cognex.VisionPro;
 using Cognex.VisionPro.CalibFix;
 using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.Dimensioning;
+using Cognex.VisionPro.ImageFile;
+using Cognex.VisionPro.ImageProcessing;
+using Cognex.VisionPro.Implementation;
 using Cognex.VisionPro.LineMax;
 using Cognex.VisionPro.PMAlign;
 using Cognex.VisionPro.SearchMax;
@@ -12,43 +17,85 @@ using Cognex.VisionPro.ToolBlock;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.IO;
 using System.Windows.Forms;
 
 namespace COG.UI.Forms
 {
     public partial class PatternTeachForm : Form
     {
+        public const int ORIGIN_SIZE = 120;
+
         private bool _isFormLoad { get; set; } = false;
+
+        private bool _selectedAmpMark { get; set; } = false;
+
+        private int _selectedMarkIndex { get; set; } = 0; // 0 : Main, 1~ : Sub
 
         public int StageUnitNo { get; set; } = 0;
 
         public bool IsLeft { get; set; } = false;
 
-        private List<CogRecordDisplay> AmpMarkDisplayList = new List<CogRecordDisplay>();
+        private double ZoomBackup { get; set; } = 0;
 
-        private List<Label> AmpMarkLabelList = new List<Label>();
+        private List<CogRecordDisplay> MarkDisplayList = new List<CogRecordDisplay>();
+
+        private List<Label> MarkLabelList = new List<Label>();
+
+        private CogImageFileTool DisplayImageTool = new CogImageFileTool();
+
+        private CogRecordDisplay CogDisplay = null;
+
+        private ICogImage CogDisplayImage { get; set; } = null;
+
+        private CogPointMarker OriginMarkPoint { get; set; } = null;
 
         public PatternTeachForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
+
+       
+            CogDisplay = new CogRecordDisplay();
+            CogDisplay.MouseUp += new MouseEventHandler(Display_MauseUP);
+            CogDisplay = PT_DISPLAY_CONTROL.CogDisplay00;
+            CogDisplay.Changed += PT_Display01_Changed;
+
+            PT_DisplayToolbar01.Display = CogDisplay;
+            PT_DisplayStatusBar01.Display = CogDisplay;
         }
 
         private void InitializeUI()
         {
-          
             BTN_LIVEMODE.Checked = false;
             BTN_LIVEMODE.BackColor = Color.DarkGray;
 
             this.TopMost = false;
+
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
+            {
+                string ntempSub;
+                if (i == 0)
+                    ntempSub = "MAIN_PAT" + i.ToString();
+                else
+                    ntempSub = "SUB__PAT" + i.ToString();
+                CB_SUB_PATTERN.Items.Add(ntempSub);
+            }
+
+            CB_SUB_PATTERN.SelectedIndex = 0;
+
         }
 
         private void PatternTeachForm_Load(object sender, EventArgs e)
         {
-            _isFormLoad = true;
-
             if (StaticConfig.VirtualMode)
                 BTN_IMAGE_OPEN.Visible = true;
+
+            _isFormLoad = true;
+            _selectedAmpMark = true;
+            _selectedMarkIndex = 0;
+
+            InitializeUI();
 
             TeachingData.Instance().UpdateTeachingData();
 
@@ -61,185 +108,31 @@ namespace COG.UI.Forms
 
                 UpdateMarkData();
             }
-           
-            //m_PatNo = 0;
-            //m_RetiMode = 0;
-            //m_CamNo = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo;
 
-            //RBTN_FINDLINE00.Checked = true;
-            //if (Main.DEFINE.PROGRAM_TYPE == "QD_LPA_PC1" || (Main.DEFINE.PROGRAM_TYPE == "QD_LPA_PC2" && m_CamNo == Main.DEFINE.CAM_SELECT_1ST_ALIGN))
-            //    TABC_MANU.SelectedIndex = M_TOOL_MODE = Main.DEFINE.M_FINDLINETOOL;
-            //else
-            //    TABC_MANU.SelectedIndex = M_TOOL_MODE = Main.DEFINE.M_CNLSEARCHTOOL;
+            UpdateMarkInfo();
+            ClearDisplayGraphic();
+            ClearMarkButtonBackColor();
 
-            //m_PatNo_Sub = 0;
-            //button1.BringToFront();
-            //CB_SUB_PATTERN.SelectedIndex = 0;
-            //LightRadio[0].Checked = true;
-
-            //GB_TRAY.Visible = false;
-            //BTN_MAINORIGIN_COPY.Visible = false;
-            //BTN_PATTERN_COPY.Visible = true;
-            //BTN_RETURNPAGE.Visible = false;
-            //bROICopy = false;
-            //CHK_ROI_CREATE.Checked = bROICopy;
-            //if (Main.AlignUnit[m_AlignNo].m_AlignName == "PBD" || Main.AlignUnit[m_AlignNo].m_AlignName == "PBD_STAGE" || Main.AlignUnit[m_AlignNo].m_AlignName == "PBD_FOF")
-            //{
-            //    BTN_PATTERN_COPY.Visible = true;
-            //}
-
-            //if (Main.vision.CogCamBuf[m_CamNo].Width > 2000)
-            //{
-            //    M_ORIGIN_SIZE = M_ORIGIN_SIZE_S * 2;
-            //}
-            //else
-            //{
-            //    M_ORIGIN_SIZE = M_ORIGIN_SIZE_S;
-            //}
-
-            //CB_TRAY_BlobMode.Checked = Main.AlignUnit[m_AlignNo].TrayBlobMode;
-
-            //Main.AlignUnit[m_AlignNo].m_PatTagNo = m_PatTagNo;
-
-            //for (int i = 0; i < Main.AlignUnit[m_AlignNo].m_AlignPatMax[m_PatTagNo]; i++)
-            //{
-            //    RBTN_PAT[i].Text = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_PatternName;
-            //    RBTN_PAT[i].Visible = true;
-
-            //    if (Main.DEFINE.PROGRAM_TYPE == "QD_LPA_PC2" && m_AlignNo == 0 && i == 1)   // 1CAM 1SHOT
-            //        RBTN_PAT[i].Visible = false;
-
-
-            //    PT_AcceptScore[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_ACCeptScore;
-            //    PT_GAcceptScore[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_GACCeptScore;
-
-            //    PT_TRAY_GUIDE_DISX[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].TRAY_GUIDE_DISX;
-            //    PT_TRAY_GUIDE_DISY[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].TRAY_GUIDE_DISY;
-            //    PT_TRAY_PITCH_DISX[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].TRAY_PITCH_DISX;
-            //    PT_TRAY_PITCH_DISY[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].TRAY_PITCH_DISY;
-            //}
-
-            //if (Main.DEFINE.PROGRAM_TYPE == "ATT_AREA_PC1")
-            //    RBTN_PAT[1].Visible = false;
-
-            //for (int i = 0; i < Main.DEFINE.Pattern_Max; i++)
-            //{
-            //    for (int j = 0; j < Main.DEFINE.SUBPATTERNMAX; j++)
-            //    {
-            //        PT_Pattern[i, j] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].Pattern[j];
-            //        PT_Pattern_USE[i, j] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].Pattern_USE[j];
-
-            //        PT_GPattern[i, j] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].GPattern[j];
-
-
-            //        if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, 0].m_FinealignMark[i, j] != null)
-            //            FinealignMark[i, j] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, 0].m_FinealignMark[i, j];
-            //    }
-            //}
-
-            ////Bonding Align
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    m_TeachAlignLine[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i];
-            //    if (m_TeachAlignLine[i] == null)
-            //        m_TeachAlignLine[i] = new CogCaliperTool();
-            //    if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i] == null)
-            //        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i] = new CogCaliperTool();
-            //}
-
-            //m_bROIFinealignFlag = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_bFInealignFlag;
-            //CMB_USE_ROIFINEALIGN.Checked = m_bROIFinealignFlag;
-
-            //m_dROIFinealignT_Spec = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_FinealignThetaSpec;
-            //LBL_ROI_FINEALIGN_SPEC_T.Text = m_dROIFinealignT_Spec.ToString();
-
-            //if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_FinealignMarkScore == 0)
-            //    dFinealignMarkScore = 0.5;
-            //else
-            //    dFinealignMarkScore = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_FinealignMarkScore;
-
-            //m_bInspDirectionChange = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_bInspDirectionChangeFlag;
-
-            //if (m_bInspDirectionChange)
-            //    chkUseInspDirectionChange.Checked = true;
-            //else
-            //    chkUseInspDirectionChange.Checked = false;
-
-            //Pattern_Change();
-
-            //BTN_DISNAME_01.BackColor = System.Drawing.Color.SkyBlue;
-            //BTN_DISNAME_01_Click(BTN_DISNAME_01, null);
-
-            //RBTN_PAT[0].Checked = true;
-
-            //timer1.Enabled = false;  //Live
-
-            //dBondingAlignOriginDistX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceX;
-            //dBondingAlignOriginDistY = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceY;
-            //dBondingAlignDistSpecX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecX;
-            //dBondingAlignDistSpecY = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecY;
-            //lblObjectDistanceXValue.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceX);
-            //lblObjectDistanceXSpecValue.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceSpecX);
-            //dObjectDistanceSpecX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceSpecX;
-            //dObjectDistanceX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceX;
-
-            //// ksh 사용하지않는 TabPage Visible false 및 User에따라 Teaching 권한 변경
-            //if (AppsStatus.Instance().CurrentUser == User.OPERATOR)
-            //{
-            //    gbxThetaSpecSetting.Visible = false;
-            //    RDB_MATERIAL_ALIGN.Visible = false;
-            //    BTN_PATTERN_COPY.Visible = false;
-            //    btn_Inspection_Test.Visible = false;
-            //    gbxToolSetting.Visible = false;
-
-            //    TABC_MANU.SelectTab(TAB_00);
-            //}
-            //else
-            //{
-            //    TABC_MANU.TabPages.Add(TAB_05);
-            //    gbxThetaSpecSetting.Visible = true;
-            //    RDB_MATERIAL_ALIGN.Visible = true;
-            //    BTN_PATTERN_COPY.Visible = true;
-            //    btn_Inspection_Test.Visible = true;
-            //    gbxToolSetting.Visible = true;
-
-            //    TABC_MANU.SelectTab(TAB_05);
-            //}
-
-            //DisplayFit(PT_Display01);
-
-            //chkUseTracking.Checked = false;
-            //_isFormLoad = true;
+            
         }
 
         private void LoadAmpMark()
         {
-            AmpMarkDisplayList.Clear();
-            AmpMarkLabelList.Clear();
+            MarkDisplayList.Clear();
+            MarkLabelList.Clear();
           
-           if (GetUnit() is Unit unit)
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-                {
-                    string ntempSub;
-                    if (i == 0)
-                        ntempSub = "MAIN_PAT" + i.ToString();
-                    else
-                        ntempSub = "SUB__PAT" + i.ToString();
-                    CB_SUB_PATTERN.Items.Add(ntempSub);
+                string controlName = "PT_SubDisplay_" + i.ToString("00");
+                CogRecordDisplay display = (CogRecordDisplay)this.Controls["TABC_MANU"].Controls["TAB_00"].Controls[controlName];
+                display.Visible = true;
 
-                    
-                    string controlName = "PT_SubDisplay_" + i.ToString("00");
-                    CogRecordDisplay display = (CogRecordDisplay)this.Controls["TABC_MANU"].Controls["TAB_00"].Controls[controlName];
-                    display.Visible = true;
+                MarkDisplayList.Add(display);
 
-                    AmpMarkDisplayList.Add(display);
-
-                    controlName = "LB_PATTERN_" + i.ToString("00");
-                    Label label = (Label)this.Controls["TABC_MANU"].Controls["TAB_00"].Controls[controlName];
-                    label.Visible = true;
-                    AmpMarkLabelList.Add(label);
-                }
+                controlName = "LB_PATTERN_" + i.ToString("00");
+                Label label = (Label)this.Controls["TABC_MANU"].Controls["TAB_00"].Controls[controlName];
+                label.Visible = true;
+                MarkLabelList.Add(label);
             }
         }
 
@@ -247,37 +140,38 @@ namespace COG.UI.Forms
         {
             if (GetUnit() is Unit unit)
             {
+                var markUnit = GetMarkUnit();
                 for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
                 {
-                    var display = AmpMarkDisplayList[i];
+                    var display = MarkDisplayList[i];
                     display.StaticGraphics.Clear();
                     display.InteractiveGraphics.Clear();
 
-                    var ampMarkTagList = unit.AmpMark.TagList;
-                    var ampMarkTool = ampMarkTagList[i].Tool;
-                    if (ampMarkTool != null)
+                    var markTagList = markUnit.TagList;
+                    var markTool = markTagList[i].Tool;
+                    if (markTool != null)
                     {
-                        if(ampMarkTool.Pattern.Trained)
+                        if(markTool.Pattern.Trained)
                         {
                             CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
 
-                            if (ampMarkTool.Pattern.GetTrainedPatternImageMask() is ICogImage cogImage)
+                            if (markTool.Pattern.GetTrainedPatternImageMask() is ICogImage cogImage)
                             {
-                                display.Image = ampMarkTool.Pattern.GetTrainedPatternImage();
+                                display.Image = markTool.Pattern.GetTrainedPatternImage();
 
                                 var maskGraphic = CreateMaskGraphic(cogImage as CogImage8Grey);
                                 PatternInfo.Add(maskGraphic);
 
 
-                                CogRectangle trainRegion = new CogRectangle(ampMarkTool.Pattern.TrainRegion as CogRectangle);
+                                CogRectangle trainRegion = new CogRectangle(markTool.Pattern.TrainRegion as CogRectangle);
                                 trainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position;
                                 trainRegion.Interactive = false;
                                 PatternInfo.Add(trainRegion);
 
                                 CogCoordinateAxes orgin = new CogCoordinateAxes();
                                 orgin.LineStyle = CogGraphicLineStyleConstants.Dot;
-                                orgin.Transform.TranslationX = ampMarkTool.Pattern.Origin.TranslationX;
-                                orgin.Transform.TranslationY = ampMarkTool.Pattern.Origin.TranslationY;
+                                orgin.Transform.TranslationX = markTool.Pattern.Origin.TranslationX;
+                                orgin.Transform.TranslationY = markTool.Pattern.Origin.TranslationY;
                                 orgin.GraphicDOFEnable = CogCoordinateAxesDOFConstants.Position;
                                 PatternInfo.Add(orgin);
 
@@ -342,6 +236,52 @@ namespace COG.UI.Forms
             return unit;
         }
             
+        private MarkUnit GetMarkUnit()
+        {
+            var unit = GetUnit();
+
+            if (_selectedAmpMark)
+                return unit?.AmpMark;
+            else
+                return unit?.BondingMark;
+        }
+
+        private void UpdateMarkInfo()
+        {
+            var markUnit = GetMarkUnit();
+
+            NUD_PAT_SCORE.Value = (decimal)markUnit.Score;
+
+            if (_selectedMarkIndex == 0)
+            {
+                CB_SUBPAT_USE.Visible = false;
+            }
+            else
+            {
+                CB_SUBPAT_USE.Visible = true;
+                CB_SUBPAT_USE.Checked = markUnit.TagList[_selectedMarkIndex].Use;
+            }
+
+            if (markUnit != null)
+            {
+                if(markUnit.TagList[_selectedMarkIndex].Tool is CogSearchMaxTool searchMaxTool)
+                {
+                    if(searchMaxTool.Pattern.Trained)
+                        SetOrginMark(searchMaxTool.Pattern.Origin.TranslationX, searchMaxTool.Pattern.Origin.TranslationY);
+
+                }
+                for (int i = 0; i < markUnit.TagList.Count; i++)
+                {
+                    var tag = markUnit.TagList[i];
+
+                    if (tag.Use)
+                        MarkLabelList[i].BackColor = Color.LawnGreen;
+                    else
+                        MarkLabelList[i].BackColor = Color.WhiteSmoke;
+                }
+            }
+        }
+
         private void Form_PatternTeach_FormClosed(object sender, FormClosedEventArgs e)
         {
             //timer1.Enabled = false;
@@ -573,10 +513,7 @@ namespace COG.UI.Forms
                 nDisplay.Image = nImageBuf;
             }
         }
-        private void CrossLine()
-        {
-            PT_DISPLAY_CONTROL.CrossLine();
-        }
+      
         private void RefreshTeach()
         {
             //Main.vision.Grab_Flag_Start[m_CamNo] = true;
@@ -671,75 +608,58 @@ namespace COG.UI.Forms
 
         private void BTN_IMAGE_OPEN_Click(object sender, EventArgs e)
         {
-            //bLiveStop = true;
-            //timer1.Enabled = false;
-            //BTN_LIVEMODE.BackColor = Color.DarkGray;
+            AppsStatus.Instance().LiveStop = true;
+            timer1.Enabled = false;
 
-            //string filePath = "";
-            //openFileDialog1.ReadOnlyChecked = true;
-            //openFileDialog1.Filter = "Bmp File(*.bmp)|*.bmp;,|Jpg File(*.jpg)|*.jpg";
-            //openFileDialog1.ShowDialog();
+            BTN_LIVEMODE.BackColor = Color.DarkGray;
 
-            //if (openFileDialog1.FileName != "")
-            //{
-            //    if (Main.vision.CogImgTool[m_CamNo] == null)
-            //        Main.vision.CogImgTool[m_CamNo] = new CogImageFileTool();
-            //    Main.GetImageFile(Main.vision.CogImgTool[m_CamNo], openFileDialog1.FileName);
-            //    Main.vision.CogCamBuf[m_CamNo] = Main.vision.CogImgTool[m_CamNo].OutputImage;
+            openFileDlg.ReadOnlyChecked = true;
+            openFileDlg.Filter = "Bmp File(*.bmp)|*.bmp;,|Jpg File(*.jpg)|*.jpg";
 
-            //    filePath = openFileDialog1.FileName;
-            //    CurrentFolderPath = RemoveSourceCode(filePath);
-            //    //shkang_s OK 이미지 Teaching을 위해 JPG->Cog8greyImage 변환
-            //    if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "jpg")
-            //    {
-            //        if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 6) == "OV.jpg")
-            //        {
-            //            MessageBox.Show("This JPG File is 'Overlay Image'.\r\nSelect Origin JPG Image.");
-            //            return;
-            //        }
-
-            //        string[] files = Directory.GetFiles(CurrentFolderPath, "*UP.jpg");
-
-            //        for (int i = 0; i < files.Length; i++)
-            //        {
-            //            if (filePath == files[i])
-            //            {
-            //                CurrentImageNumber = i;
-            //                break;
-            //            }
-            //        }
-
-            //        CogImageConvertTool img = new CogImageConvertTool();
-            //        img.InputImage = Main.vision.CogCamBuf[m_CamNo];
-            //        img.Run();
-            //        Main.vision.CogCamBuf[m_CamNo] = img.OutputImage;
-            //    }
-            //    //shkang_e
-            //    else if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "bmp")
-            //    {
-            //        string[] files = Directory.GetFiles(CurrentFolderPath, "*.bmp");
-
-            //        for (int i = 0; i < files.Length; i++)
-            //        {
-            //            if (filePath == files[i])
-            //            {
-            //                CurrentImageNumber = i;
-            //                break;
-            //            }
-            //        }
-            //    }
+            if(openFileDlg.ShowDialog() == DialogResult.OK)
+            {
+                if (openFileDlg.FileName == "")
+                    return;
+                DisposeDisplayImage();
 
 
-            //    PT_Display01.Image = Main.vision.CogCamBuf[m_CamNo];
-            //    OriginImage = (CogImage8Grey)Main.vision.CogCamBuf[m_CamNo];
-            //    if (_useROITracking)
-            //        FinalTracking();
-            //    DisplayClear();
-            //    if (timer1.Enabled == true)
-            //        timer1.Enabled = false;
-            //    Main.DisplayRefresh(PT_Display01);
-            //}
+                CogDisplayImage = LoadImage(openFileDlg.FileName);
+
+                CogDisplay.Image = CogDisplayImage;
+                CogDisplay.DrawingEnabled = false;
+                CogDisplay.Fit(true);
+                CogDisplay.DrawingEnabled = true;
+            }
+           
         }
+
+        private CogImage8Grey LoadImage(string filePath)
+        {
+            CogImage8Grey cogImage = null;
+
+            string dirPath = Path.GetDirectoryName(filePath);
+            string fileName = Path.GetFileName(filePath);
+            string extension = Path.GetExtension(filePath);
+
+            VisionProHelper.GetImageFile(DisplayImageTool, filePath);
+
+            if (fileName.Substring(fileName.Length - 3) == "jpg")
+            {
+                if (fileName.Substring(fileName.Length - 6) == "OV.jpg")
+                {
+                    MessageBox.Show("This JPG File is 'Overlay Image'.\r\nSelect Origin JPG Image.");
+                    return null;
+                }
+            }
+            CogImageConvertTool img = new CogImageConvertTool();
+            img.InputImage = DisplayImageTool.OutputImage;
+            img.Run();
+
+            cogImage = img.OutputImage as CogImage8Grey;
+
+            return cogImage;
+        }
+
         private void BTN_TOOL_SET_Click(object sender, EventArgs e)
         {
             //Button TempBTN = (Button)sender;
@@ -1105,65 +1025,163 @@ namespace COG.UI.Forms
 
         #endregion
 
+        private void ClearDisplayGraphic()
+        {
+            CogDisplay.StaticGraphics.Clear();
+            CogDisplay.InteractiveGraphics.Clear();
+        }
+
+        public void SetInteractiveGraphics(string groupName, ICogRecord record)
+        {
+            if (record == null)
+                return;
+
+            foreach (CogRecord subRecord in record.SubRecords)
+            {
+                if (typeof(ICogGraphic).IsAssignableFrom(subRecord.ContentType))
+                {
+                    if (subRecord.Content != null)
+                        CogDisplay.InteractiveGraphics.Add(subRecord.Content as ICogGraphicInteractive, groupName, false);
+                }
+                else if (typeof(CogGraphicCollection).IsAssignableFrom(subRecord.ContentType))
+                {
+                    if (subRecord.Content != null)
+                    {
+                        CogGraphicCollection graphics = subRecord.Content as CogGraphicCollection;
+
+                        foreach (ICogGraphic graphic in graphics)
+                            CogDisplay.InteractiveGraphics.Add(graphic as ICogGraphicInteractive, groupName, false);
+                    }
+                }
+                else if (typeof(CogGraphicInteractiveCollection).IsAssignableFrom(subRecord.ContentType))
+                {
+                    if (subRecord.Content != null)
+                        CogDisplay.InteractiveGraphics.AddList(subRecord.Content as CogGraphicInteractiveCollection, groupName, false);
+                }
+
+                SetInteractiveGraphics(groupName, subRecord);
+            }
+        }
+
         #region 패턴 등록 관련
         private void BTN_PATTERN_Click(object sender, EventArgs e)
         {
-            //m_RetiMode = M_PATTERN;
-            //BTN_BackColor(sender, e);
-            //DisplayClear();
-            //CrossLine();
+            if (CogDisplayImage == null)
+                return;
 
-            ////2023 0225 YSH ROI Finealign 
-            //if (bROIFinealignTeach)
-            //{
-            //    //FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].InputImage = PT_Display01.Image;
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Trained == false)
-            //    {
-            //        if (PatMaxTrainRegion == null)
-            //            PatMaxTrainRegion = new CogRectangle(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainRegion as CogRectangle);
+            ClearDisplayGraphic();
+            ClearMarkButtonBackColor();
+            BTN_PATTERN.BackColor = Color.LawnGreen;
 
-            //        PatMaxTrainRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 100, 100);
-            //    }
+            PT_DISPLAY_CONTROL.CrossLine();
 
-            //    PatMaxTrainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position | CogRectangleDOFConstants.Size; //| CogRectangleAffineDOFConstants.Rotation
-            //    PatMaxTrainRegion.Interactive = true;
+            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
+            if (tag.Tool.Pattern.Trained)
+            {
+                double x = tag.Tool.Pattern.Origin.TranslationX;
+                double y = tag.Tool.Pattern.Origin.TranslationY;
+                SetOrginMark(x, y);
+            }
+            else
+            {
+                SetNewROI();
+            }
 
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Trained == false)
-            //    {
-            //        MarkORGPoint.SetCenterRotationSize(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 0, M_ORIGIN_SIZE);
-            //        ORGSizeFit();
-            //    }
-            //    CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-            //    PatternInfo.Add(PatMaxTrainRegion);
-            //    //            PatternInfo.Add(PatMaxORGPoint);
-            //    PatternInfo.Add(MarkORGPoint);
-            //    PT_Display01.InteractiveGraphics.AddList(PatternInfo, "PATTERN_INFO", false);
-            //}
-            //else
-            //{
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //    {
-            //        if (PatMaxTrainRegion == null)
-            //            PatMaxTrainRegion = new CogRectangle(PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion as CogRectangle);
+            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
+        }
 
-            //        PatMaxTrainRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 100, 100);
-            //    }
+        private void ClearMarkButtonBackColor()
+        {
+            BTN_PATTERN.BackColor = Color.DarkGray;
+            BTN_ORIGIN.BackColor = Color.DarkGray;
+            BTN_PATTERN_SEARCH_SET.BackColor = Color.DarkGray;
+        }
 
-            //    PatMaxTrainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position | CogRectangleDOFConstants.Size; //| CogRectangleAffineDOFConstants.Rotation
-            //    PatMaxTrainRegion.Interactive = true;
+        private void SetOrginMark(double x, double y)
+        {
+            if(OriginMarkPoint == null)
+            {
+                OriginMarkPoint = new CogPointMarker();
+                OriginMarkPoint.GraphicDOFEnable = CogPointMarkerDOFConstants.All;
+                OriginMarkPoint.Interactive = true;
+                OriginMarkPoint.LineStyle = CogGraphicLineStyleConstants.Dot;
+                OriginMarkPoint.SelectedColor = CogColorConstants.Cyan;
+                OriginMarkPoint.DragColor = CogColorConstants.Cyan;
+            }
+            OriginMarkPoint.X = x;
+            OriginMarkPoint.Y = y;
+        }
 
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //    {
-            //        MarkORGPoint.SetCenterRotationSize(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 0, M_ORIGIN_SIZE);
-            //        ORGSizeFit();
-            //    }
-            //    CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-            //    PatternInfo.Add(PatMaxTrainRegion);
-            //    //            PatternInfo.Add(PatMaxORGPoint);
-            //    PatternInfo.Add(MarkORGPoint);
-            //    PT_Display01.InteractiveGraphics.AddList(PatternInfo, "PATTERN_INFO", false);
+        public void AddROI()
+        {
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
 
-            //}
+            if (ModelManager.Instance().CurrentModel == null)
+                return;
+
+            SetNewROI();
+        }
+
+        private void SetNewROI()
+        {
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
+
+            double centerX = CogDisplayImage.Width / 2.0;
+            double centerY = CogDisplayImage.Height / 2.0;
+
+            CogRectangle roi = VisionProHelper.CreateRectangle(centerX, centerY, 100, 100);
+            CogRectangle searchRoi = VisionProHelper.CreateRectangle(roi.CenterX, roi.CenterY, roi.Width * 2, roi.Height * 2);
+
+            SetOrginMark(centerX, centerY);
+
+            var currentParam = GetMarkUnit().TagList[_selectedMarkIndex];
+            currentParam?.SetTrainRegion(roi);
+            currentParam.SetSearchRegion(searchRoi);
+            currentParam?.SetOrginMark(OriginMarkPoint);
+        }
+
+        private void DrawROI(CogSearchMaxCurrentRecordConstants constants)
+        {
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
+
+            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
+
+            constants = constants | CogSearchMaxCurrentRecordConstants.InputImage | CogSearchMaxCurrentRecordConstants.TrainImage;
+            ;//| CogSearchMaxCurrentRecordConstants.TrainImage;
+
+            //constants = CogSearchMaxCurrentRecordConstants.All;
+
+            CogRectangle rect = new CogRectangle();
+            rect.X = 500;
+            rect.Y = 1000;
+            rect.Width = 100;
+            rect.Height = 100;
+            rect.Interactive = true;
+            rect.Color = CogColorConstants.Red;
+            rect.GraphicDOFEnable = CogRectangleDOFConstants.Position | CogRectangleDOFConstants.Size;
+            tag.Tool.SearchRegion = rect;
+            tag.Tool.CurrentRecordEnable = CogSearchMaxCurrentRecordConstants.SearchRegion;
+
+            SetInteractiveGraphics("tool", tag.Tool.CreateCurrentRecord());
+            //PT_DISPLAY_CONTROL.CogDisplay00.InteractiveGraphics.Clear();
+            
+            //CogGraphicInteractiveCollection collect2 = new CogGraphicInteractiveCollection();
+            //collect2.Add(rect);
+            //CogDisplay.InteractiveGraphics.AddList(collect2, "tool", false);
+            CogDisplay.InteractiveGraphics.Add(OriginMarkPoint, "tool", false);
+
+            if (tag.Tool.Pattern.Trained == false)
+            {
+                CogGraphicInteractiveCollection collect = new CogGraphicInteractiveCollection();
+
+                var trainRegion = tag.Tool.Pattern.TrainRegion as CogRectangle;
+                collect.Add(trainRegion);
+
+                CogDisplay.InteractiveGraphics.AddList(collect, "tool", false);
+            }
         }
 
         private void CNLSearch_DrawOverlay()
@@ -1195,29 +1213,21 @@ namespace COG.UI.Forms
 
         private void BTN_PATTERN_ORIGIN_Click(object sender, EventArgs e)
         {
-            //if (m_RetiMode == M_PATTERN || m_RetiMode == M_ORIGIN)
-            //{
-            //    if (bROIFinealignTeach)
-            //    {
-            //        if (FinealignMark[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //        {
-            //            MarkORGPoint.SetCenterRotationSize(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 0, M_ORIGIN_SIZE);
-            //            ORGSizeFit();
-            //        }
-            //    }
-            //    else
-            //    {
-            //        if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //        {
-            //            MarkORGPoint.SetCenterRotationSize(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], 0, M_ORIGIN_SIZE);
-            //            ORGSizeFit();
-            //        }
-            //    }
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
 
-            //    MarkORGPoint.X = PatMaxTrainRegion.CenterX;
-            //    MarkORGPoint.Y = PatMaxTrainRegion.CenterY;
-            //}
+            var currentParam = GetMarkUnit().TagList[_selectedMarkIndex];
+            var trainRegion = currentParam?.Tool.Pattern.TrainRegion as CogRectangle;
+
+            double newX = trainRegion.X + (trainRegion.Width / 2);
+            double newY = trainRegion.Y + (trainRegion.Height / 2);
+
+            SetOrginMark(newX, newY);
+            currentParam?.SetOrginMark(OriginMarkPoint);
+
+            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
         }
+
         private void BTN_ORIGIN_Click(object sender, EventArgs e)
         {
             //m_RetiMode = M_ORIGIN;
@@ -1225,6 +1235,25 @@ namespace COG.UI.Forms
         }
         private void BTN_PATTERN_SEARCH_SET_Click(object sender, EventArgs e)
         {
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
+
+            ClearMarkButtonBackColor();
+            ClearDisplayGraphic();
+            BTN_PATTERN_SEARCH_SET.BackColor = Color.LawnGreen;
+
+            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
+            //if (tag.Tool.Pattern.Trained == false)
+            //{
+            //    SetNewROI();
+            //}
+            //else
+            //{
+
+            //}
+            //CogSearchMaxCurrentRecordConstants consta = CogSearchMaxCurrentRecordConstants.SearchRegion || CogSearchMaxCurrentRecordConstants.TrainRegion;
+            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
+
             //m_RetiMode = M_SEARCH;
             //BTN_BackColor(sender, e);
             //DisplayClear();
@@ -1386,13 +1415,13 @@ namespace COG.UI.Forms
         }
         private void CB_SUB_PATTERN_SelectionChangeCommitted(object sender, EventArgs e)
         {
-            //m_PatNo_Sub = CB_SUB_PATTERN.SelectedIndex;
-            //if (m_PatNo_Sub == 0)
-            //    BTN_MAINORIGIN_COPY.Visible = false;
-            //else
-            //    BTN_MAINORIGIN_COPY.Visible = true;
-            //Pattern_Change();
+            int index = CB_SUB_PATTERN.SelectedIndex;
+            if (index < 0)
+                return;
+
+            ChangeMark(index);
         }
+
         public static void DrawTrainedPattern(CogRecordDisplay Display, CogSearchMaxTool TempPMAlignTool)
         {
             //Main.DisplayClear(Display);
@@ -1481,17 +1510,6 @@ namespace COG.UI.Forms
 
             //}
             //SUBPATTERN_LABELDISPLAY(CB_SUBPAT_USE.Checked, m_PatNo_Sub);
-        }
-        private void SUBPATTERN_LABELDISPLAY(bool nUSE, int nPatSubNo)
-        {
-            //if (nUSE)
-            //{
-            //    LB_PATTERN[nPatSubNo].BackColor = System.Drawing.Color.LawnGreen;
-            //}
-            //else
-            //{
-            //    LB_PATTERN[nPatSubNo].BackColor = System.Drawing.Color.WhiteSmoke;
-            //}
         }
         #endregion
 
@@ -2631,35 +2649,20 @@ namespace COG.UI.Forms
         }
         private void ORGSizeFit()
         {
-            //try
-            //{
-            //    int nZoomSize = 1;
-            //    //----------------------------------------------------------------------
-            //    nZoomSize = (int)(PT_Display01.Zoom * M_ORIGIN_SIZE);
-            //    if (nZoomSize < 1)
-            //        MarkORGPoint.SizeInScreenPixels = M_ORIGIN_SIZE;
-            //    else
-            //        MarkORGPoint.SizeInScreenPixels = nZoomSize;
-            //    //----------------------------------------------------------------------
-            //    nZoomSize = (int)(PT_Display01.Zoom * nCrossSize);
-            //    if (MarkPoint[m_PatNo, 0] != null && MarkPoint[m_PatNo, 1] != null)
-            //    {
-            //        if (nZoomSize < 1)
-            //        {
-            //            MarkPoint[m_PatNo, 0].SizeInScreenPixels = nCrossSize;
-            //            MarkPoint[m_PatNo, 1].SizeInScreenPixels = nCrossSize;
-            //        }
-            //        else
-            //        {
-            //            MarkPoint[m_PatNo, 0].SizeInScreenPixels = nZoomSize;
-            //            MarkPoint[m_PatNo, 1].SizeInScreenPixels = nZoomSize;
-            //        }
-            //    }
-            //}
-            //catch
-            //{
+            try
+            {
+                int nZoomSize = 1;
 
-            //}
+                nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
+                if (nZoomSize < 1)
+                    OriginMarkPoint.SizeInScreenPixels = ORIGIN_SIZE;
+                else
+                    OriginMarkPoint.SizeInScreenPixels = nZoomSize;
+            }
+            catch
+            {
+
+            }
         }
         private void PSizeLabel()
         {
@@ -2817,14 +2820,36 @@ namespace COG.UI.Forms
 
             //}
         }
-        private void PT_SubDisplay_00_Click_1(object sender, EventArgs e)
+
+        private void CogMarkDisplay_Click(object sender, EventArgs e)
         {
-            //CogRecordDisplay TempNum = (CogRecordDisplay)sender;
-            //int n_SubNo;
-            //n_SubNo = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
-            //CB_SUB_PATTERN.SelectedIndex = n_SubNo;
-            //CB_SUB_PATTERN_SelectionChangeCommitted(null, null);
+            CogRecordDisplay TempNum = (CogRecordDisplay)sender;
+            int index = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
+
+            ChangeMark(index);
         }
+
+        private void ChangeMark(int index)
+        {
+            if (_selectedMarkIndex < 0)
+                return;
+
+            var prevMark = GetMarkUnit().TagList[_selectedMarkIndex];
+            prevMark.SetOrginMark(OriginMarkPoint);
+
+            _selectedMarkIndex = index;
+            CB_SUB_PATTERN.SelectedIndex = index;
+
+            if (index == 0)
+                BTN_MAINORIGIN_COPY.Visible = false;
+            else
+                BTN_MAINORIGIN_COPY.Visible = true;
+
+            UpdateMarkInfo();
+            ClearDisplayGraphic();
+            ClearMarkButtonBackColor();
+        }
+
         private void BTN_MAINORIGIN_COPY_Click(object sender, EventArgs e)
         {
             //if (m_RetiMode == M_PATTERN || m_RetiMode == M_ORIGIN)
@@ -2854,33 +2879,34 @@ namespace COG.UI.Forms
         private void LB_PATTERN_08_Click(object sender, EventArgs e)
         {
             Label TempNum = (Label)sender;
-            //int n_SubNo;
-            //n_SubNo = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
+            int index = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
 
-            //if (PT_Pattern_USE[m_PatNo, n_SubNo])
-            //{
-            //    PT_Pattern_USE[m_PatNo, n_SubNo] = false;
-            //    SUBPATTERN_LABELDISPLAY(PT_Pattern_USE[m_PatNo, n_SubNo], n_SubNo);
-            //}
-            //else
-            //{
-            //    PT_Pattern_USE[m_PatNo, n_SubNo] = true;
-            //    SUBPATTERN_LABELDISPLAY(PT_Pattern_USE[m_PatNo, n_SubNo], n_SubNo);
-            //}
-
-            //if (m_PatNo_Sub == n_SubNo)
-            //    CB_SUBPAT_USE.Checked = PT_Pattern_USE[m_PatNo, m_PatNo_Sub];
+            if(GetMarkUnit() is MarkUnit unit)
+            {
+                var tag = unit.TagList[index];
+                tag.Use = !tag.Use;
+                if (_selectedMarkIndex == index)
+                {
+                    CB_SUBPAT_USE.Visible = true;
+                    CB_SUBPAT_USE.Checked = tag.Use;
+                }
+                if (tag.Use)
+                    MarkLabelList[index].BackColor = Color.LawnGreen;
+                else
+                    MarkLabelList[index].BackColor = Color.WhiteSmoke;
+            }
         }
+
         private void PT_Display01_Changed(object sender, CogChangedEventArgs e)
         {
-            //if (Main.Status.MC_MODE == Main.DEFINE.MC_TEACHFORM)
-            //{
-            //    if (PT_Display01.Zoom != ZoomBackup)
-            //    {
-            //        ZoomBackup = PT_Display01.Zoom;
-            //        ORGSizeFit();
-            //    }
-            //}
+            if (AppsStatus.Instance().UI_STATUS == UI_STATUS.TEACH_FORM)
+            {
+                if (CogDisplay.Zoom != ZoomBackup)
+                {
+                    ZoomBackup = CogDisplay.Zoom;
+                    ORGSizeFit();
+                }
+            }
         }
         private void BTN_PATTERN_MASK_Click(object sender, EventArgs e)
         {
@@ -6937,51 +6963,34 @@ namespace COG.UI.Forms
 
         private void RDB_ALIGN_TEACH_MODE_Click(object sender, EventArgs e)
         {
-            //RadioButton TempRadioButton = (RadioButton)sender;
+            RadioButton TempRadioButton = (RadioButton)sender;
 
 
-            //switch (Convert.ToInt32(TempRadioButton.Tag))
-            //{
-            //    case 1://자재 얼라인 
-            //        PANEL_MATERIAL_ALIGN.Visible = true;
-            //        PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(5, 60);
-            //        PANEL_MATERIAL_ALIGN.Size = new Size(897, 615);
-            //        PANEL_BONDING_ALIGN.Visible = false;
-            //        PANEL_ROI_FINEALIGN.Visible = false;
-            //        TempRadioButton.BackColor = Color.LimeGreen;
-            //        RDB_BONDING_ALIGN.BackColor = Color.DarkGray;
-            //        RDB_ROI_FINEALIGN.BackColor = Color.DarkGray;
-            //        chkUseTracking.Visible = true;
-            //        break;
+            switch (Convert.ToInt32(TempRadioButton.Tag))
+            {
+                case 1://자재 얼라인 
+                    PANEL_MATERIAL_ALIGN.Visible = true;
+                    PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(5, 60);
+                    PANEL_MATERIAL_ALIGN.Size = new Size(897, 615);
+                    PANEL_ROI_FINEALIGN.Visible = false;
+                    TempRadioButton.BackColor = Color.LimeGreen;
+                    RDB_ROI_FINEALIGN.BackColor = Color.DarkGray;
+                    chkUseTracking.Visible = true;
+                    break;
 
-            //    case 2://본딩 얼라인
-            //        PANEL_MATERIAL_ALIGN.Visible = false;
-            //        PANEL_BONDING_ALIGN.Visible = true;
-            //        PANEL_BONDING_ALIGN.Location = new System.Drawing.Point(5, 60);
-            //        PANEL_BONDING_ALIGN.Size = new Size(740, 258);
-            //        PANEL_ROI_FINEALIGN.Visible = false;
-            //        TempRadioButton.BackColor = Color.LimeGreen;
-            //        RDB_MATERIAL_ALIGN.BackColor = Color.DarkGray;
-            //        RDB_ROI_FINEALIGN.BackColor = Color.DarkGray;
-            //        chkUseTracking.Visible = true;
-            //        break;
+                case 3://ROI Fine얼라인             
+                    PANEL_MATERIAL_ALIGN.Visible = false;
+                    PANEL_ROI_FINEALIGN.Visible = true;
+                    PANEL_ROI_FINEALIGN.Location = new System.Drawing.Point(5, 60);
+                    PANEL_ROI_FINEALIGN.Size = new Size(740, 206);
+                    TempRadioButton.BackColor = Color.LimeGreen;
+                    RDB_MATERIAL_ALIGN.BackColor = Color.DarkGray;
+                    chkUseTracking.Visible = false;
+                    break;
 
-            //    case 3://ROI Fine얼라인             
-            //        PANEL_MATERIAL_ALIGN.Visible = false;
-            //        PANEL_BONDING_ALIGN.Visible = false;
-            //        PANEL_ROI_FINEALIGN.Visible = true;
-            //        PANEL_ROI_FINEALIGN.Location = new System.Drawing.Point(5, 60);
-            //        PANEL_ROI_FINEALIGN.Size = new Size(740, 206);
-            //        TempRadioButton.BackColor = Color.LimeGreen;
-            //        RDB_MATERIAL_ALIGN.BackColor = Color.DarkGray;
-            //        RDB_BONDING_ALIGN.BackColor = Color.DarkGray;
-            //        m_TempCaliperTool = new CogCaliperTool();
-            //        chkUseTracking.Visible = false;
-            //        break;
-
-            //    default:
-            //        break;
-            //}
+                default:
+                    break;
+            }
         }
 
         private void BTN_RETURNPAGE_Click(object sender, EventArgs e)
@@ -7139,13 +7148,13 @@ namespace COG.UI.Forms
             //else
             //    for (int i = 0; i < BTN_TOOLSET.Count; i++) BTN_TOOLSET[i].Visible = true;
         }
+
         private string RemoveSourceCode(string input)
         {
             int lastIndex = input.LastIndexOf('\\');
             if (lastIndex != -1)
-            {
                 return input.Substring(0, lastIndex);
-            }
+
             return input;
         }
 
@@ -7583,6 +7592,23 @@ namespace COG.UI.Forms
         private void NUD_PAT_SCORE_ValueChanged(object sender, EventArgs e)
         {
 
+        }
+
+        public void DisposeDisplayImage()
+        {
+            if(CogDisplayImage != null)
+            {
+                if (CogDisplayImage is CogImage8Grey grey)
+                {
+                    grey.Dispose();
+                    grey = null;
+                }
+                if (CogDisplayImage is CogImage24PlanarColor color)
+                {
+                    color.Dispose();
+                    color = null;
+                }
+            }
         }
     }
 }

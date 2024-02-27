@@ -87,7 +87,9 @@ namespace COG.Helper
 
             GetPrivateProfileString(Section, Key, "false", temp, 80, FileName);
 
-            return bool.TryParse(temp.ToString(), out Ret);
+            bool.TryParse(temp.ToString(), out Ret);
+
+            return Convert.ToBoolean(temp.ToString()); 
         }
         #endregion
     }
