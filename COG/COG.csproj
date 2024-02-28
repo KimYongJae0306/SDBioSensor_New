@@ -689,11 +689,14 @@
   <ItemGroup>
     <Compile Include="AppsStatus.cs" />
     <Compile Include="CameraBufferManager.cs" />
+    <Compile Include="Class\Algorithm.cs" />
+    <Compile Include="Class\Core\MarkResult.cs" />
     <Compile Include="Class\InspModel.cs" />
     <Compile Include="Class\InspModelService.cs" />
     <Compile Include="Class\TeachingData.cs" />
     <Compile Include="Class\Units\InspUnit.cs" />
-    <Compile Include="Class\Units\MarkUnit.cs" />
+    <Compile Include="Class\Units\Mark.cs" />
+    <Compile Include="Class\Units\MarkTool.cs" />
     <Compile Include="Class\Units\SDParameter.cs" />
     <Compile Include="Class\Vision.cs" />
     <Compile Include="Comm\SocketComm.cs" />
@@ -731,6 +734,12 @@
     </Compile>
     <Compile Include="UI\Controls\DisplayControl.Designer.cs">
       <DependentUpon>DisplayControl.cs</DependentUpon>
+    </Compile>
+    <Compile Include="UI\Controls\MarkControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="UI\Controls\MarkControl.Designer.cs">
+      <DependentUpon>MarkControl.cs</DependentUpon>
     </Compile>
     <Compile Include="UI\Forms\CMDForm.cs">
       <SubType>Form</SubType>
@@ -841,6 +850,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Controls\DisplayControl.resx">
       <DependentUpon>DisplayControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="UI\Controls\MarkControl.resx">
+      <DependentUpon>MarkControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="UI\Forms\CMDForm.resx">
       <DependentUpon>CMDForm.cs</DependentUpon>

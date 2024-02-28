@@ -13,6 +13,8 @@ namespace COG.Class
 
         private List<StageUnit> StageUnitList { get; set; } = new List<StageUnit>();
 
+        public BondingMarkDirection BondingMarkDirection { get; set; } = BondingMarkDirection.Up;
+
         public static TeachingData Instance()
         {
             if (_instance == null)
@@ -57,5 +59,18 @@ namespace COG.Class
             StageUnitList.ForEach(x => x.Dispose());
             StageUnitList.Clear();
         }
+    }
+
+    public enum BondingMarkDirection
+    {
+        Up,
+        Down,
+    }
+
+    public enum MarkType
+    {
+        Amp,
+        Bonding_Up,
+        Bonding_Down,
     }
 }

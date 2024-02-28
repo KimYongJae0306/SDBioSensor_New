@@ -23,14 +23,10 @@ namespace COG.UI.Forms
         public PatternMaskForm()
         {
             InitializeComponent();
-
         }
-
 
         private void Form_PatternMask_Load(object sender, EventArgs e)
         {
-
-
             TempSearchMaxTool = new CogSearchMaxTool(BackUpSearchMaxTool);
             TempPMAlignTool = new CogPMAlignTool(BackUpPMAlignTool);
 
@@ -40,7 +36,6 @@ namespace COG.UI.Forms
                 if (TempSearchMaxTool.Pattern.TrainImageMask != null)
                 {
                     MaskEdit.MaskImage = TempSearchMaxTool.Pattern.TrainImageMask;
-                    
                 }
             }
             catch
@@ -60,9 +55,6 @@ namespace COG.UI.Forms
                     MaskEdit.MaskImage = null;
                     MaskEdit.MaskImage.Allocate(MaskEdit.Image.Width, MaskEdit.Image.Height);
                     Mask_Display.Image = CopyIMG(TempSearchMaxTool.Pattern.GetTrainedPatternImage());
-
-
-
                 }
             }
             catch
@@ -93,15 +85,7 @@ namespace COG.UI.Forms
                 TempSearchMaxTool.Pattern.TrainImage = BackUpSearchMaxTool.Pattern.TrainImage;
                 TempSearchMaxTool.Pattern.Train();
 
-                //TempPMAlignTool.Pattern.TrainImageMaskOffsetX = (int)((Cognex.VisionPro.CogRectangle)(TempPMAlignTool.Pattern.TrainRegion)).X;
-                //TempPMAlignTool.Pattern.TrainImageMaskOffsetY = (int)((Cognex.VisionPro.CogRectangle)(TempPMAlignTool.Pattern.TrainRegion)).Y;
-                //TempPMAlignTool.Pattern.TrainImageMask = CopyIMG(MaskEdit.MaskImage);
-
-                //TempPMAlignTool.Pattern.TrainImage = BackUpPMAlignTool.Pattern.TrainImage;
-                //TempPMAlignTool.Pattern.Train();
-
                 BackUpSearchMaxTool = TempSearchMaxTool;
-                //BackUpPMAlignTool = TempPMAlignTool;
             }
             catch (System.Exception ex)
             {

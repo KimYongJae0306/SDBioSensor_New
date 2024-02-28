@@ -121,7 +121,7 @@
             this.CB_SUB_PATTERN = new System.Windows.Forms.ComboBox();
             this.PT_SubDisplay_00 = new Cognex.VisionPro.CogRecordDisplay();
             this.BTN_APPLY = new System.Windows.Forms.Button();
-            this.TAB_06 = new System.Windows.Forms.TabPage();
+            this.TAB_01 = new System.Windows.Forms.TabPage();
             this.PANEL_MATERIAL_ALIGN = new System.Windows.Forms.Panel();
             this.groupBox7 = new System.Windows.Forms.GroupBox();
             this.btn_TOP_Inscription = new System.Windows.Forms.RadioButton();
@@ -186,7 +186,7 @@
             this.BTN_ROI_FINEALIGN_LEFTMARK = new System.Windows.Forms.Button();
             this.RDB_ROI_FINEALIGN = new System.Windows.Forms.RadioButton();
             this.RDB_MATERIAL_ALIGN = new System.Windows.Forms.RadioButton();
-            this.TAB_05 = new System.Windows.Forms.TabPage();
+            this.TAB_02 = new System.Windows.Forms.TabPage();
             this.groupBox4 = new System.Windows.Forms.GroupBox();
             this.DataGridview_Insp = new System.Windows.Forms.DataGridView();
             this.COL_00 = new System.Windows.Forms.DataGridViewTextBoxColumn();
@@ -348,7 +348,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.NUD_PAT_GSCORE)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.NUD_PAT_SCORE)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.PT_SubDisplay_00)).BeginInit();
-            this.TAB_06.SuspendLayout();
+            this.TAB_01.SuspendLayout();
             this.PANEL_MATERIAL_ALIGN.SuspendLayout();
             this.groupBox7.SuspendLayout();
             this.groupBox10.SuspendLayout();
@@ -356,7 +356,7 @@
             this.groupBox8.SuspendLayout();
             this.PANEL_ROI_FINEALIGN.SuspendLayout();
             this.gbxThetaSpecSetting.SuspendLayout();
-            this.TAB_05.SuspendLayout();
+            this.TAB_02.SuspendLayout();
             this.groupBox4.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridview_Insp)).BeginInit();
             this.groupBox1.SuspendLayout();
@@ -1112,8 +1112,8 @@
             // TABC_MANU
             // 
             this.TABC_MANU.Controls.Add(this.TAB_00);
-            this.TABC_MANU.Controls.Add(this.TAB_06);
-            this.TABC_MANU.Controls.Add(this.TAB_05);
+            this.TABC_MANU.Controls.Add(this.TAB_01);
+            this.TABC_MANU.Controls.Add(this.TAB_02);
             this.TABC_MANU.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.TABC_MANU.Location = new System.Drawing.Point(903, 62);
             this.TABC_MANU.Name = "TABC_MANU";
@@ -1121,7 +1121,6 @@
             this.TABC_MANU.Size = new System.Drawing.Size(953, 736);
             this.TABC_MANU.TabIndex = 50;
             this.TABC_MANU.SelectedIndexChanged += new System.EventHandler(this.TABC_MANU_SelectedIndexChanged);
-            this.TABC_MANU.Selecting += new System.Windows.Forms.TabControlCancelEventHandler(this.TABC_MANU_Selecting);
             // 
             // TAB_00
             // 
@@ -1747,20 +1746,20 @@
             this.BTN_APPLY.UseVisualStyleBackColor = false;
             this.BTN_APPLY.Click += new System.EventHandler(this.BTN_APPLY_Click);
             // 
-            // TAB_06
+            // TAB_01
             // 
-            this.TAB_06.BackColor = System.Drawing.Color.Silver;
-            this.TAB_06.Controls.Add(this.PANEL_MATERIAL_ALIGN);
-            this.TAB_06.Controls.Add(this.PANEL_ROI_FINEALIGN);
-            this.TAB_06.Controls.Add(this.RDB_ROI_FINEALIGN);
-            this.TAB_06.Controls.Add(this.RDB_MATERIAL_ALIGN);
-            this.TAB_06.Location = new System.Drawing.Point(4, 24);
-            this.TAB_06.Name = "TAB_06";
-            this.TAB_06.Padding = new System.Windows.Forms.Padding(3);
-            this.TAB_06.Size = new System.Drawing.Size(945, 708);
-            this.TAB_06.TabIndex = 6;
-            this.TAB_06.Tag = "6";
-            this.TAB_06.Text = "MARK [BONDING]";
+            this.TAB_01.BackColor = System.Drawing.Color.Silver;
+            this.TAB_01.Controls.Add(this.PANEL_MATERIAL_ALIGN);
+            this.TAB_01.Controls.Add(this.PANEL_ROI_FINEALIGN);
+            this.TAB_01.Controls.Add(this.RDB_ROI_FINEALIGN);
+            this.TAB_01.Controls.Add(this.RDB_MATERIAL_ALIGN);
+            this.TAB_01.Location = new System.Drawing.Point(4, 24);
+            this.TAB_01.Name = "TAB_01";
+            this.TAB_01.Padding = new System.Windows.Forms.Padding(3);
+            this.TAB_01.Size = new System.Drawing.Size(945, 708);
+            this.TAB_01.TabIndex = 6;
+            this.TAB_01.Tag = "1";
+            this.TAB_01.Text = "MARK [BONDING]";
             // 
             // PANEL_MATERIAL_ALIGN
             // 
@@ -1769,9 +1768,9 @@
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox9);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox8);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.btn_Test);
-            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(6, 60);
+            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(483, 91);
             this.PANEL_MATERIAL_ALIGN.Name = "PANEL_MATERIAL_ALIGN";
-            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(647, 621);
+            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(170, 590);
             this.PANEL_MATERIAL_ALIGN.TabIndex = 399;
             // 
             // groupBox7
@@ -2638,18 +2637,18 @@
             this.RDB_MATERIAL_ALIGN.UseVisualStyleBackColor = false;
             this.RDB_MATERIAL_ALIGN.Click += new System.EventHandler(this.RDB_ALIGN_TEACH_MODE_Click);
             // 
-            // TAB_05
+            // TAB_02
             // 
-            this.TAB_05.BackColor = System.Drawing.Color.Silver;
-            this.TAB_05.Controls.Add(this.groupBox4);
-            this.TAB_05.Controls.Add(this.groupBox1);
-            this.TAB_05.Controls.Add(this.chkUseInspDirectionChange);
-            this.TAB_05.Location = new System.Drawing.Point(4, 24);
-            this.TAB_05.Name = "TAB_05";
-            this.TAB_05.Size = new System.Drawing.Size(945, 708);
-            this.TAB_05.TabIndex = 5;
-            this.TAB_05.Tag = "5";
-            this.TAB_05.Text = "INSPECTION";
+            this.TAB_02.BackColor = System.Drawing.Color.Silver;
+            this.TAB_02.Controls.Add(this.groupBox4);
+            this.TAB_02.Controls.Add(this.groupBox1);
+            this.TAB_02.Controls.Add(this.chkUseInspDirectionChange);
+            this.TAB_02.Location = new System.Drawing.Point(4, 24);
+            this.TAB_02.Name = "TAB_02";
+            this.TAB_02.Size = new System.Drawing.Size(945, 708);
+            this.TAB_02.TabIndex = 5;
+            this.TAB_02.Tag = "2";
+            this.TAB_02.Text = "INSPECTION";
             // 
             // groupBox4
             // 
@@ -4342,7 +4341,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1930, 965);
+            this.ClientSize = new System.Drawing.Size(1931, 949);
             this.ControlBox = false;
             this.Controls.Add(this.pnlDisplay);
             this.Controls.Add(this.groupBox5);
@@ -4404,7 +4403,7 @@
             ((System.ComponentModel.ISupportInitialize)(this.NUD_PAT_GSCORE)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.NUD_PAT_SCORE)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.PT_SubDisplay_00)).EndInit();
-            this.TAB_06.ResumeLayout(false);
+            this.TAB_01.ResumeLayout(false);
             this.PANEL_MATERIAL_ALIGN.ResumeLayout(false);
             this.groupBox7.ResumeLayout(false);
             this.groupBox7.PerformLayout();
@@ -4414,8 +4413,8 @@
             this.PANEL_ROI_FINEALIGN.ResumeLayout(false);
             this.PANEL_ROI_FINEALIGN.PerformLayout();
             this.gbxThetaSpecSetting.ResumeLayout(false);
-            this.TAB_05.ResumeLayout(false);
-            this.TAB_05.PerformLayout();
+            this.TAB_02.ResumeLayout(false);
+            this.TAB_02.PerformLayout();
             this.groupBox4.ResumeLayout(false);
             this.groupBox4.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)(this.DataGridview_Insp)).EndInit();
@@ -4550,7 +4549,7 @@
         private System.Windows.Forms.Button BTN_CAM_DIST;
         private System.Windows.Forms.Timer timer2;
         private System.Windows.Forms.Label LB_MARK_COMMENT;
-        private System.Windows.Forms.TabPage TAB_05;
+        private System.Windows.Forms.TabPage TAB_02;
         private System.Windows.Forms.DataGridView DataGridview_Insp;
         private System.Windows.Forms.Button BTN_INSP_DELETE;
         private System.Windows.Forms.Button BTN_INSP_ADD;
@@ -4582,7 +4581,7 @@
         private System.Windows.Forms.Button btn_Inspection_Test;
         private System.Windows.Forms.Label label61;
         private System.Windows.Forms.Label Lab_Tact;
-        private System.Windows.Forms.TabPage TAB_06;
+        private System.Windows.Forms.TabPage TAB_01;
         private System.Windows.Forms.ComboBox Combo_Polarity3;
         private System.Windows.Forms.Label label62;
         private System.Windows.Forms.Button btn_align_caliper_cnt_down;

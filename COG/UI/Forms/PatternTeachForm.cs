@@ -22,21 +22,44 @@ using System.Windows.Forms;
 
 namespace COG.UI.Forms
 {
+    public enum TabPageType
+    {
+        AmpMark = 0,
+        BondingMark = 1,
+        Inspection = 2,
+    }
+
     public partial class PatternTeachForm : Form
     {
+        private Algorithm Algorithm { get; set; } = new Algorithm();
+
+        private TabPageType TabPageType = TabPageType.AmpMark;
+
+        private bool _tabLock { get; set; } = false;
+
+        private bool _selectedAmpMark { get; set; } = false;
+
+        private bool _isSelectedBondingMarkUp { get; set; } = false;
+
+        public bool _fixedTabControl { get; set; } = false;
+
+        public bool _prevFixedTabControl { get; set; } = false;
+
         public const int ORIGIN_SIZE = 120;
 
         private bool _isFormLoad { get; set; } = false;
 
-        private bool _selectedAmpMark { get; set; } = false;
-
         private int _selectedMarkIndex { get; set; } = 0; // 0 : Main, 1~ : Sub
+
+        private int _prevSelectedTabNo { get; set; } = -1;
 
         public int StageUnitNo { get; set; } = 0;
 
         public bool IsLeft { get; set; } = false;
 
         private double ZoomBackup { get; set; } = 0;
+
+        private PatternMaskForm PatternMaskForm { get; set; } = new PatternMaskForm();
 
         private List<CogRecordDisplay> MarkDisplayList = new List<CogRecordDisplay>();
 
@@ -50,11 +73,12 @@ namespace COG.UI.Forms
 
         private CogPointMarker OriginMarkPoint { get; set; } = null;
 
+        private Unit CurrentUnit { get; set; } = null;
+
         public PatternTeachForm()
         {
             InitializeComponent();
             this.Size = new System.Drawing.Size(SystemInformation.PrimaryMonitorSize.Width, SystemInformation.PrimaryMonitorSize.Height);
-
        
             CogDisplay = new CogRecordDisplay();
             CogDisplay.MouseUp += new MouseEventHandler(Display_MauseUP);
@@ -63,6 +87,33 @@ namespace COG.UI.Forms
 
             PT_DisplayToolbar01.Display = CogDisplay;
             PT_DisplayStatusBar01.Display = CogDisplay;
+
+            InitializeUI();
+        }
+
+        private void PatternTeachForm_Load(object sender, EventArgs e)
+        {
+            if (StaticConfig.VirtualMode)
+                BTN_IMAGE_OPEN.Visible = true;
+
+            InitializeData();
+            TeachingData.Instance().UpdateTeachingData();
+
+            InspModel inspModel = ModelManager.Instance().CurrentModel;
+            if (inspModel == null)
+                return;
+
+            if (IsLeft)
+                CurrentUnit = TeachingData.Instance().GetStageUnit(StageUnitNo).Left;
+            else
+                CurrentUnit = TeachingData.Instance().GetStageUnit(StageUnitNo).Right;
+
+            TabPageType = TabPageType.Inspection;
+            TABC_MANU.SelectTab(TAB_02);
+
+            //UpdateMarkInfo();
+
+            this.Text = TeachingData.Instance().GetStageUnit(StageUnitNo).Name;
         }
 
         private void InitializeUI()
@@ -72,6 +123,7 @@ namespace COG.UI.Forms
 
             this.TopMost = false;
 
+            #region ComboBox
             for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
                 string ntempSub;
@@ -83,44 +135,12 @@ namespace COG.UI.Forms
             }
 
             CB_SUB_PATTERN.SelectedIndex = 0;
+            #endregion
 
-        }
-
-        private void PatternTeachForm_Load(object sender, EventArgs e)
-        {
-            if (StaticConfig.VirtualMode)
-                BTN_IMAGE_OPEN.Visible = true;
-
-            _isFormLoad = true;
-            _selectedAmpMark = true;
-            _selectedMarkIndex = 0;
-
-            InitializeUI();
-
-            TeachingData.Instance().UpdateTeachingData();
-
-            InspModel inspModel = ModelManager.Instance().CurrentModel;
-
-            if(inspModel != null)
-            {
-                this.Text = TeachingData.Instance().GetStageUnit(StageUnitNo).Name;
-                LoadAmpMark();
-
-                UpdateMarkData();
-            }
-
-            UpdateMarkInfo();
-            ClearDisplayGraphic();
-            ClearMarkButtonBackColor();
-
-            
-        }
-
-        private void LoadAmpMark()
-        {
+            #region Display
             MarkDisplayList.Clear();
             MarkLabelList.Clear();
-          
+
             for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
                 string controlName = "PT_SubDisplay_" + i.ToString("00");
@@ -134,55 +154,58 @@ namespace COG.UI.Forms
                 label.Visible = true;
                 MarkLabelList.Add(label);
             }
+            #endregion
         }
 
-        private void UpdateMarkData()
+        private void InitializeData()
         {
-            if (GetUnit() is Unit unit)
+            BTN_RETURNPAGE.Visible = false;
+            _selectedAmpMark = true;
+            _selectedMarkIndex = 0;
+            _fixedTabControl = false;
+            _prevSelectedTabNo = -1;
+            _tabLock = false;
+
+            ClearMarkButton();
+            ClearDisplayGraphic();
+        }
+
+        private void ClearMarkButton()
+        {
+            BTN_PATTERN.BackColor = Color.DarkGray;
+            BTN_ORIGIN.BackColor = Color.DarkGray;
+            BTN_PATTERN_SEARCH_SET.BackColor = Color.DarkGray;
+        }
+
+        private void ClearDisplayGraphic()
+        {
+            CogDisplay.StaticGraphics.Clear();
+            CogDisplay.InteractiveGraphics.Clear();
+        }
+
+        private void SetTabPageType(TabPageType type)
+        {
+            TabPageType = type;
+        }
+
+       
+
+        private List<MarkTool> GetMarkToolList()
+        {
+            List<MarkTool> markToolList = null;
+
+            if (_selectedAmpMark)
             {
-                var markUnit = GetMarkUnit();
-                for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-                {
-                    var display = MarkDisplayList[i];
-                    display.StaticGraphics.Clear();
-                    display.InteractiveGraphics.Clear();
-
-                    var markTagList = markUnit.TagList;
-                    var markTool = markTagList[i].Tool;
-                    if (markTool != null)
-                    {
-                        if(markTool.Pattern.Trained)
-                        {
-                            CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-
-                            if (markTool.Pattern.GetTrainedPatternImageMask() is ICogImage cogImage)
-                            {
-                                display.Image = markTool.Pattern.GetTrainedPatternImage();
-
-                                var maskGraphic = CreateMaskGraphic(cogImage as CogImage8Grey);
-                                PatternInfo.Add(maskGraphic);
-
-
-                                CogRectangle trainRegion = new CogRectangle(markTool.Pattern.TrainRegion as CogRectangle);
-                                trainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position;
-                                trainRegion.Interactive = false;
-                                PatternInfo.Add(trainRegion);
-
-                                CogCoordinateAxes orgin = new CogCoordinateAxes();
-                                orgin.LineStyle = CogGraphicLineStyleConstants.Dot;
-                                orgin.Transform.TranslationX = markTool.Pattern.Origin.TranslationX;
-                                orgin.Transform.TranslationY = markTool.Pattern.Origin.TranslationY;
-                                orgin.GraphicDOFEnable = CogCoordinateAxesDOFConstants.Position;
-                                PatternInfo.Add(orgin);
-
-                                display.InteractiveGraphics.AddList(PatternInfo, "Pattern", false);
-                            }
-                        }
-                        else
-                            display.Image = null;
-                    }
-                }
+                markToolList = CurrentUnit.Mark.Amp.MarkToolList;
             }
+            else
+            {
+                if (_isSelectedBondingMarkUp)
+                    markToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
+                else
+                    markToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
+            }
+            return markToolList;
         }
 
         private CogMaskGraphic CreateMaskGraphic(CogImage8Grey mask)
@@ -229,28 +252,27 @@ namespace COG.UI.Forms
 
             Unit unit = null;
             if (IsLeft)
-                unit = TeachingData.Instance().GetStageUnit(StageUnitNo).LeftUnit;
+                unit = TeachingData.Instance().GetStageUnit(StageUnitNo).Left;
             else
-                unit = TeachingData.Instance().GetStageUnit(StageUnitNo).RightUnit;
+                unit = TeachingData.Instance().GetStageUnit(StageUnitNo).Right;
 
             return unit;
-        }
-            
-        private MarkUnit GetMarkUnit()
-        {
-            var unit = GetUnit();
-
-            if (_selectedAmpMark)
-                return unit?.AmpMark;
-            else
-                return unit?.BondingMark;
         }
 
         private void UpdateMarkInfo()
         {
-            var markUnit = GetMarkUnit();
+            double score = 0;
+            if(_selectedAmpMark)
+                score = CurrentUnit.Mark.Amp.Score;
+            else
+            {
+                score = CurrentUnit.Mark.Bonding.Score;
+                LBL_ROI_FINEALIGN_SPEC_T.Text = CurrentUnit.Mark.Bonding.AlignSpec_T.ToString();
+            }
 
-            NUD_PAT_SCORE.Value = (decimal)markUnit.Score;
+            if (score <= 0)
+                score = 1;
+            NUD_PAT_SCORE.Value = (decimal)score;
 
             if (_selectedMarkIndex == 0)
             {
@@ -259,27 +281,61 @@ namespace COG.UI.Forms
             else
             {
                 CB_SUBPAT_USE.Visible = true;
-                CB_SUBPAT_USE.Checked = markUnit.TagList[_selectedMarkIndex].Use;
+                CB_SUBPAT_USE.Checked = CurrentUnit.Mark.Use[_selectedMarkIndex];
             }
 
-            if (markUnit != null)
+        
+            #region Mark Train Image Display
+            var markToolList = GetMarkToolList();
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
-                if(markUnit.TagList[_selectedMarkIndex].Tool is CogSearchMaxTool searchMaxTool)
-                {
-                    if(searchMaxTool.Pattern.Trained)
-                        SetOrginMark(searchMaxTool.Pattern.Origin.TranslationX, searchMaxTool.Pattern.Origin.TranslationY);
+                var markTool = markToolList[i].SearchMaxTool;
 
-                }
-                for (int i = 0; i < markUnit.TagList.Count; i++)
-                {
-                    var tag = markUnit.TagList[i];
+                var use = CurrentUnit.Mark.Use[_selectedMarkIndex];
 
-                    if (tag.Use)
-                        MarkLabelList[i].BackColor = Color.LawnGreen;
+                if (use)
+                    MarkLabelList[i].BackColor = Color.LawnGreen;
+                else
+                    MarkLabelList[i].BackColor = Color.WhiteSmoke;
+
+                var display = MarkDisplayList[i];
+                display.StaticGraphics.Clear();
+                display.InteractiveGraphics.Clear();
+
+                if (markTool != null)
+                {
+                    if (markTool.Pattern.Trained)
+                    {
+                        CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
+
+                        if (markTool.Pattern.GetTrainedPatternImageMask() is ICogImage cogImage)
+                        {
+                            display.Image = markTool.Pattern.GetTrainedPatternImage();
+
+                            var maskGraphic = CreateMaskGraphic(cogImage as CogImage8Grey);
+                            PatternInfo.Add(maskGraphic);
+
+
+                            CogRectangle trainRegion = new CogRectangle(markTool.Pattern.TrainRegion as CogRectangle);
+                            trainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position;
+                            trainRegion.Interactive = false;
+                            PatternInfo.Add(trainRegion);
+
+                            CogCoordinateAxes orgin = new CogCoordinateAxes();
+                            orgin.LineStyle = CogGraphicLineStyleConstants.Dot;
+                            orgin.Transform.TranslationX = markTool.Pattern.Origin.TranslationX;
+                            orgin.Transform.TranslationY = markTool.Pattern.Origin.TranslationY;
+                            orgin.GraphicDOFEnable = CogCoordinateAxesDOFConstants.Position;
+                            PatternInfo.Add(orgin);
+
+                            display.InteractiveGraphics.AddList(PatternInfo, "Pattern", false);
+                        }
+                    }
                     else
-                        MarkLabelList[i].BackColor = Color.WhiteSmoke;
+                        display.Image = null;
                 }
             }
+            #endregion
         }
 
         private void Form_PatternTeach_FormClosed(object sender, FormClosedEventArgs e)
@@ -344,153 +400,6 @@ namespace COG.UI.Forms
             //}
         }
 
-        private void Pattern_Change()
-        {
-            //BTN_BackColor();
-            //m_CamNo = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CamNo;
-            //LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Lime);
-            //LABEL_MESSAGE(LB_MESSAGE1, "", System.Drawing.Color.Lime);
-            //Light_Select();
-            //LightCheck(M_TOOL_MODE);
-            //Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetAllLight(M_TOOL_MODE);
-            //if (!bROIFinealignTeach)
-            //    PT_Display01.Image = Main.vision.CogCamBuf[m_CamNo];
-
-            //OriginImage = (CogImage8Grey)Main.vision.CogCamBuf[m_CamNo];
-            //PT_DISPLAY_CONTROL.Resuloution = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_CalX[0];
-            //// CUSTOM CROSS
-            //PT_DISPLAY_CONTROL.UseCustomCross = Main.vision.USE_CUSTOM_CROSS[m_CamNo];
-            //PT_DISPLAY_CONTROL.CustomCross = new PointF(Main.vision.CUSTOM_CROSS_X[m_CamNo], Main.vision.CUSTOM_CROSS_Y[m_CamNo]);
-            //DisplayClear();
-            //Main.DisplayRefresh(PT_Display01);
-            ////     if (BTN_DISNAME_01.BackColor.Name != "SkyBlue") CrossLine();
-            //if (PT_DISPLAY_CONTROL.CrossLineChecked) CrossLine();
-            ////--------------------CNLSEARCH-------------------------------------------
-            //#region CNLSEARCH
-            //m_RetiMode = 0;
-            //if (bROIFinealignTeach)
-            //{
-            //    FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].InputImage = PT_Display01.Image;
-            //    NUD_PAT_SCORE.Value = (decimal)dFinealignMarkScore;
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainRegion.GetType().Name != "CogRectangle")
-            //    {
-            //        FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle();
-            //    }
-
-            //    PatMaxTrainRegion = new CogRectangle(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainRegion as CogRectangle);
-            //    MarkORGPoint.X = FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Origin.TranslationX;
-            //    MarkORGPoint.Y = FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Origin.TranslationY;
-
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].SearchRegion == null)
-            //    {
-            //        PatMaxSearchRegion = new CogRectangle();
-            //        PatMaxSearchRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], Main.vision.IMAGE_SIZE_X[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA, Main.vision.IMAGE_SIZE_Y[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA);
-            //    }
-            //    else
-            //    {
-            //        PatMaxSearchRegion = new CogRectangle(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].SearchRegion as CogRectangle);
-            //    }
-
-            //    for (int i = 0; i < Main.DEFINE.SUBPATTERNMAX; i++)
-            //    {
-            //        SUBPATTERN_LABELDISPLAY(PT_Pattern_USE[nROIFineAlignIndex, i], i);
-            //        DrawTrainedPattern(PT_SubDisplay[i], FinealignMark[nROIFineAlignIndex, i]);
-            //    }
-
-            //    if (m_PatNo_Sub == 0)
-            //    {
-            //        CB_SUBPAT_USE.Visible = false;
-            //    }
-            //    else
-            //    {
-            //        CB_SUBPAT_USE.Visible = true;
-            //        CB_SUBPAT_USE.Checked = PT_Pattern_USE[nROIFineAlignIndex, m_PatNo_Sub];
-            //    }
-            //}
-            //else
-            //{
-            //    PT_Pattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //    PT_GPattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion.GetType().Name != "CogRectangle")
-            //    {
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle();
-            //    }
-
-            //    PatMaxTrainRegion = new CogRectangle(PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion as CogRectangle);
-            //    MarkORGPoint.X = PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationX;
-            //    MarkORGPoint.Y = PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationY;
-
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].SearchRegion == null)
-            //    {
-            //        PatMaxSearchRegion = new CogRectangle();
-            //        PatMaxSearchRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], Main.vision.IMAGE_SIZE_X[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA, Main.vision.IMAGE_SIZE_Y[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA);
-            //    }
-            //    else
-            //    {
-            //        PatMaxSearchRegion = new CogRectangle(PT_Pattern[m_PatNo, m_PatNo_Sub].SearchRegion as CogRectangle);
-            //    }
-
-            //    for (int i = 0; i < Main.DEFINE.SUBPATTERNMAX; i++)
-            //    {
-            //        SUBPATTERN_LABELDISPLAY(PT_Pattern_USE[m_PatNo, i], i);
-            //        DrawTrainedPattern(PT_SubDisplay[i], PT_Pattern[m_PatNo, i]);
-            //    }
-
-            //    if (m_PatNo_Sub == 0)
-            //    {
-            //        CB_SUBPAT_USE.Visible = false;
-            //    }
-            //    else
-            //    {
-            //        CB_SUBPAT_USE.Visible = true;
-            //        CB_SUBPAT_USE.Checked = PT_Pattern_USE[m_PatNo, m_PatNo_Sub];
-            //    }
-            //    NUD_PAT_SCORE.Value = (decimal)PT_AcceptScore[m_PatNo];
-            //    NUD_PAT_GSCORE.Value = (decimal)PT_GAcceptScore[m_PatNo];
-            //}
-
-            //if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_PMAlign_Use == false)
-            //{
-            //    label13.Visible = false;
-            //    NUD_PAT_GSCORE.Visible = false;
-            //}
-            //#endregion
-        }
-
-        #region DRAW & REFRESH IMAGE
-        private void Draw_Label(CogRecordDisplay nDisplay, string resultText, int index)
-        {
-            //int i;
-            //CogGraphicLabel Label = new CogGraphicLabel();
-            //i = index;
-            //float nFontSize = 0;
-
-            //double baseZoom = 0;
-            //if ((double)nDisplay.Width / nDisplay.Image.Width < (double)nDisplay.Height / nDisplay.Image.Height)
-            //{
-            //    baseZoom = ((double)nDisplay.Width - 22) / nDisplay.Image.Width;
-            //    nFontSize = (float)((nDisplay.Image.Width / Main.DEFINE.FontSize) * baseZoom);
-            //}
-            //else
-            //{
-            //    baseZoom = ((double)nDisplay.Height - 22) / nDisplay.Image.Height;
-            //    nFontSize = (float)((nDisplay.Image.Height / Main.DEFINE.FontSize) * baseZoom);
-            //}
-
-
-            //double nFontpitch = (nFontSize / nDisplay.Zoom);
-            //Label.Text = resultText;
-            //Label.Color = CogColorConstants.Cyan;
-            //Label.Font = new Font(Main.DEFINE.FontStyle, nFontSize);
-            //Label.Alignment = CogGraphicLabelAlignmentConstants.TopLeft;
-            //Label.X = (nDisplay.Image.Width - (nDisplay.Image.Width / (nDisplay.Zoom / baseZoom))) / 2 - nDisplay.PanX;
-            //Label.Y = (nDisplay.Image.Height - (nDisplay.Image.Height / (nDisplay.Zoom / baseZoom))) / 2 - nDisplay.PanY + (i * nFontpitch);
-
-
-            //nDisplay.StaticGraphics.Add(Label as ICogGraphic, "Result Text");
-        }
-
         private void timer1_Tick(object sender, EventArgs e)
         {
             //if (bLiveStop == false)
@@ -498,7 +407,9 @@ namespace COG.UI.Forms
             //    RefreshTeach();
             //}
         }
+
         delegate void dGrabRefresh(CogRecordDisplay nDisplay, ICogImage nImageBuf);
+
         public static void GrabDisRefresh_(CogRecordDisplay nDisplay, ICogImage nImageBuf)
         {
 
@@ -519,29 +430,31 @@ namespace COG.UI.Forms
             //Main.vision.Grab_Flag_Start[m_CamNo] = true;
             //GrabDisRefresh_(PT_Display01, Main.vision.CogCamBuf[m_CamNo]);
         }
-        #endregion
 
-        #region 조명조절관련
         private void BTN_LIGHT_UP_Click(object sender, EventArgs e)
         {
             if (TBAR_LIGHT.Maximum == TBAR_LIGHT.Value)
                 return;
             TBAR_LIGHT.Value++;
         }
+
         private void BTN_LIGHT_DOWN_Click(object sender, EventArgs e)
         {
             if (TBAR_LIGHT.Minimum == TBAR_LIGHT.Value)
                 return;
             TBAR_LIGHT.Value--;
         }
+
         private void RBTN_LIGHT_0_CheckedChanged(object sender, EventArgs e)
         {
             Light_Select();
         }
+
         private void TBAR_LIGHT_ValueChanged(object sender, EventArgs e)
         {
            // Light_Change(m_SelectLight);
         }
+
         private void Light_Select()
         {
             //bool nLightUse = false;
@@ -583,12 +496,7 @@ namespace COG.UI.Forms
             //if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_LightCtrl[m_SelectLight] >= 0)
             //    TBAR_LIGHT.Value = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_LightValue[m_SelectLight, 0];
         }
-        private void Light_Change(int m_LightNum)
-        {
-            //Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetLight(m_LightNum, TBAR_LIGHT.Value);
-            //Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_LightValue[m_LightNum, 0] = TBAR_LIGHT.Value;
-            //Light_Text[m_LightNum].Text = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_LightValue[m_LightNum, 0].ToString();
-        }
+
         private void LB_LIGHT_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -602,9 +510,6 @@ namespace COG.UI.Forms
                 //Light_Select();
             }
         }
-        #endregion
-
-        #region 버튼클릭이벤트들
 
         private void BTN_IMAGE_OPEN_Click(object sender, EventArgs e)
         {
@@ -713,7 +618,7 @@ namespace COG.UI.Forms
             //    LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Red);
             //}
         }
-        bool nPatternCopy = false;
+ 
         private void BTN_SAVE_Click(object sender, EventArgs e)
         {
             //formMessage.LB_MESSAGE.Text = "Did You Check [APPLY]?";
@@ -997,6 +902,7 @@ namespace COG.UI.Forms
             //iCountClick = 0;
             //this.Hide();
         }// BTN_SAVE_Click
+
         private void BTN_EXIT_Click(object sender, EventArgs e)
         {
             //shkang_s 파라미터저장시 로그 변수 초기화
@@ -1021,14 +927,6 @@ namespace COG.UI.Forms
             //    chkUseLoadImageTeachMode.Checked = false;
             //}
             this.Hide();
-        }
-
-        #endregion
-
-        private void ClearDisplayGraphic()
-        {
-            CogDisplay.StaticGraphics.Clear();
-            CogDisplay.InteractiveGraphics.Clear();
         }
 
         public void SetInteractiveGraphics(string groupName, ICogRecord record)
@@ -1063,38 +961,36 @@ namespace COG.UI.Forms
             }
         }
 
-        #region 패턴 등록 관련
         private void BTN_PATTERN_Click(object sender, EventArgs e)
         {
             if (CogDisplayImage == null)
                 return;
 
             ClearDisplayGraphic();
-            ClearMarkButtonBackColor();
+
+            ClearMarkButton();
             BTN_PATTERN.BackColor = Color.LawnGreen;
 
             PT_DISPLAY_CONTROL.CrossLine();
 
-            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
-            if (tag.Tool.Pattern.Trained)
-            {
-                double x = tag.Tool.Pattern.Origin.TranslationX;
-                double y = tag.Tool.Pattern.Origin.TranslationY;
-                SetOrginMark(x, y);
-            }
-            else
-            {
-                SetNewROI();
-            }
+            var markToolList = GetMarkToolList();
 
-            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
-        }
+            if (markToolList != null)
+            {
+                var tool = markToolList[_selectedMarkIndex].SearchMaxTool;
+                if (tool.Pattern.Trained)
+                {
+                    double x = tool.Pattern.Origin.TranslationX;
+                    double y = tool.Pattern.Origin.TranslationY;
+                    SetOrginMark(x, y);
+                }
+                else
+                {
+                    SetNewROI();
+                }
 
-        private void ClearMarkButtonBackColor()
-        {
-            BTN_PATTERN.BackColor = Color.DarkGray;
-            BTN_ORIGIN.BackColor = Color.DarkGray;
-            BTN_PATTERN_SEARCH_SET.BackColor = Color.DarkGray;
+                DrawTrainRegion();
+            }
         }
 
         private void SetOrginMark(double x, double y)
@@ -1112,17 +1008,6 @@ namespace COG.UI.Forms
             OriginMarkPoint.Y = y;
         }
 
-        public void AddROI()
-        {
-            if (CogDisplayImage == null || CogDisplay.Image == null)
-                return;
-
-            if (ModelManager.Instance().CurrentModel == null)
-                return;
-
-            SetNewROI();
-        }
-
         private void SetNewROI()
         {
             if (CogDisplayImage == null || CogDisplay.Image == null)
@@ -1136,79 +1021,78 @@ namespace COG.UI.Forms
 
             SetOrginMark(centerX, centerY);
 
-            var currentParam = GetMarkUnit().TagList[_selectedMarkIndex];
-            currentParam?.SetTrainRegion(roi);
-            currentParam.SetSearchRegion(searchRoi);
-            currentParam?.SetOrginMark(OriginMarkPoint);
+            var markToolList = GetMarkToolList();
+
+            if(markToolList != null)
+            {
+                var currentParam = markToolList[_selectedMarkIndex];
+                currentParam?.SetTrainRegion(roi);
+                currentParam.SetSearchRegion(searchRoi);
+                currentParam?.SetOrginMark(OriginMarkPoint);
+            }
         }
 
-        private void DrawROI(CogSearchMaxCurrentRecordConstants constants)
+        private void DrawSearchRegion()
         {
             if (CogDisplayImage == null || CogDisplay.Image == null)
                 return;
 
-            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
+            var markToolList = GetMarkToolList();
 
-            constants = constants | CogSearchMaxCurrentRecordConstants.InputImage | CogSearchMaxCurrentRecordConstants.TrainImage;
-            ;//| CogSearchMaxCurrentRecordConstants.TrainImage;
-
-            //constants = CogSearchMaxCurrentRecordConstants.All;
-
-            CogRectangle rect = new CogRectangle();
-            rect.X = 500;
-            rect.Y = 1000;
-            rect.Width = 100;
-            rect.Height = 100;
-            rect.Interactive = true;
-            rect.Color = CogColorConstants.Red;
-            rect.GraphicDOFEnable = CogRectangleDOFConstants.Position | CogRectangleDOFConstants.Size;
-            tag.Tool.SearchRegion = rect;
-            tag.Tool.CurrentRecordEnable = CogSearchMaxCurrentRecordConstants.SearchRegion;
-
-            SetInteractiveGraphics("tool", tag.Tool.CreateCurrentRecord());
-            //PT_DISPLAY_CONTROL.CogDisplay00.InteractiveGraphics.Clear();
-            
-            //CogGraphicInteractiveCollection collect2 = new CogGraphicInteractiveCollection();
-            //collect2.Add(rect);
-            //CogDisplay.InteractiveGraphics.AddList(collect2, "tool", false);
-            CogDisplay.InteractiveGraphics.Add(OriginMarkPoint, "tool", false);
-
-            if (tag.Tool.Pattern.Trained == false)
+            if (markToolList != null)
             {
-                CogGraphicInteractiveCollection collect = new CogGraphicInteractiveCollection();
+                var tool = markToolList[_selectedMarkIndex].SearchMaxTool;
 
-                var trainRegion = tag.Tool.Pattern.TrainRegion as CogRectangle;
-                collect.Add(trainRegion);
+                tool.InputImage = CogDisplayImage;
+                tool.CurrentRecordEnable = CogSearchMaxCurrentRecordConstants.InputImage | CogSearchMaxCurrentRecordConstants.SearchRegion;
 
-                CogDisplay.InteractiveGraphics.AddList(collect, "tool", false);
+                SetInteractiveGraphics("tool", tool.CreateCurrentRecord());
             }
         }
 
-        private void CNLSearch_DrawOverlay()
+        private void DrawTrainRegion()
         {
-            //CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-            //PatternInfo.Add(PatMaxTrainRegion);
-            ////         PatternInfo.Add(PatMaxORGPoint);
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
 
-            //PT_Display01.InteractiveGraphics.AddList(PatternInfo, "PATTERN_INFO", false);
+            var markToolList = GetMarkToolList();
+
+            if (markToolList != null)
+            {
+                var tool = markToolList[_selectedMarkIndex].SearchMaxTool;
+
+                if (tool.Pattern.Trained == false)
+                {
+                    tool.Pattern.TrainImage = CogDisplayImage;
+                    tool.Pattern.Train();
+                }
+
+                tool.CurrentRecordEnable = CogSearchMaxCurrentRecordConstants.InputImage | CogSearchMaxCurrentRecordConstants.TrainImage
+                    | CogSearchMaxCurrentRecordConstants.TrainRegion;
+
+                SetInteractiveGraphics("tool", tool.CreateCurrentRecord());
+            }
         }
 
-        private void BTN_BackColor(object sender, EventArgs e)
+        private void DrawOriginMark()
         {
-            //nDistanceShow[m_PatNo] = false;
-            //LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Red);
-            //LABEL_MESSAGE(LB_MESSAGE1, "", System.Drawing.Color.Red);
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
 
-            //BTN_BackColor();
-            //Button TempBTN = (Button)sender;
-            //TempBTN.BackColor = System.Drawing.Color.LawnGreen;
-        }
+            var markToolList = GetMarkToolList();
 
-        private void BTN_BackColor()
-        {
-            BTN_PATTERN.BackColor = System.Drawing.Color.DarkGray;
-            BTN_ORIGIN.BackColor = System.Drawing.Color.DarkGray;
-            BTN_PATTERN_SEARCH_SET.BackColor = System.Drawing.Color.DarkGray;
+            if (markToolList != null)
+            {
+                var tool = markToolList[_selectedMarkIndex].SearchMaxTool;
+
+                tool.InputImage = CogDisplayImage;
+                tool.CurrentRecordEnable = CogSearchMaxCurrentRecordConstants.InputImage | CogSearchMaxCurrentRecordConstants.TrainImage
+                    | CogSearchMaxCurrentRecordConstants.TrainRegion;
+
+                SetInteractiveGraphics("tool", tool.CreateCurrentRecord());
+                CogDisplay.InteractiveGraphics.Add(OriginMarkPoint, "tool", false);
+            }
+               
         }
 
         private void BTN_PATTERN_ORIGIN_Click(object sender, EventArgs e)
@@ -1216,69 +1100,45 @@ namespace COG.UI.Forms
             if (CogDisplayImage == null || CogDisplay.Image == null)
                 return;
 
-            var currentParam = GetMarkUnit().TagList[_selectedMarkIndex];
-            var trainRegion = currentParam?.Tool.Pattern.TrainRegion as CogRectangle;
+            var markToolList = GetMarkToolList();
 
-            double newX = trainRegion.X + (trainRegion.Width / 2);
-            double newY = trainRegion.Y + (trainRegion.Height / 2);
+            if (markToolList != null)
+            {
+                var currentParam = markToolList[_selectedMarkIndex];
+                var trainRegion = currentParam.SearchMaxTool.Pattern.TrainRegion as CogRectangle;
 
-            SetOrginMark(newX, newY);
-            currentParam?.SetOrginMark(OriginMarkPoint);
+                double newX = trainRegion.X + (trainRegion.Width / 2);
+                double newY = trainRegion.Y + (trainRegion.Height / 2);
 
-            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
+                SetOrginMark(newX, newY);
+                currentParam?.SetOrginMark(OriginMarkPoint);
+
+                DrawOriginMark();
+            }
         }
 
         private void BTN_ORIGIN_Click(object sender, EventArgs e)
         {
-            //m_RetiMode = M_ORIGIN;
-            //BTN_BackColor(sender, e);
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
+
+            ClearDisplayGraphic();
+
+            ClearMarkButton();
+            BTN_ORIGIN.BackColor = Color.LawnGreen;
+
+            DrawOriginMark();
         }
+
         private void BTN_PATTERN_SEARCH_SET_Click(object sender, EventArgs e)
         {
             if (CogDisplayImage == null || CogDisplay.Image == null)
                 return;
-
-            ClearMarkButtonBackColor();
             ClearDisplayGraphic();
+
+            ClearMarkButton();
             BTN_PATTERN_SEARCH_SET.BackColor = Color.LawnGreen;
-
-            var tag = GetMarkUnit().TagList[_selectedMarkIndex];
-            //if (tag.Tool.Pattern.Trained == false)
-            //{
-            //    SetNewROI();
-            //}
-            //else
-            //{
-
-            //}
-            //CogSearchMaxCurrentRecordConstants consta = CogSearchMaxCurrentRecordConstants.SearchRegion || CogSearchMaxCurrentRecordConstants.TrainRegion;
-            DrawROI(CogSearchMaxCurrentRecordConstants.TrainRegion);
-
-            //m_RetiMode = M_SEARCH;
-            //BTN_BackColor(sender, e);
-            //DisplayClear();
-
-            //if (bROIFinealignTeach)
-            //{
-            //    if (FinealignMark[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //        PatMaxSearchRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], Main.vision.IMAGE_SIZE_X[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA, Main.vision.IMAGE_SIZE_Y[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA);
-            //}
-            //else
-            //{
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Trained == false)
-            //        PatMaxSearchRegion.SetCenterWidthHeight(Main.vision.IMAGE_CENTER_X[m_CamNo], Main.vision.IMAGE_CENTER_Y[m_CamNo], Main.vision.IMAGE_SIZE_X[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA, Main.vision.IMAGE_SIZE_Y[m_CamNo] - Main.DEFINE.DEFAULT_SEARCH_AREA);
-            //}
-
-            //PatMaxSearchRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position | CogRectangleDOFConstants.Size;
-            //PatMaxSearchRegion.Color = CogColorConstants.Orange;
-            //PatMaxSearchRegion.Interactive = true;
-
-            //CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-
-            //PatternInfo.Add(PatMaxSearchRegion);
-            //PT_Display01.InteractiveGraphics.AddList(PatternInfo, "PATTERN_INFO", false);
-
-            //DisplayFit(PT_Display01);
+            DrawSearchRegion();
         }
 
         private void BTN_PATTERN_SEARCH_SET_MouseDown(object sender, MouseEventArgs e)
@@ -1291,25 +1151,7 @@ namespace COG.UI.Forms
                 //BTN_PATTERN_SEARCH_SET_Click(sender, null);
             }
         }
-        private static void DisplayFit(CogRecordDisplay Display)
-        {
-            Display.AutoFitWithGraphics = true;
-            Display.Fit(true);
-        }
-        private CogImage8Grey CopyIMG(ICogImage IMG)
-        {
-            return new CogImage8Grey();
 
-            //if (IMG == null)
-            //    return new CogImage8Grey();
-
-            //CogImage8Grey returnIMG;
-
-            //returnIMG = new CogImage8Grey(IMG as CogImage8Grey);
-            //return returnIMG;
-
-
-        }
         private void BTN_APPLY_Click(object sender, EventArgs e)
         {
             //try
@@ -1391,28 +1233,23 @@ namespace COG.UI.Forms
             //    LABEL_MESSAGE(LB_MESSAGE, ex.Message, System.Drawing.Color.Red);
             //}
         }
+
         private void BTN_PATTERN_DELETE_Click(object sender, EventArgs e)
         {
-            //DialogResult result = MessageBox.Show("Do you want to Delete Pattern Number: " + CB_SUB_PATTERN.Text + " ?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
-            //if (result == DialogResult.Yes)
-            //{
-            //    if (bROIFinealignTeach)
-            //    {
-            //        FinealignMark[m_PatNo, m_PatNo_Sub].Pattern = new CogSearchMaxPattern();
-            //        FinealignMark[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle();
-            //        DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], FinealignMark[m_PatNo, m_PatNo_Sub]);
-            //    }
-            //    else
-            //    {
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern = new CogSearchMaxPattern();
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle();
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern = new CogPMAlignPattern();
-            //        //        DrawTrainedPattern(PT_SubDisplay_00, PT_Pattern[m_PatNo, m_PatNo_Sub]);
-            //        DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], PT_Pattern[m_PatNo, m_PatNo_Sub]);
-            //    }
+            if (_selectedMarkIndex < 0)
+                return;
 
-            //}
+            DialogResult result = MessageBox.Show("Do you want to Delete Pattern Number: " + CB_SUB_PATTERN.Text + " ?", "Delete", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
+            if (result == DialogResult.Yes)
+            {
+                var markToolList = GetMarkToolList();
+                markToolList[_selectedMarkIndex].Dispose();
+                markToolList[_selectedMarkIndex].SetTool(new CogSearchMaxTool());
+
+                UpdateMarkInfo();
+            }
         }
+
         private void CB_SUB_PATTERN_SelectionChangeCommitted(object sender, EventArgs e)
         {
             int index = CB_SUB_PATTERN.SelectedIndex;
@@ -1422,919 +1259,76 @@ namespace COG.UI.Forms
             ChangeMark(index);
         }
 
-        public static void DrawTrainedPattern(CogRecordDisplay Display, CogSearchMaxTool TempPMAlignTool)
-        {
-            //Main.DisplayClear(Display);
-
-            //CogSearchMaxTool PMAlignTool = new CogSearchMaxTool(TempPMAlignTool);
-            //if (PMAlignTool.Pattern.Trained)
-            //{
-            //    Display.Image = PMAlignTool.Pattern.GetTrainedPatternImage();
-
-            //    CogRectangle TrainRegion = new CogRectangle(PMAlignTool.Pattern.TrainRegion as CogRectangle);
-            //    TrainRegion.GraphicDOFEnable = CogRectangleDOFConstants.Position;
-            //    TrainRegion.Interactive = false;
-
-            //    CogCoordinateAxes ORGPoint = new CogCoordinateAxes();
-            //    ORGPoint.LineStyle = CogGraphicLineStyleConstants.Dot;
-            //    ORGPoint.Transform.TranslationX = PMAlignTool.Pattern.Origin.TranslationX;
-            //    ORGPoint.Transform.TranslationY = PMAlignTool.Pattern.Origin.TranslationY;
-            //    ORGPoint.GraphicDOFEnable = CogCoordinateAxesDOFConstants.Position;
-
-            //    CogGraphicInteractiveCollection PatternInfo = new CogGraphicInteractiveCollection();
-            //    //VisionPro 9.5 Ver 이상
-            //    if (PMAlignTool.Pattern.GetTrainedPatternImageMask() != null) PatternInfo.Add(CreateMaskGraphic(PMAlignTool.Pattern.TrainImage.SelectedSpaceName, PMAlignTool.Pattern.GetTrainedPatternImageMask()));
-            //    PatternInfo.Add(TrainRegion);
-            //    PatternInfo.Add(ORGPoint);
-
-            //    Display.InteractiveGraphics.AddList(PatternInfo, "PATTERN_INFO", false);
-
-            //    DisplayFit(Display);
-            //}
-            //else
-            //{
-            //    Display.Image = null;
-            //}
-        }
-        private static CogMaskGraphic CreateMaskGraphic(string SelectedSpaceName, CogImage8Grey mask)
-        {
-            return new CogMaskGraphic();
-            //CogMaskGraphic cogMaskGraphic = new CogMaskGraphic();
-            //for (short index = 0; index < (short)256; ++index)
-            //{
-            //    CogColorConstants cogColorConstants;
-            //    CogMaskGraphicTransparencyConstants transparencyConstants;
-            //    if (index < (short)64)
-            //    {
-            //        cogColorConstants = CogColorConstants.DarkRed;
-            //        transparencyConstants = CogMaskGraphicTransparencyConstants.Half;
-            //    }
-            //    else if (index < (short)128)
-            //    {
-            //        cogColorConstants = CogColorConstants.Yellow;
-            //        transparencyConstants = CogMaskGraphicTransparencyConstants.Half;
-            //    }
-            //    else if (index < (short)192)
-            //    {
-            //        cogColorConstants = CogColorConstants.Red;
-            //        transparencyConstants = CogMaskGraphicTransparencyConstants.None;
-            //    }
-            //    else
-            //    {
-            //        cogColorConstants = CogColorConstants.Yellow;
-            //        transparencyConstants = CogMaskGraphicTransparencyConstants.Full;
-            //    }
-            //    cogMaskGraphic.SetColorMap((byte)index, cogColorConstants);
-            //    cogMaskGraphic.SetTransparencyMap((byte)index, transparencyConstants);
-            //}
-            //cogMaskGraphic.Image = mask;
-            //cogMaskGraphic.Color = CogColorConstants.None;
-            //if (SelectedSpaceName == "#")
-            //{
-            //    ((ICogGraphic)cogMaskGraphic).SelectedSpaceName = "_TrainImage#";
-            //}
-            //return cogMaskGraphic;
-        }
         private void CB_SUBPAT_USE_CheckedChanged(object sender, EventArgs e)
         {
-            //if (CB_SUBPAT_USE.Checked)
-            //{
-            //    PT_Pattern_USE[m_PatNo, m_PatNo_Sub] = true;
-            //    CB_SUBPAT_USE.BackColor = System.Drawing.Color.LawnGreen;
-
-            //}
-            //else
-            //{
-            //    PT_Pattern_USE[m_PatNo, m_PatNo_Sub] = false;
-            //    CB_SUBPAT_USE.BackColor = System.Drawing.Color.DarkGray;
-
-            //}
-            //SUBPATTERN_LABELDISPLAY(CB_SUBPAT_USE.Checked, m_PatNo_Sub);
+            
         }
-        #endregion
 
         private void BTN_PATTERN_RUN_Click(object sender, EventArgs e)
         {
-            //try
-            //{
-            //    LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Red);
-            //    m_Timer.StartTimer();
-            //    CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //    DisplayClear();
-            //    List_NG.Items.Clear();
-            //    switch (Convert.ToInt32(TABC_MANU.SelectedTab.Tag))
-            //    {
-            //        case Main.DEFINE.M_CNLSEARCHTOOL: //CogCNLSearch
-            //            #region CNLSEARCH
-            //            Save_SystemLog("Mark Search Start", Main.DEFINE.CMD);
-            //            lock (mlock)
-            //            {
-            //                Search_PATCNL();
-            //            }
-            //            #endregion
-            //            break;
-
-            //        case Main.DEFINE.M_CALIPERTOOL: //CogCALIPERTOOL
-            //            #region CALIPERTOOL
-            //            RefreshDisplay2();
-            //            if (ThresValue_Sts)
-            //                Search_Caliper(false);
-            //            else
-            //                Search_Caliper(true);
-            //            #endregion
-            //            break;
-
-            //        case Main.DEFINE.M_FINDLINETOOL: //CogFINDLineTOOL
-            //            #region COGFINDLine
-            //            RefreshDisplay2();
-            //            if (ThresValue_Sts)
-            //            {
-            //                Search_FindLine(false);
-            //                Search_Circle(false);
-            //            }
-            //            else
-            //            {
-            //                Search_FindLine(true);
-            //                Search_Circle(true);
-            //            }
-            //            #endregion
-            //            break;
-
-            //        case Main.DEFINE.M_FINDCIRCLETOOL:
-            //            #region CIRCLETOOL
-            //            RefreshDisplay2();
-            //            if (ThresValue_Sts)
-            //            {
-            //                Search_FindLine(false);
-            //                Search_Circle(false);
-            //            }
-            //            else
-            //            {
-            //                Search_FindLine(true);
-            //                Search_Circle(true);
-            //            }
-            //            #endregion
-            //            break;
-            //        case Main.DEFINE.M_INSPECTION:
-            //            #region INSPECITON
-            //            if (m_enumROIType == enumROIType.Line)
-            //            {
-            //                Test_FindLine();
-            //            }
-            //            else
-            //            {
-            //                Test_FindCricle();
-            //            }
-            //            #endregion
-            //            break;
-            //        case Main.DEFINE.M_ALIGNINPECTION:
-            //            Test_TrackingLine();
-            //            break;
-            //    }
-            //    Lab_Tact.Text = m_Timer.GetElapsedTime().ToString() + " ms";
-            //    //    if (BTN_DISNAME_01.BackColor.Name != "SkyBlue") CrossLine();
-            //    if (PT_DISPLAY_CONTROL.CrossLineChecked) CrossLine();
-            //}//try
-            //catch (System.Exception ex)
-            //{
-            //    LABEL_MESSAGE(LB_MESSAGE, ex.Message, System.Drawing.Color.Red);
-            //}
-
-
+            
         }
 
-        private void Test_FindLine()
-        {
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //double[] Result;
-            //int ignore;
-            //bool bRet = false;
-            ////2023 0615 YSH
-            ////티칭창에서 단일 Search시엔, Searck 방식 플래그에 따라 동작하게끔 함
-            ////단일 티칭 확인 가능용도
-
-            //if (m_bInspDirectionChange)
-            //    GaloDirectionConvertInspection(0, (int)enumROIType.Line, m_TempFindLineTool, (CogImage8Grey)PT_Display01.Image, out Result, ref resultGraphics, out ignore);
-            //else
-            //    GaloOppositeInspection(m_iGridIndex, (int)enumROIType.Line, m_TempFindLineTool, (CogImage8Grey)PT_Display01.Image, out Result, ref resultGraphics, out ignore);
-
-            //PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-            ////
-            //ResultGride(Result);
-        }
-        private void Test_TrackingLine()
-        {
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //m_TempTrackingLine.InputImage = (CogImage8Grey)PT_Display01.Image;
-            //m_TempTrackingLine.Run();
-            //if (m_TempTrackingLine.Results != null || m_TempTrackingLine.Results.Count > 0)
-            //{
-            //    resultGraphics.Add(m_TempTrackingLine.Results.GetLine());
-            //    PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-
-            //}
-        }
-        private void Test_FindCricle()
-        {
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //double[] Result;
-            //int ignore;
-            //GaloOppositeInspection(m_iGridIndex, (int)enumROIType.Circle, m_TempFindCircleTool, (CogImage8Grey)PT_Display01.Image, out Result, ref resultGraphics, out ignore);
-            //PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-
-            //ResultGride(Result);
-        }
-        private void ResultGride(double[] ResulteData)
-        {
-            //if (ResulteData != null)
-            //{
-            //    dataGridView_Result.Rows.Clear();
-            //    string[] strResultData = new string[7];
-            //    for (int i = 0; i < ResulteData.GetLength(0); i++)
-            //    {
-            //        strResultData[0] = i.ToString();
-            //        strResultData[1] = "0";
-
-            //        double dDist = ResulteData[i];
-            //        strResultData[3] = string.Format("{0:F3}", dDist/** PixelResolution/1000*/);
-            //        dataGridView_Result.Rows.Add(strResultData);
-            //    }
-            //}
-        }
-        private void TABC_MANU_Selecting(object sender, TabControlCancelEventArgs e)
-        {
-            //switch (TABC_MANU.SelectedIndex)
-            //{
-            //    case Main.DEFINE.M_CNLSEARCHTOOL:
-            //        switch (Main.AlignUnit[m_AlignNo].m_AlignName)
-            //        {
-            //            case "1st PREALIGN":
-            //                TABC_MANU.SelectedIndex = Main.DEFINE.M_FINDLINETOOL;
-            //                break;
-            //            default:
-            //                //TABC_MANU.SelectedIndex = Main.DEFINE.M_CNLSEARCHTOOL;
-            //                break;
-            //        }
-            //        break;
-
-            //    case Main.DEFINE.M_BLOBTOOL:
-            //        switch (Main.AlignUnit[m_AlignNo].m_AlignName)
-            //        {
-            //            case "IC_TRAY":
-            //                break;
-            //            case "ACF_BLOB":
-            //                break;
-            //            case "FOF_ACF_PRE":
-            //                break;
-            //            case "FOP_ACF_PRE":
-            //                break;
-            //            case "SCANNER HEAD CAM1":
-            //            case "ALIGN INSP CAM2":
-            //            case "ALIGN INSP CAM3":
-            //            case "ALIGN INSP CAM4":
-            //            case "1st PREALIGN":
-            //                TABC_MANU.SelectedIndex = Main.DEFINE.M_FINDLINETOOL;
-            //                break;
-            //            default:
-            //                //TABC_MANU.SelectedIndex = Main.DEFINE.M_CNLSEARCHTOOL;
-            //                break;
-            //        }
-            //        break;
-
-            //    default:
-            //        break;
-            //}
-        }
         private void TABC_MANU_SelectedIndexChanged(object sender, EventArgs e)
         {
-            //LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Lime);
-            //LABEL_MESSAGE(LB_MESSAGE1, "", System.Drawing.Color.Lime);
+            int index = Convert.ToInt32(TABC_MANU.SelectedTab.Tag);
+            TabPageType tabPageType = (TabPageType)index;
 
-            //M_TOOL_MODE = Convert.ToInt32(TABC_MANU.SelectedTab.Tag);
-            //if (bROIFinealignTeach)
-            //{
-            //    if (Convert.ToInt32(TABC_MANU.SelectedTab.Tag) != 0)
-            //    {
-            //        TABC_MANU.SelectedIndex = 0;
-            //        return;
-            //    }
-            //}
-            //if (Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 6 || Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 5)
-            //{
-            //    if (Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 5)
-            //        btn_Inspection_Test.Visible = true;
-            //    else
-            //        btn_Inspection_Test.Visible = false;
+            if (_prevSelectedTabNo == (int)tabPageType)
+                return;
 
-            //    if (Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 5)
-            //    {
-            //        UpdateParamUI();
-            //        _useROITracking = false;
-            //        chkUseRoiTracking.Checked = _useROITracking;
-            //        _eTabSelect = enumTabSelect.Insp;
-            //    }
-            //    else
-            //    {
-            //        _eTabSelect = enumTabSelect.ThetaOrigin;
-            //        //2023 0223 YSH 창 진입시 자재얼라인 패널 Show
-            //        RDB_ROI_FINEALIGN.PerformClick();
-            //    }
-            //    m_enumAlignROI = enumAlignROI.Left1_1;
-            //    btn_TOP_Inscription.BackColor = Color.Green;
-            //    btn_Top_Circumcription.BackColor = Color.DarkGray;
-            //    btn_Bottom_Inscription.BackColor = Color.DarkGray;
-            //    btn_Bottom_Circumcription.BackColor = Color.DarkGray;
-            //    for (int i = 0; i < 4; i++)
-            //    {
-            //        if (i < 2)
-            //        {
-            //            LeftOrigin[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].LeftOrigin[i];
-            //            RightOrigin[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].RightOrigin[i];
-            //        }
-            //        m_TeachLine[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i];
-            //        if (m_TeachLine[i] == null)
-            //            m_TeachLine[i] = new CogFindLineTool();
-            //        if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i] == null)
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i] = new CogFindLineTool();
-            //        //Bonding Align
-            //        m_TeachAlignLine[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i];
-            //        if (m_TeachAlignLine[i] == null)
-            //            m_TeachAlignLine[i] = new CogCaliperTool();
-            //        if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i] == null)
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_BondingAlignLine[i] = new CogCaliperTool();
-            //    }
-            //    lab_LeftOriginX.Text = LeftOrigin[0].ToString("F3");
-            //    lab_LeftOriginY.Text = LeftOrigin[1].ToString("F3");
-            //    lab_RightOriginX.Text = RightOrigin[0].ToString("F3");
-            //    lab_RightOriginY.Text = RightOrigin[1].ToString("F3");
-            //    m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Left1_1];
-            //    lblOkDistanceValueX.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceX);
-            //    lblOkDistanceValueY.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceY);
-            //    lblAlignSpecValueX.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecX);
-            //    lblAlignSpecValueY.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecY);
-            //    dBondingAlignOriginDistX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceX;
-            //    dBondingAlignOriginDistY = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dOriginDistanceY;
-            //    dBondingAlignDistSpecX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecX;
-            //    dBondingAlignDistSpecY = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dDistanceSpecY;
-            //    lblObjectDistanceXValue.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceX);
-            //    lblObjectDistanceXSpecValue.Text = Convert.ToString(Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceSpecX);
-            //    dObjectDistanceSpecX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceSpecX;
-            //    dObjectDistanceX = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_dObjectDistanceX;
+            if (_tabLock)
+            {
+                TABC_MANU.SelectTab(TAB_00);
+                return;
+            }
 
+            if (tabPageType == TabPageType.Inspection)
+            {
 
-            //    if (OriginImage != null)
-            //        PT_Display01.Image = OriginImage;
-            //    Get_FindConerParameter();
-            //}
-            //if (M_TOOL_MODE > 0 && M_TOOL_MODE < 5)
-            //{
-            //    TABC_MANU.SelectedIndex = 5;
-            //    return;
-            //}
-            //else if (m_PatNo == 1 && M_TOOL_MODE == 5)
-            //{
-            //    TABC_MANU.SelectedIndex = 6;
-            //}
+            }
+            else
+            {
+                UpdateData();
+                if (_fixedTabControl == false)
+                {
+                    if (tabPageType == TabPageType.AmpMark)
+                    {
+                        _selectedAmpMark = true;
+                        BTN_RETURNPAGE.Visible = false;
+                    }
+                    else if (tabPageType == TabPageType.BondingMark)
+                    {
+                        _selectedAmpMark = false;
+                        BTN_RETURNPAGE.Visible = true;
+                    }
+                }
+                else
+                {
+                    if(_selectedAmpMark == false)
+                        _tabLock = true;
+                }
 
-            //if (Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 5 || Convert.ToInt32(TABC_MANU.SelectedTab.Tag) == 6)
-            //    M_TOOL_MODE = 0;
-            //if (bROICopy)
-            //    for (int i = 0; i < BTN_TOOLSET.Count; i++) BTN_TOOLSET[i].Visible = false;
-            //else
-            //    for (int i = 0; i < BTN_TOOLSET.Count; i++) BTN_TOOLSET[i].Visible = true;
+                UpdateMarkInfo();
+            }
 
-            //BTN_TOOLSET[M_TOOL_MODE].Visible = true;
-            ////if (M_TOOL_MODE == Main.DEFINE.M_CNLSEARCHTOOL) BTN_TOOLSET[Main.DEFINE.M_PMALIGNTOOL].Visible = true;
+            LABEL_MESSAGE(LB_MESSAGE, "", Color.Lime);
+            LABEL_MESSAGE(LB_MESSAGE1, "", Color.Lime);
 
-            //Light_Select();
-            //LightCheck(M_TOOL_MODE);
-            //Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetAllLight(M_TOOL_MODE);
-            //DisplayClear();
-            //nDistanceShow[m_PatNo] = false;
-
-            //m_TABCHANGE_MODE = true;
-            //switch (M_TOOL_MODE)
-            //{
-            //    case Main.DEFINE.M_CNLSEARCHTOOL:
-            //        if (bROIFinealignTeach)
-            //            BTN_RETURNPAGE.Visible = true;
-            //        else
-            //            BTN_RETURNPAGE.Visible = false;
-            //        Pattern_Change();
-            //        break;
-            //    case Main.DEFINE.M_BLOBTOOL:
-            //        CB_BLOB_MARK_USE.Checked = PT_Blob_MarkUSE[m_PatNo];
-            //        CB_BLOB_CALIPER_USE.Checked = PT_Blob_CaliperUSE[m_PatNo];
-            //        m_SelectBlob = 0;
-            //        CB_BLOB_COUNT.SelectedIndex = 0;
-            //        Inspect_Cnt.Value = PT_Blob_InspCnt[m_PatNo];
-            //        Blob_Change();
-            //        break;
-
-            //    case Main.DEFINE.M_CALIPERTOOL:
-            //        CB_CALIPER_MARK_USE.Checked = PT_Caliper_MarkUSE[m_PatNo];
-            //        RBTN_CALIPER00.Checked = true;
-            //        m_SelectCaliper = 0;
-            //        Caliper_Change();
-            //        break;
-
-            //    case Main.DEFINE.M_FINDLINETOOL:
-            //        CB_FINDLINE_MARK_USE.Checked = PT_FindLine_MarkUSE[m_PatNo];
-            //        RBTN_FINDLINE00.Checked = true;
-            //        m_SelectFindLine = 0;
-            //        FINDLINE_Change();
-            //        break;
-
-            //    case Main.DEFINE.M_FINDCIRCLETOOL:
-            //        CB_CIRCLE_MARK_USE.Checked = PT_Circle_MarkUSE[m_PatNo];
-            //        RBTN_CIRCLE00.Checked = true;
-            //        m_SelectCircle = 0;
-            //        Circle_Change();
-            //        break;
-            //}
-            //m_TABCHANGE_MODE = false;
+            _prevSelectedTabNo = index;
         }
-        private void RefreshDisplay2()
+
+        private void UpdateData()
         {
-            //try
-            //{
-            //    CogImage8Grey nTempImage = new CogImage8Grey();
-            //    nTempImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //    bool TargetPosUse = false;
-            //    switch (M_TOOL_MODE)
-            //    {
-            //        case Main.DEFINE.M_BLOBTOOL:
-            //        case Main.DEFINE.M_CALIPERTOOL:
-            //        case Main.DEFINE.M_FINDLINETOOL:
-            //        case Main.DEFINE.M_FINDCIRCLETOOL:
-            //            if ((PT_Caliper_MarkUSE[m_PatNo] && M_TOOL_MODE == Main.DEFINE.M_CALIPERTOOL)
-            //                || (PT_Blob_MarkUSE[m_PatNo] && M_TOOL_MODE == Main.DEFINE.M_BLOBTOOL)
-            //                || (PT_FindLine_MarkUSE[m_PatNo] && M_TOOL_MODE == Main.DEFINE.M_FINDLINETOOL)
-            //                || (PT_Circle_MarkUSE[m_PatNo] && M_TOOL_MODE == Main.DEFINE.M_FINDCIRCLETOOL))
-            //            {
-            //                TargetPosUse = true;
-            //                LightCheck(Main.DEFINE.M_LIGHT_CNL);
-            //                Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetAllLight(Main.DEFINE.M_LIGHT_CNL);
-            //                Main.SearchDelay(100);
-            //                if (!Search_PATCNL())
-            //                {
-            //                    PatResult.TranslationX = 0;
-            //                    PatResult.TranslationY = 0;
-            //                    return;
-            //                }
-            //            }
-            //            else if ((PT_Blob_CaliperUSE[m_PatNo] && M_TOOL_MODE == Main.DEFINE.M_BLOBTOOL))
-            //            {
-            //                TargetPosUse = true;
-            //                LightCheck(Main.DEFINE.M_LIGHT_CALIPER);
-            //                Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetAllLight(Main.DEFINE.M_LIGHT_CALIPER);
-            //                Main.SearchDelay(100);
+            #region Mark
+            if (_selectedAmpMark)
+                CurrentUnit.Mark.Amp.Score = (double)NUD_PAT_SCORE.Value;
+            else
+                CurrentUnit.Mark.Bonding.Score = (double)NUD_PAT_SCORE.Value;
 
-            //                if (!Search_Caliper(true))
-            //                {
-            //                    PatResult.TranslationX = 0;
-            //                    PatResult.TranslationY = 0;
-            //                    return;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                PatResult.TranslationX = 0;
-            //                PatResult.TranslationY = 0;
-            //            }
-            //            if (TargetPosUse)
-            //            {
-            //                LightCheck(M_TOOL_MODE);
-            //                Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].SetAllLight(M_TOOL_MODE);
-            //                Main.SearchDelay(100);
-            //                //그랩이 되기전에 다음으로 넘어가기 때문에 넣음.
-            //                Main.vision.Grab_Flag_End[m_CamNo] = false;
-            //                Main.vision.Grab_Flag_Start[m_CamNo] = true;
-
-            //                while (!Main.vision.Grab_Flag_End[m_CamNo] && !Main.DEFINE.OPEN_F)
-            //                {
-            //                    Main.SearchDelay(1);
-            //                }
-            //                nTempImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //            }
-            //            if (M_TOOL_MODE == Main.DEFINE.M_BLOBTOOL)
-            //            {
-            //                for (int i = 0; i < Main.DEFINE.BLOB_CNT_MAX; i++)
-            //                    PT_BlobTools[m_PatNo, i].InputImage = nTempImage;
-            //            }
-            //            if (M_TOOL_MODE == Main.DEFINE.M_CALIPERTOOL)
-            //            {
-            //                for (int i = 0; i < Main.DEFINE.CALIPER_MAX; i++)
-            //                    PT_CaliperTools[m_PatNo, i].InputImage = nTempImage;
-            //            }
-            //            if (M_TOOL_MODE == Main.DEFINE.M_FINDLINETOOL)
-            //            {
-            //                PT_FindLineTool.InputImage = nTempImage;
-            //                PT_LineMaxTool.InputImage = nTempImage;
-            //                for (int ii = 0; ii < Main.DEFINE.SUBLINE_MAX; ii++)
-            //                {
-            //                    for (int i = 0; i < Main.DEFINE.FINDLINE_MAX; i++)
-            //                    {
-            //                        PT_FindLineTools[m_PatNo, ii, i].InputImage = nTempImage;
-            //                        PT_LineMaxTools[m_PatNo, ii, i].InputImage = nTempImage;
-            //                    }
-            //                }
-
-            //                // JHKIM 호-직선 연계
-            //                PT_CircleTool.InputImage = nTempImage;
-            //            }
-            //            if (M_TOOL_MODE == Main.DEFINE.M_FINDCIRCLETOOL)
-            //            {
-            //                PT_CircleTool.InputImage = nTempImage;
-            //                for (int i = 0; i < Main.DEFINE.CIRCLE_MAX; i++)
-            //                    PT_CircleTools[m_PatNo, i].InputImage = nTempImage;
-
-            //                // JHKIM 호-직선 연계
-            //                for (int ii = 0; ii < Main.DEFINE.SUBLINE_MAX; ii++)
-            //                {
-            //                    for (int i = 0; i < Main.DEFINE.FINDLINE_MAX; i++)
-            //                    {
-            //                        PT_FindLineTools[m_PatNo, ii, i].InputImage = nTempImage;
-            //                        PT_LineMaxTools[m_PatNo, ii, i].InputImage = nTempImage;
-            //                    }
-            //                }
-            //            }
-            //            break;
-            //    }//switch
-
-            //}// try
-            //catch
-            //{
-
-            //}
-        }
-        private bool Search_PATCNL()
-        {
-            return true;
-            //bool nRet = false;
-            //bool nRetSearch_CNL = false;
-            //bool nRetSearch_PMA = false;
-
-            //if (bROIFinealignTeach == true)
-            //{
-            //    if (bLiveStop == false)
-            //    {
-            //        Main.vision.Grab_Flag_End[m_CamNo] = false;
-            //        Main.vision.Grab_Flag_Start[m_CamNo] = true;
-
-            //        while (!Main.vision.Grab_Flag_End[m_CamNo] && !Main.DEFINE.OPEN_F)
-            //        {
-            //            Main.SearchDelay(1);
-            //        }
-
-            //        FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //    }
-            //    else
-            //    {
-            //        Save_SystemLog("Mark image Load", Main.DEFINE.CMD);
-            //        FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].InputImage = PT_Display01.Image;
-            //    }
-
-            //    FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Run();
-            //    Save_SystemLog("Mark Search start", Main.DEFINE.CMD);
-            //    List<CogCompositeShape> ResultGraphic = new List<CogCompositeShape>();
-
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results != null)
-            //    {
-            //        if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results.Count >= 1) nRetSearch_CNL = true;
-            //    }
-            //    if (nRetSearch_CNL)
-            //    {
-            //        Save_SystemLog("Mark G1", Main.DEFINE.CMD);
-            //        if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results.Count >= 1)
-            //        {
-            //            if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results.Count >= 1)
-            //            {
-            //                for (int j = 0; j < FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results.Count; j++)
-            //                {
-            //                    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results != null)
-            //                    {
-            //                        ResultGraphic.Add(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[j].CreateResultGraphics(Cognex.VisionPro.SearchMax.CogSearchMaxResultGraphicConstants.MatchRegion | Cognex.VisionPro.SearchMax.CogSearchMaxResultGraphicConstants.Origin));
-            //                    }
-            //                }
-            //            }
-            //            if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score >= dFinealignMarkScore)
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, "Mark OK! " + "Score: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", System.Drawing.Color.Lime);
-            //            }
-            //            else
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, "Mark NG! " + "Score: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", System.Drawing.Color.Red);
-            //            }
-
-            //            if (!_useROITracking)
-            //            {
-            //                Draw_Label(PT_Display01, "Mark     X: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000"), 1);//
-            //                Draw_Label(PT_Display01, "Mark     Y: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000"), 2);
-            //                if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score >= dFinealignMarkScore)
-            //                    Draw_Label(PT_Display01, "Mark     OK! " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", 3); // cyh -> 삭제해도됨
-            //                else
-            //                    Draw_Label(PT_Display01, "Mark     NG! " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", 3); // cyh -> 삭제해도됨
-            //            }
-            //            nRet = true;
-
-            //            PatResult.TranslationX = FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationX;
-            //            PatResult.TranslationY = FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationY;
-
-            //            string X = "X: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000");
-            //            string Y = "Y: " + (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000");
-            //            LABEL_MESSAGE(LB_MESSAGE1, X + ", " + Y, System.Drawing.Color.Lime);
-
-            //            double tempDataX = 0, tempDataY = 0;
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationX, FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Results[0].GetPose().TranslationY,
-            //                                   ref tempDataX, ref tempDataY);
-
-            //            string strLog = tempDataX.ToString("0.000") + "," + tempDataY.ToString("0.000");
-            //            Save_SystemLog(strLog, Main.DEFINE.DATA);
-            //            Save_SystemLog("Label ", Main.DEFINE.CMD);
-            //        }
-
-            //        for (int i = 0; i < ResultGraphic.Count; i++)
-            //        {
-            //            PT_Display01.StaticGraphics.Add(ResultGraphic[i] as ICogGraphic, "Mark");
-            //        }
-            //    }
-            //    else
-            //    {
-            //        LABEL_MESSAGE(LB_MESSAGE, "Mark NG! ", System.Drawing.Color.Red);
-            //        Save_SystemLog("Label NG ", Main.DEFINE.CMD);
-            //    }
-
-            //    return nRet;
-            //}
-            //else
-            //{
-            //    #region CNLSEARCH
-            //    if (bLiveStop == false)
-            //    {
-            //        Main.vision.Grab_Flag_End[m_CamNo] = false;
-            //        Main.vision.Grab_Flag_Start[m_CamNo] = true;
-
-            //        while (!Main.vision.Grab_Flag_End[m_CamNo] && !Main.DEFINE.OPEN_F)
-            //        {
-            //            Main.SearchDelay(1);
-            //        }
-
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //    }
-            //    else
-            //    {
-            //        Save_SystemLog("Mark image Load", Main.DEFINE.CMD);
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].InputImage = PT_Display01.Image;
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub].InputImage = PT_Display01.Image;
-            //    }
-            //    PT_Pattern[m_PatNo, m_PatNo_Sub].Run();
-            //    Save_SystemLog("Mark Search start", Main.DEFINE.CMD);
-            //    List<CogCompositeShape> ResultGraphic = new List<CogCompositeShape>();
-
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results != null)
-            //    {
-            //        if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results.Count >= 1) nRetSearch_CNL = true;
-            //    }
-            //    if (nRetSearch_CNL)
-            //    {
-            //        Save_SystemLog("Mark G1", Main.DEFINE.CMD);
-            //        if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results.Count >= 1)
-            //        {
-
-            //            if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results.Count >= 1)
-            //            {
-            //                for (int j = 0; j < PT_Pattern[m_PatNo, m_PatNo_Sub].Results.Count; j++)
-            //                {
-            //                    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results != null)
-            //                    {
-            //                        ResultGraphic.Add(PT_Pattern[m_PatNo, m_PatNo_Sub].Results[j].CreateResultGraphics(Cognex.VisionPro.SearchMax.CogSearchMaxResultGraphicConstants.MatchRegion | Cognex.VisionPro.SearchMax.CogSearchMaxResultGraphicConstants.Origin));
-            //                    }
-            //                }
-            //            }
-            //            Save_SystemLog("Mark G end", Main.DEFINE.CMD);
-            //            if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score >= PT_AcceptScore[m_PatNo])
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, "Mark OK! " + "Score: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", System.Drawing.Color.Lime);
-            //            }
-            //            else
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, "Mark NG! " + "Score: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", System.Drawing.Color.Red);
-            //            }
-
-            //            if (!_useROITracking)
-            //            {
-            //                Draw_Label(PT_Display01, "Mark     X: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000"), 1);//
-            //                Draw_Label(PT_Display01, "Mark     Y: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000"), 2);
-            //                if (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score >= PT_AcceptScore[m_PatNo])
-            //                    Draw_Label(PT_Display01, "Mark     OK! " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", 3); // cyh -> 삭제해도됨
-            //                else
-            //                    Draw_Label(PT_Display01, "Mark     NG! " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].Score * 100).ToString("0.000") + "%", 3); // cyh -> 삭제해도됨
-            //                //shkang_Test_s(게이지 데이터용)
-            //                //Draw_Label(PT_Display01, "TEST     X: " + ((PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX - (OriginImage.Width / 2)) * 13.36 / 1000).ToString("0.000") + "mm", 4);
-            //                //Draw_Label(PT_Display01, "TEST     Y: " + ((PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY - (OriginImage.Height / 2)) * 13.36 / 1000).ToString("0.000")+ "mm", 5);
-            //                //shkang_Test_e
-            //            }
-            //            nRet = true;
-
-            //            PatResult.TranslationX = PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX;
-            //            PatResult.TranslationY = PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY;
-
-            //            string X = "X: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000");
-            //            string Y = "Y: " + (PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000");
-            //            LABEL_MESSAGE(LB_MESSAGE1, X + ", " + Y, System.Drawing.Color.Lime);
-
-            //            double tempDataX = 0, tempDataY = 0;
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX, PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY,
-            //                                   ref tempDataX, ref tempDataY);
-
-            //            string strLog = tempDataX.ToString("0.000") + "," + tempDataY.ToString("0.000");
-            //            Save_SystemLog(strLog, Main.DEFINE.DATA);
-            //            Save_SystemLog("Label ", Main.DEFINE.CMD);
-            //        }
-            //    }
-            //    else
-            //    {
-            //        LABEL_MESSAGE(LB_MESSAGE, "Mark NG! ", System.Drawing.Color.Red);
-            //        Save_SystemLog("Label NG ", Main.DEFINE.CMD);
-            //    }
-
-            //    if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_PMAlign_Use)
-            //    {
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub].Run();
-            //        //      PT_Display01.Record = PT_GPattern[m_PatNo, m_PatNo_Sub].CreateLastRunRecord();
-
-            //        if (PT_GPattern[m_PatNo, m_PatNo_Sub].Results != null)
-            //        {
-            //            if (PT_GPattern[m_PatNo, m_PatNo_Sub].Results.Count >= 1) nRetSearch_PMA = true;
-            //        }
-            //        if (nRetSearch_PMA)
-            //        {
-            //            Save_SystemLog("Graphy add ", Main.DEFINE.CMD);
-            //            ResultGraphic.Add(PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].CreateResultGraphics(CogPMAlignResultGraphicConstants.MatchRegion | CogPMAlignResultGraphicConstants.MatchFeatures | CogPMAlignResultGraphicConstants.Origin));
-
-            //            if (PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].Score >= PT_GAcceptScore[m_PatNo])
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, LB_MESSAGE.Text + "\n" + "GMark OK! " + "Score: " + PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].Score.ToString("0.000") + "%", System.Drawing.Color.Lime);
-            //            }
-            //            else
-            //            {
-            //                LABEL_MESSAGE(LB_MESSAGE, LB_MESSAGE.Text + "\n" + "GMark NG! " + "Score: " + PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].Score.ToString("0.000") + "%", System.Drawing.Color.Red);
-            //            }
-
-            //            Draw_Label(PT_Display01, "GMark  X: " + (PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000"), 3);
-            //            Draw_Label(PT_Display01, "GMark  Y: " + (PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000"), 4);
-
-            //            string X = "G X: " + (PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX).ToString("0.000");
-            //            string Y = "Y: " + (PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY).ToString("0.000");
-            //            LABEL_MESSAGE(LB_MESSAGE1, LB_MESSAGE1.Text + "\n" + X + ", " + Y, System.Drawing.Color.Lime);
-
-            //            double tempDataX = 0, tempDataY = 0, tempDataX2 = 0, tempDataY2 = 0;
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX, PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY,
-            //                                   ref tempDataX, ref tempDataY);
-            //            Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX, PT_GPattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY,
-            //                                   ref tempDataX2, ref tempDataY2);
-
-            //            string strLog = tempDataX.ToString("0.000") + "," + tempDataY.ToString("0.000") + "," + tempDataX2.ToString("0.000") + "," + tempDataY2.ToString("0.000");
-            //            Save_SystemLog(strLog, Main.DEFINE.DATA);
-            //        }
-            //        else
-            //        {
-            //            LABEL_MESSAGE(LB_MESSAGE, LB_MESSAGE.Text + "\n" + "GMark NG! ", System.Drawing.Color.Red);
-            //        }
-            //    }
-            //    for (int i = 0; i < ResultGraphic.Count; i++)
-            //    {
-            //        PT_Display01.StaticGraphics.Add(ResultGraphic[i] as ICogGraphic, "Mark");
-            //    }
-            //    Save_SystemLog("Mark Search end", Main.DEFINE.CMD);
-            //    ////////////////수정할것 
-            //    //       DisplayFit(PT_Display01);
-            //    return nRet;
-            //    #endregion
-            //}
-
-        }
-        private bool Search_Caliper(bool nALLSEARCH)
-        {
-            return true;
-            //bool nRet = true;
-            //string strLog = "";
-            //bool TempSelect = false;
-            //int nStartNum = 0;
-            //int nLastNum = 0;
-
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //double[] tempData = new double[2];
-            //double[] tempDataMark = new double[2];
-            //long tempYLength = new long();
-
-            //if (nALLSEARCH)
-            //{
-            //    nStartNum = 0;
-            //    nLastNum = Main.DEFINE.CALIPER_MAX;
-            //}
-            //else
-            //{
-            //    nStartNum = m_SelectCaliper;
-            //    nLastNum = m_SelectCaliper + 1;
-            //}
-
-            //for (int i = nStartNum; i < nLastNum; i++)
-            //{
-            //    if (PT_CaliPara[m_PatNo, i].m_UseCheck)
-            //    {
-            //        TempSelect = true;
-            //        int nTempPlusMinus = 1;
-
-            //        if (PT_Caliper_MarkUSE[m_PatNo])
-            //        {
-            //            (PT_CaliperTools[m_PatNo, i].Region as CogRectangleAffine).CenterX = PatResult.TranslationX + PT_CaliPara[m_PatNo, i].m_TargetToCenter[Main.DEFINE.M_CNLSEARCHTOOL].X;
-            //            (PT_CaliperTools[m_PatNo, i].Region as CogRectangleAffine).CenterY = PatResult.TranslationY + PT_CaliPara[m_PatNo, i].m_TargetToCenter[Main.DEFINE.M_CNLSEARCHTOOL].Y;
-            //        }
-
-            //        if (Main.ALIGNINSPECTION_USE(m_AlignNo))
-            //        {
-            //            PT_CaliperTools[m_PatNo, i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].CaliperToolPairRun(PT_CaliperTools[m_PatNo, i], out nTempPlusMinus);
-            //        }
-            //        else
-            //        {
-            //            PT_CaliperTools[m_PatNo, i].Run();
-            //        }
-
-            //        if (PT_CaliperTools[m_PatNo, i].Results != null && PT_CaliperTools[m_PatNo, i].Results.Count > 0)
-            //        {
-            //            for (int j = 0; j < PT_CaliperTools[m_PatNo, i].Results.Count; j++)
-            //            {
-            //                resultGraphics.Add(PT_CaliperTools[m_PatNo, i].Results[j].CreateResultGraphics(CogCaliperResultGraphicConstants.Edges));
-            //            }
-            //            PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-            //            //---------------------------------------------------------------------------------------------------------------------------------
-
-            //            #region COF_LENGTH
-            //            if (Main.AlignUnit[m_AlignNo].m_AlignName == "COF_CUTTING_ALIGN1" || Main.AlignUnit[m_AlignNo].m_AlignName == "COF_CUTTING_ALIGN2")
-            //            {
-            //                if (Main.GetCaliperDirection(Main.GetCaliperDirection(PT_CaliperTools[m_PatNo, i].Region.Rotation)) == Main.DEFINE.X)
-            //                {
-            //                    // PatResult.TranslationX = PT_CaliperTools[m_PatNo, i].Results[0].Edge0.PositionX;
-            //                }
-            //                if (Main.GetCaliperDirection(Main.GetCaliperDirection(PT_CaliperTools[m_PatNo, i].Region.Rotation)) == Main.DEFINE.Y)
-            //                {
-            //                    // PatResult.TranslationY = PT_CaliperTools[m_PatNo, i].Results[0].Edge0.PositionY;
-
-            //                    Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(0, PT_CaliperTools[m_PatNo, i].Results[0].Edge0.PositionY,
-            //                    ref tempData[Main.DEFINE.X], ref tempData[Main.DEFINE.Y]);
-            //                    if (PT_Caliper_MarkUSE[m_PatNo])
-            //                    {
-            //                        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2R(PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationX, PT_Pattern[m_PatNo, m_PatNo_Sub].Results[0].GetPose().TranslationY,
-            //                        ref tempDataMark[Main.DEFINE.X], ref tempDataMark[Main.DEFINE.Y]);
-            //                        tempYLength = (long)(Math.Abs(tempDataMark[Main.DEFINE.Y] - tempData[Main.DEFINE.Y]));
-            //                        LABEL_MESSAGE(LB_MESSAGE, "COF Y_LENGTH: " + tempYLength.ToString("00") + " um", System.Drawing.Color.Lime);
-            //                    }
-            //                }
-            //            }
-            //            #endregion
-
-            //            #region BEAM_WIDTH
-            //            for (int j = 0; j < PT_CaliperTools[m_PatNo, i].Results.Count; j++)
-            //            {
-            //                if (PT_CaliperTools[m_PatNo, i].RunParams.EdgeMode == CogCaliperEdgeModeConstants.Pair
-            //                    && PT_CaliperTools[m_PatNo, i].Results.Edges.Count > 1)
-            //                {
-            //                    double dWidth = 0;
-            //                    Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].V2RScalar(PT_CaliperTools[m_PatNo, i].Results[0].Width, ref dWidth);
-            //                    strLog += i.ToString() + " " + dWidth.ToString("0.000") + " ";
-            //                }
-            //            }
-            //            #endregion
-            //            //---------------------------------------------------------------------------------------------------------------------------------
-            //        }
-            //        else
-            //        {
-            //            nRet = false;
-            //            LABEL_MESSAGE(LB_MESSAGE, i.ToString("00") + " Caliper: Search NG! Check!!!", System.Drawing.Color.Red);
-            //        }
-            //    }
-            //}
-
-            //LABEL_MESSAGE(LB_MESSAGE, strLog, System.Drawing.Color.Green);
-
-            //if (PT_CaliperTools[m_PatNo, m_SelectCaliper].Results != null && PT_CaliperTools[m_PatNo, m_SelectCaliper].Results.Count > 0 && PT_CaliPara[m_PatNo, m_SelectCaliper].m_UseCheck)
-            //{
-            //    DrawLastRegionData(PT_CALIPER_SUB_Display, PT_CaliperTools[m_PatNo, m_SelectCaliper]);
-            //}
-            //else
-            //{
-            //    Main.DisplayClear(PT_CALIPER_SUB_Display);
-            //    PT_CALIPER_SUB_Display.Image = null;
-            //}
-            //if (!TempSelect)
-            //{
-            //    LABEL_MESSAGE(LB_MESSAGE, "All Caliper Not Use!!", System.Drawing.Color.Red);
-            //    nRet = false;
-            //}
-            //return nRet;
+            if (CB_SUBPAT_USE.Visible)
+                CurrentUnit.Mark.Use[_selectedMarkIndex] = CB_SUBPAT_USE.Checked;
+            #endregion
         }
         #region MOVE_SIZE_LBMSSAGE
         private void BTN_MOVE_Click(object sender, EventArgs e)
@@ -2823,6 +1817,8 @@ namespace COG.UI.Forms
 
         private void CogMarkDisplay_Click(object sender, EventArgs e)
         {
+            UpdateData();
+
             CogRecordDisplay TempNum = (CogRecordDisplay)sender;
             int index = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
 
@@ -2834,7 +1830,9 @@ namespace COG.UI.Forms
             if (_selectedMarkIndex < 0)
                 return;
 
-            var prevMark = GetMarkUnit().TagList[_selectedMarkIndex];
+            var markToolList = GetMarkToolList();
+
+            var prevMark = markToolList[_selectedMarkIndex];
             prevMark.SetOrginMark(OriginMarkPoint);
 
             _selectedMarkIndex = index;
@@ -2847,7 +1845,7 @@ namespace COG.UI.Forms
 
             UpdateMarkInfo();
             ClearDisplayGraphic();
-            ClearMarkButtonBackColor();
+            ClearMarkButton();
         }
 
         private void BTN_MAINORIGIN_COPY_Click(object sender, EventArgs e)
@@ -2881,20 +1879,16 @@ namespace COG.UI.Forms
             Label TempNum = (Label)sender;
             int index = Convert.ToInt16(TempNum.Name.Substring(TempNum.Name.Length - 2, 2));
 
-            if(GetMarkUnit() is MarkUnit unit)
+            CurrentUnit.Mark.Use[index] = !CurrentUnit.Mark.Use[index];
+            if (_selectedMarkIndex == index)
             {
-                var tag = unit.TagList[index];
-                tag.Use = !tag.Use;
-                if (_selectedMarkIndex == index)
-                {
-                    CB_SUBPAT_USE.Visible = true;
-                    CB_SUBPAT_USE.Checked = tag.Use;
-                }
-                if (tag.Use)
-                    MarkLabelList[index].BackColor = Color.LawnGreen;
-                else
-                    MarkLabelList[index].BackColor = Color.WhiteSmoke;
+                CB_SUBPAT_USE.Visible = true;
+                CB_SUBPAT_USE.Checked = CurrentUnit.Mark.Use[index];
             }
+            if (CurrentUnit.Mark.Use[index])
+                MarkLabelList[index].BackColor = Color.LawnGreen;
+            else
+                MarkLabelList[index].BackColor = Color.WhiteSmoke;
         }
 
         private void PT_Display01_Changed(object sender, CogChangedEventArgs e)
@@ -2910,42 +1904,31 @@ namespace COG.UI.Forms
         }
         private void BTN_PATTERN_MASK_Click(object sender, EventArgs e)
         {
-            ////2023 0225 YSH ROI Finealign 
-            //if (bROIFinealignTeach)
-            //{
-            //    if (FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Trained)
-            //    {
-            //        FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].InputImage = CopyIMG(FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.GetTrainedPatternImage());
-            //        FormPatternMask.BackUpSearchMaxTool = FinealignMark[nROIFineAlignIndex, m_PatNo_Sub];
-            //        FormPatternMask.ShowDialog();
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
 
-            //        FinealignMark[nROIFineAlignIndex, m_PatNo_Sub] = FormPatternMask.BackUpSearchMaxTool;
+            var markToolList = GetMarkToolList();
 
-            //        DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], FinealignMark[nROIFineAlignIndex, m_PatNo_Sub]);
-            //    }
-            //}
-            //else
-            //{
-            //    if (PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Trained)
-            //    {
-            //        //                 PT_Pattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //        //                 PT_GPattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
+            if (markToolList != null)
+            {
+                var markTool = markToolList[_selectedMarkIndex];
+                var tool = markTool.SearchMaxTool;
 
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImage);
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub].InputImage = CopyIMG(PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImage);
+                if (tool.Pattern.Trained)
+                {
+                    tool.InputImage = new CogImage8Grey(CogDisplayImage as CogImage8Grey);
+                    PatternMaskForm.BackUpSearchMaxTool = tool;
 
-            //        FormPatternMask.BackUpSearchMaxTool = PT_Pattern[m_PatNo, m_PatNo_Sub];
-            //        FormPatternMask.BackUpPMAlignTool = PT_GPattern[m_PatNo, m_PatNo_Sub];
-            //        FormPatternMask.ShowDialog();
+                    PatternMaskForm.ShowDialog();
 
-            //        PT_Pattern[m_PatNo, m_PatNo_Sub] = FormPatternMask.BackUpSearchMaxTool;
-            //        PT_GPattern[m_PatNo, m_PatNo_Sub] = FormPatternMask.BackUpPMAlignTool;
+                    markTool.SetMaskingImage(PatternMaskForm.BackUpSearchMaxTool.Pattern.TrainImageMask);
+                    tool.Pattern.Train();
 
-            //        DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], PT_Pattern[m_PatNo, m_PatNo_Sub]);
-            //    }
-            //}
-
+                    UpdateMarkInfo();
+                }
+            }
         }
+
         private void BTN_PATTERN_SCORE_Click(object sender, EventArgs e)
         {
 
@@ -2997,120 +1980,11 @@ namespace COG.UI.Forms
 
         #endregion
 
-        private void CheckChangedParams(int nAlignUnit, int nCamUnit, string ParaName, bool oldPara, bool newPara)
-        {
-            //string strLog = "CAM" + nAlignUnit.ToString();
-
-            //if (nCamUnit == Main.DEFINE.CAM_SELECT_ALIGN)
-            //    strLog += " ALIGN ";
-            //else if (nCamUnit == Main.DEFINE.CAM_SELECT_INSPECT)
-            //    strLog += " INSPECTION ";
-
-            //if (oldPara != newPara)
-            //{
-            //    strLog += ParaName + " [" + oldPara.ToString() + "] ▶▷▶ [" + newPara.ToString() + "]";
-            //    Save_SystemLog(strLog, Main.DEFINE.CHANGEPARA);
-            //}
-        }
-
-        private void CheckChangedParams(int nAlignUnit, int nCamUnit, string ParaName, int oldPara, int newPara)
-        {
-            //string strLog = "CAM" + nAlignUnit.ToString();
-
-            //if (nCamUnit == Main.DEFINE.CAM_SELECT_ALIGN)
-            //    strLog += " ALIGN ";
-            //else if (nCamUnit == Main.DEFINE.CAM_SELECT_INSPECT)
-            //    strLog += " INSPECTION ";
-
-            //if (oldPara != newPara)
-            //{
-            //    strLog += ParaName + " [" + oldPara + "] ▶▷▶ [" + newPara + "]";
-            //    Save_SystemLog(strLog, Main.DEFINE.CHANGEPARA);
-            //}
-        }
-
-        private void CheckChangedParams(int nAlignUnit, int nCamUnit, string ParaName, double oldPara, double newPara)
-        {
-            //string strLog = "CAM" + nAlignUnit.ToString();
-
-            //if (nCamUnit == Main.DEFINE.CAM_SELECT_ALIGN)
-            //    strLog += " ALIGN ";
-            //else if (nCamUnit == Main.DEFINE.CAM_SELECT_INSPECT)
-            //    strLog += " INSPECTION ";
-
-            //if (oldPara != newPara)
-            //{
-            //    strLog += ParaName + " [" + oldPara.ToString("0.0000") + "] ▶▷▶ [" + newPara.ToString("0.0000") + "]";
-            //    Save_SystemLog(strLog, Main.DEFINE.CHANGEPARA);
-            //}
-        }
-
-        private void CheckChangedParams(int nAlignUnit, int nCamUnit, string ParaName, string oldPara, string newPara)
-        {
-            //string strLog = "CAM" + nAlignUnit.ToString();
-
-            //if (nCamUnit == Main.DEFINE.CAM_SELECT_ALIGN)
-            //    strLog += " ALIGN ";
-            //else if (nCamUnit == Main.DEFINE.CAM_SELECT_INSPECT)
-            //    strLog += " INSPECTION ";
-
-            //if (oldPara != newPara)
-            //{
-            //    strLog += ParaName + " [" + oldPara + "] ▶▷▶ [" + newPara + "]";
-            //    Save_SystemLog(strLog, Main.DEFINE.CHANGEPARA);
-            //}
-        }
-
-        object syncLock_Log = new object();
-        private void Save_SystemLog(string nMessage, string nType)
-        {
-            //string nFolder;
-            //string nFileName = "";
-            //nFolder = Main.LogdataPath + DateTime.Now.ToString("yyyyMMdd") + "\\";
-            //if (!Directory.Exists(Main.LogdataPath)) Directory.CreateDirectory(Main.LogdataPath);
-            //if (!Directory.Exists(nFolder)) Directory.CreateDirectory(nFolder);
-
-            //string Date;
-            //Date = DateTime.Now.ToString("[MM_dd HH:mm:ss:fff] ");
-
-            //lock (syncLock_Log)
-            //{
-            //    try
-            //    {
-            //        switch (nType)
-            //        {
-            //            case Main.DEFINE.CHANGEPARA:
-            //                nFileName = "ChangePara.txt";
-            //                nMessage = Date + nMessage;
-            //                break;
-            //            case Main.DEFINE.DATA:
-            //                nFileName = "Data.csv";
-            //                nMessage = Date + nMessage;
-            //                break;
-            //            case Main.DEFINE.CMD:
-            //                nFileName = "CMD.txt";
-            //                nMessage = Date + nMessage;
-            //                break;
-            //        }
-
-            //        StreamWriter SW = new StreamWriter(nFolder + nFileName, true, Encoding.Unicode);
-            //        SW.WriteLine(nMessage);
-            //        SW.Close();
-            //    }
-            //    catch
-            //    {
-
-            //    }
-            //}
-        }
-
         private void timer2_Tick(object sender, EventArgs e)
         {
             //if (PT_DISPLAY_CONTROL.CrossLineChecked) CrossLine();
             //timer2.Enabled = false;
         }
-
-
         #region SD BIO
         private void ROIType(object sender, EventArgs e)
         {
@@ -6995,118 +5869,79 @@ namespace COG.UI.Forms
 
         private void BTN_RETURNPAGE_Click(object sender, EventArgs e)
         {
-            //bROIFinealignTeach = false;
-            //TABC_MANU.SelectTab(TAB_06);
-            //m_PatNo_Sub = 0;
-            //RDB_ROI_FINEALIGN.PerformClick();
+            UpdateData();
+
+            _fixedTabControl = false;
+            _tabLock = false;
+            TABC_MANU.SelectTab(TAB_01);
+            _isFormLoad = true;
+
+            RDB_ROI_FINEALIGN.PerformClick();
         }
 
         private void BTN_ROI_FINEALIGN_TEST_Click(object sender, EventArgs e)
         {
-            //bool bRet;
-            //double dGapX;
-            //double dGapY;
-            //double dGapT;
-            //double dGapT_degree;
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+            if (ModelManager.Instance().CurrentModel == null)
+                return;
 
-            ////bool bSearchRes = Search_PATCNL();
-            //CogGraphicLabel LabelText = new CogGraphicLabel();
+            var inputImage = CogDisplay.Image;
 
-            //PT_Display01.StaticGraphics.Clear();
-            //PT_Display01.InteractiveGraphics.Clear();
-            //bRet = Main.AlignUnit[m_AlignNo].ROIFinealign(FinealignMark, OriginImage, out dGapX, out dGapY, out dGapT, ref resultGraphics);
-            //if (bRet)
-            //{
-            //    if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //    {
-            //        LabelText.X = 2000;
-            //        LabelText.Y = 1000;
-            //    }
-            //    else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //    {
-            //        LabelText.X = 1800;
-            //        LabelText.Y = 900;
-            //    }
+            double score = 0;
+            if (_selectedAmpMark)
+                score = CurrentUnit.Mark.Amp.Score;
+            else
+                score = CurrentUnit.Mark.Bonding.Score;
 
-            //    //2023 0228 YSH Finealign Spec 부분 추후 필요 시 수정 요망
-            //    dGapT_degree = dGapT * 180 / Math.PI;
-            //    if (-m_dROIFinealignT_Spec < dGapT_degree && dGapT_degree < m_dROIFinealignT_Spec)//Spec Check
-            //    {
-            //        CogFixtureTool mCogFixtureTool = new CogFixtureTool();
-            //        mCogFixtureTool.InputImage = OriginImage;
-            //        CogTransform2DLinear TempData = new CogTransform2DLinear();
-            //        TempData.TranslationX = dGapX;
-            //        TempData.TranslationY = dGapY;
-            //        TempData.Rotation = dGapT;
-            //        mCogFixtureTool.RunParams.UnfixturedFromFixturedTransform = TempData;
-            //        mCogFixtureTool.RunParams.FixturedSpaceNameDuplicateHandling = CogFixturedSpaceNameDuplicateHandlingConstants.Compatibility;
-            //        mCogFixtureTool.Run();
-            //        PT_Display01.Image = mCogFixtureTool.OutputImage;
-            //        LabelText.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //        LabelText.Color = CogColorConstants.Green;
-            //        LabelText.Text = "ROI FINEALIGN OK";
-            //        //현재 이미지 Theta 값
-            //        LBL_ROI_FINEALIGN_CURRENT_T.ForeColor = Color.Green;
-            //        LBL_ROI_FINEALIGN_CURRENT_T.Text = string.Format("{0:F3}°", dGapT_degree);
+            var upMarkToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
+            var upMarkResult = Algorithm.FindMark(inputImage as CogImage8Grey, upMarkToolList, score);
 
+            var downMarkToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
+            var downMarkResult = Algorithm.FindMark(inputImage as CogImage8Grey, downMarkToolList, score);
 
-            //    }
-            //    else
-            //    {
-            //        LabelText.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //        LabelText.Color = CogColorConstants.Red;
-            //        LabelText.Text = "ROI FINEALIGN SPEC OUT";
-            //        //현재 이미지 Theta 값
-            //        LBL_ROI_FINEALIGN_CURRENT_T.ForeColor = Color.Red;
-            //        LBL_ROI_FINEALIGN_CURRENT_T.Text = string.Format("{0:F3}°", dGapT_degree);
-            //    }
-            //    resultGraphics.Add(LabelText);
+            ClearDisplayGraphic();
 
-            //}
-            //else
-            //{
-            //    LabelText.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //    LabelText.Color = CogColorConstants.Red;
-            //    if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //    {
-            //        LabelText.X = 2000;
-            //        LabelText.Y = 1000;
-            //    }
-            //    else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //    {
-            //        LabelText.X = 1800;
-            //        LabelText.Y = 900;
-            //    }
-            //    LabelText.Text = "ROI FINEALIGN FAIL!";
-            //    resultGraphics.Add(LabelText);
-            //}
-            //PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
+            if(upMarkResult == null || downMarkResult == null)
+            {
+                //검사 실패
+            }
+            else
+            {
+                //Todo : 정환
+                // CurrentUnit.Mark.Bonding.AlignSpec_T
+                //CheckAlignSpec_T();
+
+                CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+                resultGraphics.Add(upMarkResult.ResultGraphics);
+                resultGraphics.Add(downMarkResult.ResultGraphics);
+                CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Test", false);
+            }
         }
 
         private void BTN_ROI_FINEALIGN_Click(object sender, EventArgs e)
         {
-            //Button TempBtn = (Button)sender;
+            Button TempBtn = (Button)sender;
 
-            //if (TempBtn.Name.Equals("BTN_ROI_FINEALIGN_LEFTMARK"))
-            //    nROIFineAlignIndex = (int)enumROIFineAlignPosition.Left;
-            //else
-            //    nROIFineAlignIndex = (int)enumROIFineAlignPosition.Right;
+            if (TempBtn.Name.Equals("BTN_ROI_FINEALIGN_LEFTMARK"))
+                _isSelectedBondingMarkUp = true;
+            else
+                _isSelectedBondingMarkUp = false;
 
-            //bROIFinealignTeach = true;
-            //TABC_MANU.SelectedIndex = 0;
+            _selectedAmpMark = false;
+
+            _fixedTabControl = true;
+            TABC_MANU.SelectedIndex = 0;
         }
 
         private void LBL_ROI_FINEALIGN_SPEC_T_Click(object sender, EventArgs e)
         {
-            //double nCurData = Convert.ToDouble(LBL_ROI_FINEALIGN_SPEC_T.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 6, nCurData, "Input Data", 0);
-            //KeyPad.ShowDialog();
-            //double dTheta = KeyPad.m_data;
+            double nCurData = Convert.ToDouble(LBL_ROI_FINEALIGN_SPEC_T.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 6, nCurData, "Input Data", 0);
+            KeyPad.ShowDialog();
 
-            //m_dROIFinealignT_Spec = dTheta;
+            double dTheta = KeyPad.m_data;
 
-            //LBL_ROI_FINEALIGN_SPEC_T.Text = dTheta.ToString();
+            CurrentUnit.Mark.Bonding.AlignSpec_T = dTheta;
+            LBL_ROI_FINEALIGN_SPEC_T.Text = dTheta.ToString();
         }
 
         private void CMB_USE_ROIFINEALIGN_CheckedChanged(object sender, EventArgs e)
