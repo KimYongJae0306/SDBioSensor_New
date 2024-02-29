@@ -718,7 +718,7 @@ namespace COG
             DialogResult result = MessageBox.Show("Do you want EXIT?", "Information", MessageBoxButtons.YesNo, MessageBoxIcon.Information);
             if (result == DialogResult.Yes)
             {
-                LogHelper.Save_SystemLog("PROGRAM END", LogType.CMD);
+                LoggerHelper.Save_SystemLog("PROGRAM END", LogType.Cmd);
                 //Main.Thread_Stop();
                 //Main.ThreadCAM_Stop();
                 //if (ThreadProcM.IsAlive)

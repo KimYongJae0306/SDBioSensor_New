@@ -8,7 +8,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace COG.Class.Units
+namespace COG.Class.Data
 {
     public class MarkTool
     {
@@ -42,6 +42,7 @@ namespace COG.Class.Units
         {
             if (SearchMaxTool == null | cogImage == null)
                 return;
+
             SearchMaxTool.Pattern.TrainImageMask?.Dispose();
             SearchMaxTool.Pattern.TrainImageMask = null;
 
@@ -96,49 +97,5 @@ namespace COG.Class.Units
 
             return markTool;
         }
-
-        //public List<MarkTool> MarkList = new List<MarkTool>();
-
-        //public void Load()
-        //{
-        //    Score = StaticConfig.ModelFile.GetFData(Name, "ACCEPT_SCORE");
-        //    for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-        //    {
-        //        MarkList[i].Index = i;
-        //        string key = "PATUSE" + i.ToString();
-        //        MarkList[i].Use = StaticConfig.ModelFile.GetBData(Name, key);
-        //    }
-
-        //}
-
-        //public void Save()
-        //{
-        //    StaticConfig.ModelFile.SetData(Name, "ACCEPT_SCORE", Score);
-        //    for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-        //    {
-        //        string key = "PATUSE" + i.ToString();
-        //        StaticConfig.ModelFile.SetData(Name, key, MarkList[i].Use);
-        //    }
-        //}
-
-        //public void Dispose()
-        //{
-        //    //MarkList.ForEach(x => x.Dispose());
-        //    //MarkList.Clear();
-        //}
-
-        //public Mark DeepCopy()
-        //{
-        //    Mark unit = new Mark();
-        //    //unit.Name = Name;
-        //    //unit.CamNo = CamNo;
-        //    //unit.AlignType = AlignType;
-        //    //unit.Score = Score;
-
-        //    //foreach (var tag in MarkList)
-        //    //    unit.MarkList.Add(tag.DeepCopy());
-
-        //    return unit;
-        //}
     }
 }

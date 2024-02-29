@@ -44,7 +44,6 @@
             this.BTN_LIGHT_DOWN = new System.Windows.Forms.Button();
             this.TBAR_LIGHT = new System.Windows.Forms.TrackBar();
             this.PT_DisplayToolbar01 = new Cognex.VisionPro.CogDisplayToolbarV2();
-            this.PT_DisplayStatusBar01 = new Cognex.VisionPro.CogDisplayStatusBarV2();
             this.timer1 = new System.Windows.Forms.Timer(this.components);
             this.LB_MESSAGE = new System.Windows.Forms.Label();
             this.gbxToolSetting = new System.Windows.Forms.GroupBox();
@@ -131,16 +130,6 @@
             this.btn_AlginApply = new System.Windows.Forms.Button();
             this.btn_Bottom_Inscription = new System.Windows.Forms.RadioButton();
             this.chkUseTracking = new System.Windows.Forms.CheckBox();
-            this.groupBox10 = new System.Windows.Forms.GroupBox();
-            this.label72 = new System.Windows.Forms.Label();
-            this.label80 = new System.Windows.Forms.Label();
-            this.lab_RightOriginY = new System.Windows.Forms.Label();
-            this.label81 = new System.Windows.Forms.Label();
-            this.lab_LeftOriginY = new System.Windows.Forms.Label();
-            this.lab_RightOriginX = new System.Windows.Forms.Label();
-            this.lab_LeftOriginX = new System.Windows.Forms.Label();
-            this.label74 = new System.Windows.Forms.Label();
-            this.btn_Origin_Point_Apply = new System.Windows.Forms.Button();
             this.groupBox9 = new System.Windows.Forms.GroupBox();
             this.lblObjectDistanceXSpec = new System.Windows.Forms.Label();
             this.lblObjectDistanceXSpecValue = new System.Windows.Forms.Label();
@@ -153,7 +142,7 @@
             this.lab_Ignore = new System.Windows.Forms.Label();
             this.label66 = new System.Windows.Forms.Label();
             this.lblThetaFilterSizeValueDown = new System.Windows.Forms.Button();
-            this.Combo_Polarity3 = new System.Windows.Forms.ComboBox();
+            this.Combo_FilAlign_Polarity = new System.Windows.Forms.ComboBox();
             this.lblThetaFilterSizeValueUp = new System.Windows.Forms.Button();
             this.label62 = new System.Windows.Forms.Label();
             this.lblThetaFilterSizeValue = new System.Windows.Forms.Label();
@@ -173,7 +162,7 @@
             this.btn_align_caliper_Projction_Down = new System.Windows.Forms.Button();
             this.label67 = new System.Windows.Forms.Label();
             this.btn_align_caliper_Projction_up = new System.Windows.Forms.Button();
-            this.btn_Test = new System.Windows.Forms.Button();
+            this.btn_FilmAlignTest = new System.Windows.Forms.Button();
             this.PANEL_ROI_FINEALIGN = new System.Windows.Forms.Panel();
             this.gbxThetaSpecSetting = new System.Windows.Forms.GroupBox();
             this.label75 = new System.Windows.Forms.Label();
@@ -351,7 +340,6 @@
             this.TAB_01.SuspendLayout();
             this.PANEL_MATERIAL_ALIGN.SuspendLayout();
             this.groupBox7.SuspendLayout();
-            this.groupBox10.SuspendLayout();
             this.groupBox9.SuspendLayout();
             this.groupBox8.SuspendLayout();
             this.PANEL_ROI_FINEALIGN.SuspendLayout();
@@ -396,7 +384,7 @@
             this.BTN_PATTERN_RUN.FlatAppearance.BorderColor = System.Drawing.Color.Navy;
             this.BTN_PATTERN_RUN.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BTN_PATTERN_RUN.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_PATTERN_RUN.Location = new System.Drawing.Point(774, 814);
+            this.BTN_PATTERN_RUN.Location = new System.Drawing.Point(775, 813);
             this.BTN_PATTERN_RUN.Name = "BTN_PATTERN_RUN";
             this.BTN_PATTERN_RUN.Size = new System.Drawing.Size(120, 48);
             this.BTN_PATTERN_RUN.TabIndex = 9;
@@ -417,7 +405,7 @@
             this.groupBoxLightSetting.Controls.Add(this.TBAR_LIGHT);
             this.groupBoxLightSetting.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBoxLightSetting.ForeColor = System.Drawing.Color.White;
-            this.groupBoxLightSetting.Location = new System.Drawing.Point(9, 871);
+            this.groupBoxLightSetting.Location = new System.Drawing.Point(10, 870);
             this.groupBoxLightSetting.Name = "groupBoxLightSetting";
             this.groupBoxLightSetting.Size = new System.Drawing.Size(238, 167);
             this.groupBoxLightSetting.TabIndex = 33;
@@ -527,21 +515,10 @@
             // 
             // PT_DisplayToolbar01
             // 
-            this.PT_DisplayToolbar01.Location = new System.Drawing.Point(2, 3);
+            this.PT_DisplayToolbar01.Location = new System.Drawing.Point(4, 4);
             this.PT_DisplayToolbar01.Name = "PT_DisplayToolbar01";
             this.PT_DisplayToolbar01.Size = new System.Drawing.Size(895, 26);
             this.PT_DisplayToolbar01.TabIndex = 35;
-            // 
-            // PT_DisplayStatusBar01
-            // 
-            this.PT_DisplayStatusBar01.CoordinateSpaceName = "*\\#";
-            this.PT_DisplayStatusBar01.CoordinateSpaceName3D = "*\\#";
-            this.PT_DisplayStatusBar01.Location = new System.Drawing.Point(2, 776);
-            this.PT_DisplayStatusBar01.Name = "PT_DisplayStatusBar01";
-            this.PT_DisplayStatusBar01.RightToLeft = System.Windows.Forms.RightToLeft.No;
-            this.PT_DisplayStatusBar01.Size = new System.Drawing.Size(894, 22);
-            this.PT_DisplayStatusBar01.TabIndex = 36;
-            this.PT_DisplayStatusBar01.Use3DCoordinateSpaceTree = false;
             // 
             // timer1
             // 
@@ -571,7 +548,7 @@
             this.gbxToolSetting.Controls.Add(this.label1);
             this.gbxToolSetting.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.gbxToolSetting.ForeColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.gbxToolSetting.Location = new System.Drawing.Point(904, -1);
+            this.gbxToolSetting.Location = new System.Drawing.Point(906, 0);
             this.gbxToolSetting.Name = "gbxToolSetting";
             this.gbxToolSetting.Size = new System.Drawing.Size(315, 64);
             this.gbxToolSetting.TabIndex = 45;
@@ -647,7 +624,7 @@
             this.BTN_DISNAME_01.BackColor = System.Drawing.Color.SkyBlue;
             this.BTN_DISNAME_01.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BTN_DISNAME_01.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_DISNAME_01.Location = new System.Drawing.Point(206, 2);
+            this.BTN_DISNAME_01.Location = new System.Drawing.Point(298, -1);
             this.BTN_DISNAME_01.Name = "BTN_DISNAME_01";
             this.BTN_DISNAME_01.Size = new System.Drawing.Size(255, 30);
             this.BTN_DISNAME_01.TabIndex = 47;
@@ -671,7 +648,7 @@
             this.GB_PANEL_WIN.Controls.Add(this.PB_TFOF_PANEL);
             this.GB_PANEL_WIN.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.GB_PANEL_WIN.ForeColor = System.Drawing.Color.White;
-            this.GB_PANEL_WIN.Location = new System.Drawing.Point(9, 798);
+            this.GB_PANEL_WIN.Location = new System.Drawing.Point(10, 797);
             this.GB_PANEL_WIN.Name = "GB_PANEL_WIN";
             this.GB_PANEL_WIN.Size = new System.Drawing.Size(238, 75);
             this.GB_PANEL_WIN.TabIndex = 48;
@@ -1115,7 +1092,7 @@
             this.TABC_MANU.Controls.Add(this.TAB_01);
             this.TABC_MANU.Controls.Add(this.TAB_02);
             this.TABC_MANU.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.TABC_MANU.Location = new System.Drawing.Point(903, 62);
+            this.TABC_MANU.Location = new System.Drawing.Point(905, 63);
             this.TABC_MANU.Name = "TABC_MANU";
             this.TABC_MANU.SelectedIndex = 0;
             this.TABC_MANU.Size = new System.Drawing.Size(953, 736);
@@ -1764,13 +1741,12 @@
             // PANEL_MATERIAL_ALIGN
             // 
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox7);
-            this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox10);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox9);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox8);
-            this.PANEL_MATERIAL_ALIGN.Controls.Add(this.btn_Test);
-            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(483, 91);
+            this.PANEL_MATERIAL_ALIGN.Controls.Add(this.btn_FilmAlignTest);
+            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(39, 72);
             this.PANEL_MATERIAL_ALIGN.Name = "PANEL_MATERIAL_ALIGN";
-            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(170, 590);
+            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(747, 589);
             this.PANEL_MATERIAL_ALIGN.TabIndex = 399;
             // 
             // groupBox7
@@ -1902,136 +1878,6 @@
             this.chkUseTracking.UseVisualStyleBackColor = true;
             this.chkUseTracking.CheckedChanged += new System.EventHandler(this.chkUseTracking_CheckedChanged);
             // 
-            // groupBox10
-            // 
-            this.groupBox10.Controls.Add(this.label72);
-            this.groupBox10.Controls.Add(this.label80);
-            this.groupBox10.Controls.Add(this.lab_RightOriginY);
-            this.groupBox10.Controls.Add(this.label81);
-            this.groupBox10.Controls.Add(this.lab_LeftOriginY);
-            this.groupBox10.Controls.Add(this.lab_RightOriginX);
-            this.groupBox10.Controls.Add(this.lab_LeftOriginX);
-            this.groupBox10.Controls.Add(this.label74);
-            this.groupBox10.Controls.Add(this.btn_Origin_Point_Apply);
-            this.groupBox10.Location = new System.Drawing.Point(3, 393);
-            this.groupBox10.Name = "groupBox10";
-            this.groupBox10.Size = new System.Drawing.Size(381, 225);
-            this.groupBox10.TabIndex = 402;
-            this.groupBox10.TabStop = false;
-            this.groupBox10.Text = "Origin Point Setting";
-            // 
-            // label72
-            // 
-            this.label72.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label72.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label72.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label72.Location = new System.Drawing.Point(129, 17);
-            this.label72.Name = "label72";
-            this.label72.Size = new System.Drawing.Size(120, 48);
-            this.label72.TabIndex = 348;
-            this.label72.Text = "LEFT Top";
-            this.label72.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label80
-            // 
-            this.label80.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label80.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label80.Location = new System.Drawing.Point(10, 64);
-            this.label80.Name = "label80";
-            this.label80.Size = new System.Drawing.Size(120, 48);
-            this.label80.TabIndex = 354;
-            this.label80.Text = "X";
-            this.label80.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lab_RightOriginY
-            // 
-            this.lab_RightOriginY.BackColor = System.Drawing.Color.White;
-            this.lab_RightOriginY.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_RightOriginY.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_RightOriginY.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.lab_RightOriginY.Location = new System.Drawing.Point(248, 111);
-            this.lab_RightOriginY.Name = "lab_RightOriginY";
-            this.lab_RightOriginY.Size = new System.Drawing.Size(120, 48);
-            this.lab_RightOriginY.TabIndex = 353;
-            this.lab_RightOriginY.Text = "0";
-            this.lab_RightOriginY.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label81
-            // 
-            this.label81.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label81.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label81.Location = new System.Drawing.Point(10, 111);
-            this.label81.Name = "label81";
-            this.label81.Size = new System.Drawing.Size(120, 48);
-            this.label81.TabIndex = 355;
-            this.label81.Text = "Y";
-            this.label81.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lab_LeftOriginY
-            // 
-            this.lab_LeftOriginY.BackColor = System.Drawing.Color.White;
-            this.lab_LeftOriginY.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_LeftOriginY.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_LeftOriginY.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.lab_LeftOriginY.Location = new System.Drawing.Point(129, 111);
-            this.lab_LeftOriginY.Name = "lab_LeftOriginY";
-            this.lab_LeftOriginY.Size = new System.Drawing.Size(120, 48);
-            this.lab_LeftOriginY.TabIndex = 352;
-            this.lab_LeftOriginY.Text = "0";
-            this.lab_LeftOriginY.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lab_RightOriginX
-            // 
-            this.lab_RightOriginX.BackColor = System.Drawing.Color.White;
-            this.lab_RightOriginX.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_RightOriginX.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_RightOriginX.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.lab_RightOriginX.Location = new System.Drawing.Point(248, 64);
-            this.lab_RightOriginX.Name = "lab_RightOriginX";
-            this.lab_RightOriginX.Size = new System.Drawing.Size(120, 48);
-            this.lab_RightOriginX.TabIndex = 351;
-            this.lab_RightOriginX.Text = "0";
-            this.lab_RightOriginX.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // lab_LeftOriginX
-            // 
-            this.lab_LeftOriginX.BackColor = System.Drawing.Color.White;
-            this.lab_LeftOriginX.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_LeftOriginX.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_LeftOriginX.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.lab_LeftOriginX.Location = new System.Drawing.Point(129, 64);
-            this.lab_LeftOriginX.Name = "lab_LeftOriginX";
-            this.lab_LeftOriginX.Size = new System.Drawing.Size(120, 48);
-            this.lab_LeftOriginX.TabIndex = 350;
-            this.lab_LeftOriginX.Text = "0";
-            this.lab_LeftOriginX.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // label74
-            // 
-            this.label74.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label74.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label74.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.label74.Location = new System.Drawing.Point(248, 17);
-            this.label74.Name = "label74";
-            this.label74.Size = new System.Drawing.Size(120, 48);
-            this.label74.TabIndex = 349;
-            this.label74.Text = "RIGHT Top";
-            this.label74.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // btn_Origin_Point_Apply
-            // 
-            this.btn_Origin_Point_Apply.BackColor = System.Drawing.Color.DarkGray;
-            this.btn_Origin_Point_Apply.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            this.btn_Origin_Point_Apply.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_Origin_Point_Apply.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn_Origin_Point_Apply.Location = new System.Drawing.Point(247, 162);
-            this.btn_Origin_Point_Apply.Name = "btn_Origin_Point_Apply";
-            this.btn_Origin_Point_Apply.Size = new System.Drawing.Size(120, 48);
-            this.btn_Origin_Point_Apply.TabIndex = 347;
-            this.btn_Origin_Point_Apply.Text = "Origin Point Apply";
-            this.btn_Origin_Point_Apply.UseVisualStyleBackColor = false;
-            this.btn_Origin_Point_Apply.Click += new System.EventHandler(this.btn_Origin_Point_Apply_Click);
-            // 
             // groupBox9
             // 
             this.groupBox9.Controls.Add(this.lblObjectDistanceXSpec);
@@ -2101,7 +1947,7 @@
             this.groupBox8.Controls.Add(this.lab_Ignore);
             this.groupBox8.Controls.Add(this.label66);
             this.groupBox8.Controls.Add(this.lblThetaFilterSizeValueDown);
-            this.groupBox8.Controls.Add(this.Combo_Polarity3);
+            this.groupBox8.Controls.Add(this.Combo_FilAlign_Polarity);
             this.groupBox8.Controls.Add(this.lblThetaFilterSizeValueUp);
             this.groupBox8.Controls.Add(this.label62);
             this.groupBox8.Controls.Add(this.lblThetaFilterSizeValue);
@@ -2151,6 +1997,7 @@
             this.btn_align_caliper_Ignore_Down.Tag = "1";
             this.btn_align_caliper_Ignore_Down.Text = "↓";
             this.btn_align_caliper_Ignore_Down.UseVisualStyleBackColor = false;
+            this.btn_align_caliper_Ignore_Down.Click += new System.EventHandler(this.lblIgnoreValueUpDown_Click);
             // 
             // btn_align_caliper_Ignore_Up
             // 
@@ -2164,6 +2011,7 @@
             this.btn_align_caliper_Ignore_Up.Tag = "0";
             this.btn_align_caliper_Ignore_Up.Text = "↑";
             this.btn_align_caliper_Ignore_Up.UseVisualStyleBackColor = false;
+            this.btn_align_caliper_Ignore_Up.Click += new System.EventHandler(this.lblIgnoreValueUpDown_Click);
             // 
             // lab_Ignore
             // 
@@ -2203,21 +2051,21 @@
             this.lblThetaFilterSizeValueDown.UseVisualStyleBackColor = false;
             this.lblThetaFilterSizeValueDown.Click += new System.EventHandler(this.lblThetaFilterSizeValueUpDown_Click);
             // 
-            // Combo_Polarity3
+            // Combo_FilAlign_Polarity
             // 
-            this.Combo_Polarity3.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.Combo_Polarity3.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.Combo_Polarity3.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.Combo_Polarity3.FormattingEnabled = true;
-            this.Combo_Polarity3.Items.AddRange(new object[] {
+            this.Combo_FilAlign_Polarity.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.Combo_FilAlign_Polarity.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.Combo_FilAlign_Polarity.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.Combo_FilAlign_Polarity.FormattingEnabled = true;
+            this.Combo_FilAlign_Polarity.Items.AddRange(new object[] {
             "DARK TO LIGHT",
             "LIGHT TO DARK"});
-            this.Combo_Polarity3.Location = new System.Drawing.Point(130, 317);
-            this.Combo_Polarity3.Name = "Combo_Polarity3";
-            this.Combo_Polarity3.Size = new System.Drawing.Size(220, 34);
-            this.Combo_Polarity3.TabIndex = 340;
-            this.Combo_Polarity3.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
-            this.Combo_Polarity3.SelectedIndexChanged += new System.EventHandler(this.Combo_Polarity3_SelectedIndexChanged);
+            this.Combo_FilAlign_Polarity.Location = new System.Drawing.Point(130, 317);
+            this.Combo_FilAlign_Polarity.Name = "Combo_FilAlign_Polarity";
+            this.Combo_FilAlign_Polarity.Size = new System.Drawing.Size(220, 34);
+            this.Combo_FilAlign_Polarity.TabIndex = 340;
+            this.Combo_FilAlign_Polarity.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
+            this.Combo_FilAlign_Polarity.SelectedIndexChanged += new System.EventHandler(this.Combo_FilAlign_Polarity_SelectedIndexChanged);
             // 
             // lblThetaFilterSizeValueUp
             // 
@@ -2345,6 +2193,7 @@
             this.btn_align_caliper_SerchLenth_Down.Tag = "1";
             this.btn_align_caliper_SerchLenth_Down.Text = "↓";
             this.btn_align_caliper_SerchLenth_Down.UseVisualStyleBackColor = false;
+            this.btn_align_caliper_SerchLenth_Down.Click += new System.EventHandler(this.Align_Length_Click);
             // 
             // btn_Align_Threshold_down
             // 
@@ -2372,6 +2221,7 @@
             this.btn_align_caliper_SerchLenth_Up.Tag = "0";
             this.btn_align_caliper_SerchLenth_Up.Text = "↑";
             this.btn_align_caliper_SerchLenth_Up.UseVisualStyleBackColor = false;
+            this.btn_align_caliper_SerchLenth_Up.Click += new System.EventHandler(this.Align_Length_Click);
             // 
             // LAB_Align_Threshold
             // 
@@ -2462,20 +2312,20 @@
             this.btn_align_caliper_Projction_up.UseVisualStyleBackColor = false;
             this.btn_align_caliper_Projction_up.Click += new System.EventHandler(this.Align_ProjectionLenth);
             // 
-            // btn_Test
+            // btn_FilmAlignTest
             // 
-            this.btn_Test.BackColor = System.Drawing.Color.Teal;
-            this.btn_Test.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            this.btn_Test.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.btn_Test.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn_Test.ForeColor = System.Drawing.Color.White;
-            this.btn_Test.Location = new System.Drawing.Point(136, 214);
-            this.btn_Test.Name = "btn_Test";
-            this.btn_Test.Size = new System.Drawing.Size(120, 48);
-            this.btn_Test.TabIndex = 346;
-            this.btn_Test.Text = "Film Align TEST";
-            this.btn_Test.UseVisualStyleBackColor = false;
-            this.btn_Test.Click += new System.EventHandler(this.btn_Test_Click);
+            this.btn_FilmAlignTest.BackColor = System.Drawing.Color.Teal;
+            this.btn_FilmAlignTest.FlatAppearance.BorderColor = System.Drawing.Color.White;
+            this.btn_FilmAlignTest.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.btn_FilmAlignTest.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.btn_FilmAlignTest.ForeColor = System.Drawing.Color.White;
+            this.btn_FilmAlignTest.Location = new System.Drawing.Point(136, 214);
+            this.btn_FilmAlignTest.Name = "btn_FilmAlignTest";
+            this.btn_FilmAlignTest.Size = new System.Drawing.Size(120, 48);
+            this.btn_FilmAlignTest.TabIndex = 346;
+            this.btn_FilmAlignTest.Text = "Film Align TEST";
+            this.btn_FilmAlignTest.UseVisualStyleBackColor = false;
+            this.btn_FilmAlignTest.Click += new System.EventHandler(this.btn_FilmAlignTest_Click);
             // 
             // PANEL_ROI_FINEALIGN
             // 
@@ -2484,9 +2334,9 @@
             this.PANEL_ROI_FINEALIGN.Controls.Add(this.BTN_ROI_FINEALIGN_RIGHTMARK);
             this.PANEL_ROI_FINEALIGN.Controls.Add(this.BTN_ROI_FINEALIGN_LEFTMARK);
             this.PANEL_ROI_FINEALIGN.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.PANEL_ROI_FINEALIGN.Location = new System.Drawing.Point(6, 293);
+            this.PANEL_ROI_FINEALIGN.Location = new System.Drawing.Point(30, 383);
             this.PANEL_ROI_FINEALIGN.Name = "PANEL_ROI_FINEALIGN";
-            this.PANEL_ROI_FINEALIGN.Size = new System.Drawing.Size(897, 388);
+            this.PANEL_ROI_FINEALIGN.Size = new System.Drawing.Size(590, 177);
             this.PANEL_ROI_FINEALIGN.TabIndex = 392;
             // 
             // gbxThetaSpecSetting
@@ -3905,7 +3755,7 @@
             this.btn_Inspection_Test.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Inspection_Test.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.btn_Inspection_Test.ForeColor = System.Drawing.Color.White;
-            this.btn_Inspection_Test.Location = new System.Drawing.Point(774, 870);
+            this.btn_Inspection_Test.Location = new System.Drawing.Point(775, 869);
             this.btn_Inspection_Test.Name = "btn_Inspection_Test";
             this.btn_Inspection_Test.Size = new System.Drawing.Size(120, 48);
             this.btn_Inspection_Test.TabIndex = 304;
@@ -3917,7 +3767,7 @@
             // 
             this.label61.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label61.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label61.Location = new System.Drawing.Point(532, 985);
+            this.label61.Location = new System.Drawing.Point(564, 987);
             this.label61.Name = "label61";
             this.label61.Size = new System.Drawing.Size(120, 48);
             this.label61.TabIndex = 309;
@@ -3929,7 +3779,7 @@
             this.Lab_Tact.BackColor = System.Drawing.Color.White;
             this.Lab_Tact.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Lab_Tact.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Lab_Tact.Location = new System.Drawing.Point(653, 985);
+            this.Lab_Tact.Location = new System.Drawing.Point(685, 987);
             this.Lab_Tact.Name = "Lab_Tact";
             this.Lab_Tact.Size = new System.Drawing.Size(120, 48);
             this.Lab_Tact.TabIndex = 310;
@@ -3943,7 +3793,7 @@
             this.GB_MOVE_.Controls.Add(this.BTN_DOWN);
             this.GB_MOVE_.Controls.Add(this.BTN_LEFT);
             this.GB_MOVE_.Controls.Add(this.BTN_RIGHT);
-            this.GB_MOVE_.Location = new System.Drawing.Point(539, 807);
+            this.GB_MOVE_.Location = new System.Drawing.Point(540, 806);
             this.GB_MOVE_.Name = "GB_MOVE_";
             this.GB_MOVE_.Size = new System.Drawing.Size(227, 177);
             this.GB_MOVE_.TabIndex = 129;
@@ -4044,7 +3894,7 @@
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_INC_H);
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_INC_V);
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_DEC_V);
-            this.GB_SIZE.Location = new System.Drawing.Point(1368, 10000);
+            this.GB_SIZE.Location = new System.Drawing.Point(1368, 12658);
             this.GB_SIZE.Name = "GB_SIZE";
             this.GB_SIZE.Size = new System.Drawing.Size(229, 203);
             this.GB_SIZE.TabIndex = 132;
@@ -4134,7 +3984,7 @@
             this.BTN_PATTERN_COPY.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_PATTERN_COPY.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BTN_PATTERN_COPY.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BTN_PATTERN_COPY.Location = new System.Drawing.Point(253, 812);
+            this.BTN_PATTERN_COPY.Location = new System.Drawing.Point(254, 811);
             this.BTN_PATTERN_COPY.Name = "BTN_PATTERN_COPY";
             this.BTN_PATTERN_COPY.Size = new System.Drawing.Size(120, 48);
             this.BTN_PATTERN_COPY.TabIndex = 133;
@@ -4150,7 +4000,7 @@
             this.BTN_SAVE.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_SAVE.FlatAppearance.BorderSize = 2;
             this.BTN_SAVE.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_SAVE.Location = new System.Drawing.Point(1658, 933);
+            this.BTN_SAVE.Location = new System.Drawing.Point(1659, 932);
             this.BTN_SAVE.Name = "BTN_SAVE";
             this.BTN_SAVE.Size = new System.Drawing.Size(100, 101);
             this.BTN_SAVE.TabIndex = 14;
@@ -4167,7 +4017,7 @@
             this.BTN_EXIT.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_EXIT.FlatAppearance.BorderSize = 2;
             this.BTN_EXIT.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_EXIT.Location = new System.Drawing.Point(1758, 933);
+            this.BTN_EXIT.Location = new System.Drawing.Point(1759, 932);
             this.BTN_EXIT.Name = "BTN_EXIT";
             this.BTN_EXIT.Size = new System.Drawing.Size(100, 101);
             this.BTN_EXIT.TabIndex = 1;
@@ -4180,7 +4030,7 @@
             // 
             this.BTN_CAM_DIST.BackColor = System.Drawing.Color.DarkGray;
             this.BTN_CAM_DIST.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_CAM_DIST.Location = new System.Drawing.Point(1485, 10000);
+            this.BTN_CAM_DIST.Location = new System.Drawing.Point(1485, 12658);
             this.BTN_CAM_DIST.Name = "BTN_CAM_DIST";
             this.BTN_CAM_DIST.Size = new System.Drawing.Size(136, 43);
             this.BTN_CAM_DIST.TabIndex = 279;
@@ -4200,7 +4050,7 @@
             this.BTN_LIVEMODE.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_LIVEMODE.FlatAppearance.BorderSize = 2;
             this.BTN_LIVEMODE.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_LIVEMODE.Location = new System.Drawing.Point(1658, 807);
+            this.BTN_LIVEMODE.Location = new System.Drawing.Point(1659, 806);
             this.BTN_LIVEMODE.Name = "BTN_LIVEMODE";
             this.BTN_LIVEMODE.Size = new System.Drawing.Size(200, 126);
             this.BTN_LIVEMODE.TabIndex = 342;
@@ -4253,7 +4103,7 @@
             this.groupBox2.Controls.Add(this.chkUseLoadImageTeachMode);
             this.groupBox2.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox2.ForeColor = System.Drawing.Color.Black;
-            this.groupBox2.Location = new System.Drawing.Point(1532, 2);
+            this.groupBox2.Location = new System.Drawing.Point(1534, 3);
             this.groupBox2.Name = "groupBox2";
             this.groupBox2.Size = new System.Drawing.Size(324, 82);
             this.groupBox2.TabIndex = 278;
@@ -4283,7 +4133,7 @@
             this.gbxHistogram.Controls.Add(this.button8);
             this.gbxHistogram.Controls.Add(this.btn_HistogramTest);
             this.gbxHistogram.Controls.Add(this.btn_Histogram_Apply);
-            this.gbxHistogram.Location = new System.Drawing.Point(1000, 3000);
+            this.gbxHistogram.Location = new System.Drawing.Point(5, 45);
             this.gbxHistogram.Name = "gbxHistogram";
             this.gbxHistogram.Size = new System.Drawing.Size(347, 141);
             this.gbxHistogram.TabIndex = 364;
@@ -4294,7 +4144,7 @@
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.List_NG);
-            this.groupBox5.Location = new System.Drawing.Point(1252, 806);
+            this.groupBox5.Location = new System.Drawing.Point(1253, 805);
             this.groupBox5.Name = "groupBox5";
             this.groupBox5.Size = new System.Drawing.Size(404, 227);
             this.groupBox5.TabIndex = 362;
@@ -4304,7 +4154,8 @@
             // groupBox6
             // 
             this.groupBox6.Controls.Add(this.dataGridView_Result);
-            this.groupBox6.Location = new System.Drawing.Point(904, 806);
+            this.groupBox6.Controls.Add(this.gbxHistogram);
+            this.groupBox6.Location = new System.Drawing.Point(905, 805);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Size = new System.Drawing.Size(344, 227);
             this.groupBox6.TabIndex = 363;
@@ -4316,7 +4167,8 @@
             this.pnlDisplay.Controls.Add(this.LB_MESSAGE1);
             this.pnlDisplay.Controls.Add(this.LB_MESSAGE);
             this.pnlDisplay.Controls.Add(this.PT_DISPLAY_CONTROL);
-            this.pnlDisplay.Location = new System.Drawing.Point(0, 0);
+            this.pnlDisplay.Controls.Add(this.BTN_DISNAME_01);
+            this.pnlDisplay.Location = new System.Drawing.Point(2, 1);
             this.pnlDisplay.Name = "pnlDisplay";
             this.pnlDisplay.Size = new System.Drawing.Size(896, 798);
             this.pnlDisplay.TabIndex = 365;
@@ -4341,7 +4193,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1931, 949);
+            this.ClientSize = new System.Drawing.Size(1912, 957);
             this.ControlBox = false;
             this.Controls.Add(this.pnlDisplay);
             this.Controls.Add(this.groupBox5);
@@ -4349,7 +4201,6 @@
             this.Controls.Add(this.BTN_LIVEMODE);
             this.Controls.Add(this.BTN_PATTERN_COPY);
             this.Controls.Add(this.groupBox2);
-            this.Controls.Add(this.gbxHistogram);
             this.Controls.Add(this.BTN_PATTERN_RUN);
             this.Controls.Add(this.btn_Inspection_Test);
             this.Controls.Add(this.BTN_CAM_DIST);
@@ -4361,9 +4212,7 @@
             this.Controls.Add(this.BTN_EXIT);
             this.Controls.Add(this.GB_MOVE_);
             this.Controls.Add(this.TABC_MANU);
-            this.Controls.Add(this.BTN_DISNAME_01);
             this.Controls.Add(this.PT_DisplayToolbar01);
-            this.Controls.Add(this.PT_DisplayStatusBar01);
             this.Controls.Add(this.label61);
             this.Controls.Add(this.Lab_Tact);
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.Fixed3D;
@@ -4407,7 +4256,6 @@
             this.PANEL_MATERIAL_ALIGN.ResumeLayout(false);
             this.groupBox7.ResumeLayout(false);
             this.groupBox7.PerformLayout();
-            this.groupBox10.ResumeLayout(false);
             this.groupBox9.ResumeLayout(false);
             this.groupBox8.ResumeLayout(false);
             this.PANEL_ROI_FINEALIGN.ResumeLayout(false);
@@ -4452,7 +4300,6 @@
         private System.Windows.Forms.Button BTN_LIGHT_UP;
         private System.Windows.Forms.Label LB_LIGHT_0;
         private Cognex.VisionPro.CogDisplayToolbarV2 PT_DisplayToolbar01;
-        private Cognex.VisionPro.CogDisplayStatusBarV2 PT_DisplayStatusBar01;
         private System.Windows.Forms.Timer timer1;
         private System.Windows.Forms.Label LB_MESSAGE;
         private System.Windows.Forms.GroupBox gbxToolSetting;
@@ -4582,7 +4429,7 @@
         private System.Windows.Forms.Label label61;
         private System.Windows.Forms.Label Lab_Tact;
         private System.Windows.Forms.TabPage TAB_01;
-        private System.Windows.Forms.ComboBox Combo_Polarity3;
+        private System.Windows.Forms.ComboBox Combo_FilAlign_Polarity;
         private System.Windows.Forms.Label label62;
         private System.Windows.Forms.Button btn_align_caliper_cnt_down;
         private System.Windows.Forms.Button btn_align_caliper_cnt_up;
@@ -4610,7 +4457,7 @@
         private System.Windows.Forms.Button btn_align_caliper_Ignore_Up;
         private System.Windows.Forms.Label lab_Ignore;
         private System.Windows.Forms.Label label66;
-        private System.Windows.Forms.Button btn_Test;
+        private System.Windows.Forms.Button btn_FilmAlignTest;
         private System.Windows.Forms.Label lab_Dist;
         private System.Windows.Forms.Button btn_ignore_dist_down;
         private System.Windows.Forms.Button btn_ignore_dist_up;
@@ -4628,15 +4475,6 @@
         private System.Windows.Forms.Label lab_Histogram_ROI_Count;
         private System.Windows.Forms.Button btn_HistogramTest;
         private System.Windows.Forms.Button btn_Histogram_Apply;
-        private System.Windows.Forms.Button btn_Origin_Point_Apply;
-        private System.Windows.Forms.Label label81;
-        private System.Windows.Forms.Label label80;
-        private System.Windows.Forms.Label lab_RightOriginY;
-        private System.Windows.Forms.Label lab_LeftOriginY;
-        private System.Windows.Forms.Label lab_RightOriginX;
-        private System.Windows.Forms.Label lab_LeftOriginX;
-        private System.Windows.Forms.Label label74;
-        private System.Windows.Forms.Label label72;
         private System.Windows.Forms.CheckBox chkUseTracking;
         private System.Windows.Forms.Button lblParamFilterSizeValueDown;
         private System.Windows.Forms.Button lblParamFilterSizeValueUp;
@@ -4727,7 +4565,6 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn COL_18;
         private System.Windows.Forms.DataGridViewCheckBoxColumn COL_19;
         private System.Windows.Forms.DataGridViewTextBoxColumn COL_20;
-        private System.Windows.Forms.GroupBox groupBox10;
         private System.Windows.Forms.GroupBox groupBox9;
         private System.Windows.Forms.GroupBox groupBox8;
         private System.Windows.Forms.GroupBox groupBox7;

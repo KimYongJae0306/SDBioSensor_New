@@ -1,4 +1,6 @@
-﻿using COG.Core;
+﻿using COG.Class.Data;
+using COG.Class.Units;
+using COG.Core;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -10,6 +12,8 @@ namespace COG.Class
     public class TeachingData
     {
         private static TeachingData _instance = null;
+
+        public AmpCoordinate AmpCoordinate { get; set; } = new AmpCoordinate();
 
         private List<StageUnit> StageUnitList { get; set; } = new List<StageUnit>();
 
@@ -27,21 +31,15 @@ namespace COG.Class
         {
             var inspModel = ModelManager.Instance().CurrentModel as InspModel;
             if (inspModel != null)
-            {
-                Dispose();
                 Initialize(inspModel);
-            }
         }
 
         public void Initialize(InspModel inspModel)
         {
-            Dispose();
             lock (StageUnitList)
             {
                 foreach (var unit in inspModel.StageUnitList)
-                {
-                    StageUnitList.Add(unit.DeepCopy());
-                }
+                    StageUnitList.Add(unit);
             }
         }
 

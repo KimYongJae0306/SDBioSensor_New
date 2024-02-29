@@ -1,4 +1,6 @@
 ﻿using COG.Class;
+using COG.Class.Core;
+using COG.Class.Data;
 using COG.Class.Units;
 using COG.Core;
 using COG.Helper;
@@ -16,6 +18,7 @@ using Cognex.VisionPro.SearchMax;
 using Cognex.VisionPro.ToolBlock;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Windows.Forms;
@@ -59,7 +62,11 @@ namespace COG.UI.Forms
 
         private double ZoomBackup { get; set; } = 0;
 
+        private FilmROIType _selectedFileROIType { get; set; } = FilmROIType.Left_Top;
+
         private PatternMaskForm PatternMaskForm { get; set; } = new PatternMaskForm();
+
+        private MessageForm MessageForm = new MessageForm(2);
 
         private List<CogRecordDisplay> MarkDisplayList = new List<CogRecordDisplay>();
 
@@ -86,7 +93,6 @@ namespace COG.UI.Forms
             CogDisplay.Changed += PT_Display01_Changed;
 
             PT_DisplayToolbar01.Display = CogDisplay;
-            PT_DisplayStatusBar01.Display = CogDisplay;
 
             InitializeUI();
         }
@@ -109,9 +115,13 @@ namespace COG.UI.Forms
                 CurrentUnit = TeachingData.Instance().GetStageUnit(StageUnitNo).Right;
 
             TabPageType = TabPageType.Inspection;
-            TABC_MANU.SelectTab(TAB_02);
 
-            //UpdateMarkInfo();
+            UpdateMarkInfo();
+            UpdateFileAlimParam();
+            DataGridview_Insp.Rows.Clear();
+            UpdateInspParam();
+
+            TABC_MANU.SelectTab(TAB_02);
 
             this.Text = TeachingData.Instance().GetStageUnit(StageUnitNo).Name;
         }
@@ -188,8 +198,6 @@ namespace COG.UI.Forms
             TabPageType = type;
         }
 
-       
-
         private List<MarkTool> GetMarkToolList()
         {
             List<MarkTool> markToolList = null;
@@ -207,7 +215,7 @@ namespace COG.UI.Forms
             }
             return markToolList;
         }
-
+      
         private CogMaskGraphic CreateMaskGraphic(CogImage8Grey mask)
         {
             CogMaskGraphic cogMaskGraphic = new CogMaskGraphic();
@@ -259,6 +267,15 @@ namespace COG.UI.Forms
             return unit;
         }
 
+        private CogFindLineTool GetCurrentFilmAlignTool()
+        {
+            var unit = GetUnit();
+            var filmLineTool = unit.FilmAlign.GetTool(_selectedFileROIType);
+            var lineTool = filmLineTool.FindLineTool;
+
+            return lineTool;
+        }
+
         private void UpdateMarkInfo()
         {
             double score = 0;
@@ -267,7 +284,9 @@ namespace COG.UI.Forms
             else
             {
                 score = CurrentUnit.Mark.Bonding.Score;
-                LBL_ROI_FINEALIGN_SPEC_T.Text = CurrentUnit.Mark.Bonding.AlignSpec_T.ToString();
+                LBL_ROI_FINEALIGN_SPEC_T.Text = CurrentUnit.FilmAlign.AlignSpec_T.ToString();
+                lblObjectDistanceXValue.Text = CurrentUnit.FilmAlign.AmpModuleDistanceX.ToString();
+                lblObjectDistanceXSpecValue.Text = CurrentUnit.FilmAlign.FilmAlignSpecX.ToString();
             }
 
             if (score <= 0)
@@ -621,49 +640,26 @@ namespace COG.UI.Forms
  
         private void BTN_SAVE_Click(object sender, EventArgs e)
         {
-            //formMessage.LB_MESSAGE.Text = "Did You Check [APPLY]?";
-            //if (!formMessage.Visible)
-            //{
-            //    formMessage.ShowDialog();
-            //}
+            MessageForm.LB_MESSAGE.Text = "Did You Check [APPLY]?";
+            if (!MessageForm.Visible)
+            {
+                MessageForm.ShowDialog();
+            }
 
-            //Form_Password formpassword = new Form_Password(true);
-            //formpassword.ShowDialog();
+            PasswordForm passwordForm = new PasswordForm(true);
+            passwordForm.ShowDialog();
 
-            //if (!formpassword.LOGINOK)
-            //{
-            //    nPatternCopy = false;
-            //    formpassword.Dispose();
-            //    return;
-            //}
-            //formpassword.Dispose();
+            if (!passwordForm.LOGINOK)
+            {
+                passwordForm.Dispose();
+                return;
+            }
+            passwordForm.Dispose();
 
-            //string strParaName = "";
-            //#region CNLSEARCH SAVE
-            //for (int i = 0; i < Main.AlignUnit[m_AlignNo].m_AlignPatMax[m_PatTagNo]; i++)
-            //{
-            //    strParaName = "PATTERN SCORE";
-            //    CheckChangedParams(m_AlignNo, i, strParaName, Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_ACCeptScore, PT_AcceptScore[i]);
-            //    Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_ACCeptScore = PT_AcceptScore[i];
-            //    strParaName = "GPATTERN SCORE";
-            //    CheckChangedParams(m_AlignNo, i, strParaName, Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_GACCeptScore, PT_GAcceptScore[i]);
-            //    Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_GACCeptScore = PT_GAcceptScore[i];
+            if (chkUseTracking.Checked)
+                SetAmpTrackingOnOff(false);
 
-            //    for (int j = 0; j < Main.DEFINE.SUBPATTERNMAX; j++)
-            //    {
-            //        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].Pattern[j] = new CogSearchMaxTool(PT_Pattern[i, j]);
-
-            //        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].Pattern_USE[j] = PT_Pattern_USE[i, j];
-            //        if (j == 0) Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].Pattern_USE[j] = true;
-
-            //        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].GPattern[j] = new CogPMAlignTool(PT_GPattern[i, j]);
-            //    }
-            //}
-            //#endregion
-
-            //#region Inspection
-
-
+            // Todo : 누가할래?
             //for (int i = 0; i < Main.AlignUnit[m_AlignNo].m_AlignPatMax[m_PatTagNo]; i++)
             //{
             //    //shkang_s
@@ -727,16 +723,6 @@ namespace COG.UI.Forms
             //    }
             //    //shkang_e
 
-
-            //    Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_InspParameter = m_TeachParameter;
-            //    var temp = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, i].m_InspParameter[0];
-            //    if (temp.m_CogBlobTool[0].Region != null)
-            //    {
-            //        CogPolygon ROITracking = (CogPolygon)temp.m_CogBlobTool[0].Region;
-            //        double dx = ROITracking.GetVertexX(0);
-            //    }
-
-            //}
             //for (int i = 0; i < Main.AlignUnit[m_AlignNo].m_AlignPatMax[m_PatTagNo]; i++)
             //{
             //    for (int j = 0; j < 4; j++)
@@ -905,6 +891,7 @@ namespace COG.UI.Forms
 
         private void BTN_EXIT_Click(object sender, EventArgs e)
         {
+            SystemManager.Instance().ReLoadModel();
             //shkang_s 파라미터저장시 로그 변수 초기화
             //tempCaliperNum.Clear();
             //iCountClick = 0;
@@ -1154,84 +1141,6 @@ namespace COG.UI.Forms
 
         private void BTN_APPLY_Click(object sender, EventArgs e)
         {
-            //try
-            //{
-            //    if (m_RetiMode == M_PATTERN || m_RetiMode == M_ORIGIN)
-            //    {
-            //        if (bROIFinealignTeach)
-            //        {
-            //            if (m_RetiMode == M_PATTERN || m_RetiMode == M_ORIGIN)
-            //            {
-            //                FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainImageMask = null;
-            //                FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainImageMaskOffsetX = 0;
-            //                FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainImageMaskOffsetY = 0;
-            //            }
-
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainImage = PT_Display01.Image;
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle(PatMaxTrainRegion);
-
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Origin.TranslationX = MarkORGPoint.X;
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Origin.TranslationY = MarkORGPoint.Y;
-
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].Pattern.Train();
-
-            //            DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], FinealignMark[nROIFineAlignIndex, m_PatNo_Sub]);
-            //            LABEL_MESSAGE(LB_MESSAGE, "Train OK", System.Drawing.Color.Lime);
-            //        }
-            //        else
-            //        {
-            //            if (m_RetiMode == M_PATTERN || m_RetiMode == M_ORIGIN)
-            //            {
-            //                PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMask = null;
-            //                PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMaskOffsetX = 0;
-            //                PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMaskOffsetY = 0;
-
-            //                PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMask = null;
-            //                PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMaskOffsetX = 0;
-            //                PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImageMaskOffsetY = 0;
-            //            }
-
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //            //PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangleAffine(PatMaxTrainRegion);
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle(PatMaxTrainRegion);
-
-
-
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationX = MarkORGPoint.X;
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationY = MarkORGPoint.Y;
-
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Train();
-
-            //            DrawTrainedPattern(PT_SubDisplay[m_PatNo_Sub], PT_Pattern[m_PatNo, m_PatNo_Sub]);
-            //            LABEL_MESSAGE(LB_MESSAGE, "Train OK", System.Drawing.Color.Lime);
-
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainImage = CopyIMG(Main.vision.CogCamBuf[m_CamNo]);
-            //            //      PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangleAffine(PatMaxTrainRegion);
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.TrainRegion = new CogRectangle(PatMaxTrainRegion);
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationX = MarkORGPoint.X;
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationY = MarkORGPoint.Y;
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].Pattern.Train();
-            //        }
-
-
-            //    }
-            //    if (m_RetiMode == M_SEARCH)
-            //    {
-            //        if (bROIFinealignTeach)
-            //        {
-            //            FinealignMark[nROIFineAlignIndex, m_PatNo_Sub].SearchRegion = new CogRectangle(PatMaxSearchRegion);
-            //        }
-            //        else
-            //        {
-            //            PT_Pattern[m_PatNo, m_PatNo_Sub].SearchRegion = new CogRectangle(PatMaxSearchRegion);
-            //            PT_GPattern[m_PatNo, m_PatNo_Sub].SearchRegion = new CogRectangle(PatMaxSearchRegion);
-            //        }
-            //    }
-            //}
-            //catch (System.Exception ex)
-            //{
-            //    LABEL_MESSAGE(LB_MESSAGE, ex.Message, System.Drawing.Color.Red);
-            //}
         }
 
         private void BTN_PATTERN_DELETE_Click(object sender, EventArgs e)
@@ -1266,7 +1175,178 @@ namespace COG.UI.Forms
 
         private void BTN_PATTERN_RUN_Click(object sender, EventArgs e)
         {
-            
+            LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Red);
+            ClearDisplayGraphic();
+            List_NG.Items.Clear();
+
+            switch (Convert.ToInt32(TABC_MANU.SelectedTab.Tag))
+            {
+                case 0: // Mark
+                    LoggerHelper.Save_SystemLog("Mark Search Start", LogType.Cmd);
+                    RunMarkForTest();
+                    break;
+                case 1: // Amp Film Align
+                    LoggerHelper.Save_SystemLog("Amp Film Align", LogType.Cmd);
+                    RunAmpFilmAlignForTest();
+                    break;
+                default:
+                    break;
+            }
+        }
+
+        private void RunMarkForTest()
+        {
+            if (CogDisplayImage == null)
+                return;
+
+            PT_DISPLAY_CONTROL.CrossLine();
+
+            double score = (double)NUD_PAT_SCORE.Value;
+            MarkTool markTool = null;
+
+            if (_selectedAmpMark)
+            {
+                markTool = CurrentUnit.Mark.Amp.MarkToolList[_selectedMarkIndex];
+            }
+            else
+            {
+                if (_isSelectedBondingMarkUp)
+                    markTool = CurrentUnit.Mark.Bonding.UpMarkToolList[_selectedMarkIndex];
+                else
+                    markTool = CurrentUnit.Mark.Bonding.DownMarkToolList[_selectedMarkIndex];
+            }
+
+            LoggerHelper.Save_SystemLog("Mark Search start", LogType.Cmd);
+            Stopwatch sw = Stopwatch.StartNew();
+
+            var markResult = Algorithm.FindMark(CogDisplayImage as CogImage8Grey, markTool);
+
+            sw.Stop();
+            Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
+            LoggerHelper.Save_SystemLog($"Mark Search Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
+           
+            CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+            if (markResult == null)
+            {
+                string message = "Mark NG! " + "Not Found Mark!!";
+                LABEL_MESSAGE(LB_MESSAGE, message, System.Drawing.Color.Red);
+                LABEL_MESSAGE(LB_MESSAGE1, "", Color.Lime);
+            }
+            else
+            {
+                string temp = (markResult.Score * 100).ToString("0.000");
+                string foundX = markResult.FoundPos.X.ToString("0.000");
+                string foundY = markResult.FoundPos.Y.ToString("0.000");
+
+                string pointMessage = $"X: {foundX}, Y: {foundY}";
+                LABEL_MESSAGE(LB_MESSAGE1, pointMessage, Color.Lime);
+
+                LoggerHelper.Save_SystemLog(pointMessage, LogType.Data);
+                LoggerHelper.Save_SystemLog("Label ", LogType.Cmd);
+
+                DrawDisplayLabel(CogDisplay, $"Mark     X: {foundX}", 0);
+                DrawDisplayLabel(CogDisplay, $"Mark     Y: {foundY}", 1);
+
+                if (markResult.Score >= score)
+                {
+                    string message = $"Mark OK! Score: {temp}%";
+                    LABEL_MESSAGE(LB_MESSAGE, message, Color.Lime);
+
+                    DrawDisplayLabel(CogDisplay, $"Mark     OK! {temp}", 2);
+                }
+                else
+                {
+                    string message = $"Mark NG! Score: {temp}%";
+                    LABEL_MESSAGE(LB_MESSAGE, message, Color.Red);
+
+                    DrawDisplayLabel(CogDisplay, $"Mark     NG! {temp}", 2);
+                }
+                resultGraphics.Add(markResult?.ResultGraphics);
+            }
+            CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
+        }
+
+        private void RunAmpFilmAlignForTest()
+        {
+            if (CogDisplayImage == null)
+                return;
+
+            ClearDisplayGraphic();
+            CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+
+            CogGraphicLabel LabelText = new CogGraphicLabel();
+            LabelText.X = CogDisplay.Width / 2;
+            LabelText.Y = 0;
+            resultGraphics.Add(LabelText);
+
+            LoggerHelper.Save_SystemLog("Amp Film Align start", LogType.Cmd);
+            Stopwatch sw = Stopwatch.StartNew();
+
+            var alignResult = Algorithm.RunAmpFlimAlign(CogDisplayImage as CogImage8Grey, CurrentUnit.FilmAlign);
+
+            sw.Stop();
+
+            Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
+            LoggerHelper.Save_SystemLog($"Amp Film Align Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
+
+            if(alignResult.Judgement == Judgement.OK)
+            {
+                LabelText.Font = new Font(StaticConfig.FontStyle, 20, FontStyle.Bold);
+                LabelText.Color = CogColorConstants.Green;
+                LabelText.Text = string.Format("Film OK, X:{0:F3}", alignResult.GetDistanceX_mm().ToString("F3"));
+                resultGraphics.Add(LabelText);
+            }
+            else
+            {
+                LabelText.Font = new Font(StaticConfig.FontStyle, 20, FontStyle.Bold);
+                LabelText.Color = CogColorConstants.Red;
+                LabelText.Text = string.Format("Film NG, X:{0:F3}", alignResult.GetDistanceX_mm().ToString("F3"));
+                resultGraphics.Add(LabelText);
+            }
+
+            foreach (var fileResult in alignResult.FilmAlignResult)
+            {
+                var value = fileResult.Type.ToString().ToUpper();
+                if (value.Contains("LEFT"))
+                    fileResult.Line.Color = CogColorConstants.Blue;
+                else
+                    fileResult.Line.Color = CogColorConstants.Orange;
+
+                CogDisplay.InteractiveGraphics.Add(fileResult.Line, "Result", false);
+            }
+
+            CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
+        }
+
+        private void DrawDisplayLabel(CogRecordDisplay display, string message, int index)
+        {
+            int i;
+            CogGraphicLabel Label = new CogGraphicLabel();
+            i = index;
+            float nFontSize = 0;
+
+            double baseZoom = 0;
+            if ((double)display.Width / display.Image.Width < (double)display.Height / display.Image.Height)
+            {
+                baseZoom = ((double)display.Width - 22) / display.Image.Width;
+                nFontSize = (float)((display.Image.Width / StaticConfig.FontSize) * baseZoom);
+            }
+            else
+            {
+                baseZoom = ((double)display.Height - 22) / display.Image.Height;
+                nFontSize = (float)((display.Image.Height / StaticConfig.FontSize) * baseZoom);
+            }
+
+            double nFontpitch = (nFontSize / display.Zoom);
+            Label.Text = message;
+            Label.Color = CogColorConstants.Cyan;
+            Label.Font = new Font(StaticConfig.FontStyle, nFontSize);
+            Label.Alignment = CogGraphicLabelAlignmentConstants.TopLeft;
+            Label.X = (display.Image.Width - (display.Image.Width / (display.Zoom / baseZoom))) / 2 - display.PanX;
+            Label.Y = (display.Image.Height - (display.Image.Height / (display.Zoom / baseZoom))) / 2 - display.PanY + (i * nFontpitch);
+
+
+            display.StaticGraphics.Add(Label as ICogGraphic, "Result Text");
         }
 
         private void TABC_MANU_SelectedIndexChanged(object sender, EventArgs e)
@@ -1320,6 +1400,12 @@ namespace COG.UI.Forms
 
         private void UpdateData()
         {
+            if(_prevSelectedTabNo < 0)
+            {
+                UpdateMarkInfo();
+                return;
+            }
+
             #region Mark
             if (_selectedAmpMark)
                 CurrentUnit.Mark.Amp.Score = (double)NUD_PAT_SCORE.Value;
@@ -1330,6 +1416,7 @@ namespace COG.UI.Forms
                 CurrentUnit.Mark.Use[_selectedMarkIndex] = CB_SUBPAT_USE.Checked;
             #endregion
         }
+
         #region MOVE_SIZE_LBMSSAGE
         private void BTN_MOVE_Click(object sender, EventArgs e)
         {
@@ -2347,15 +2434,7 @@ namespace COG.UI.Forms
             //if (-1 < PT_Display01.InteractiveGraphics.ZOrderGroups.IndexOf(GraphicIndex ? "Result0" : "Result1"))
             //    PT_Display01.InteractiveGraphics.Remove(GraphicIndex ? "Result0" : "Result1");
         }
-        private void DrawRoiLine()
-        {
-            //m_TempTrackingLine.InputImage = (CogImage8Grey)PT_Display01.Image;
-            //m_TempTrackingLine.CurrentRecordEnable = CogFindLineCurrentRecordConstants.InputImage | CogFindLineCurrentRecordConstants.CaliperRegions | CogFindLineCurrentRecordConstants.ExpectedLineSegment |
-            //                                           CogFindLineCurrentRecordConstants.InteractiveCaliperSearchDirection | CogFindLineCurrentRecordConstants.InteractiveCaliperSize;
-            //Display.SetInteractiveGraphics(PT_Display01, m_TempTrackingLine.CreateCurrentRecord(), false);
-            //if (-1 < PT_Display01.InteractiveGraphics.ZOrderGroups.IndexOf(GraphicIndex ? "Result0" : "Result1"))
-            //    PT_Display01.InteractiveGraphics.Remove(GraphicIndex ? "Result0" : "Result1");
-        }
+     
         private void CircleROI()
         {
 
@@ -2599,33 +2678,7 @@ namespace COG.UI.Forms
             //    return;
             //}
         }
-        private void initTracking()
-        {
-            //m_enumAlignROI = enumAlignROI.Left1_1;
-            //btn_TOP_Inscription.BackColor = Color.Green;
-            //btn_Top_Circumcription.BackColor = Color.DarkGray;
-            //btn_Bottom_Inscription.BackColor = Color.DarkGray;
-            //btn_Bottom_Circumcription.BackColor = Color.DarkGray;
-            //for (int i = 0; i < 4; i++)
-            //{
-            //    if (i < 2)
-            //    {
-            //        LeftOrigin[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].LeftOrigin[i];
-            //        RightOrigin[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].RightOrigin[i];
-            //    }
-            //    m_TeachLine[i] = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i];
-            //    if (m_TeachLine[i] == null)
-            //        m_TeachLine[i] = new CogFindLineTool();
-            //    if (Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i] == null)
-            //        Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].m_TrackingLine[i] = new CogFindLineTool();
-            //}
-            //lab_LeftOriginX.Text = LeftOrigin[0].ToString("F3");
-            //lab_LeftOriginY.Text = LeftOrigin[1].ToString("F3");
-            //lab_RightOriginX.Text = RightOrigin[0].ToString("F3");
-            //lab_RightOriginY.Text = RightOrigin[1].ToString("F3");
-            //m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Left1_1];
-            //Get_FindConerParameter();
-        }
+      
         public void Init_ListBox()
         {
             //init_ComboPolarity();
@@ -2717,6 +2770,7 @@ namespace COG.UI.Forms
             //}
             //SetText();
         }
+
         private void UpDataTool()
         {
             //double dEdgeWidth;
@@ -2812,6 +2866,7 @@ namespace COG.UI.Forms
             //        m_TempFindCircleTool = m_TeachParameter[m_iGridIndex].m_FindCircleTool;
             //}
         }
+
         private void DataGridview_Insp_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             //if (e.RowIndex < 0)
@@ -4867,6 +4922,7 @@ namespace COG.UI.Forms
 
             //return Res;
         }
+
         private void ReultView(bool Res, bool[] bROIResult, double[] bDist)
         {
             dataGridView_Result.Rows.Clear();
@@ -4913,224 +4969,147 @@ namespace COG.UI.Forms
             //return patternMatchingGap;
         }
 
-        private void TrackingTest(bool isTracking)
-        {
-            //if (isTracking == true)
-            //{
-            //    foreach (var item in m_TeachLine)
-            //    {
-            //        item.RunParams.ExpectedLineSegment.StartX -= GetOriginGap().X;
-            //        item.RunParams.ExpectedLineSegment.StartY -= GetOriginGap().Y;
-            //        item.RunParams.ExpectedLineSegment.EndX -= GetOriginGap().X;
-            //        item.RunParams.ExpectedLineSegment.EndY -= GetOriginGap().Y;
-            //    }
-            //}
-            //else
-            //{
-            //    foreach (var item in m_TeachLine)
-            //    {
-            //        item.RunParams.ExpectedLineSegment.StartX += GetOriginGap().X;
-            //        item.RunParams.ExpectedLineSegment.StartY += GetOriginGap().Y;
-            //        item.RunParams.ExpectedLineSegment.EndX += GetOriginGap().X;
-            //        item.RunParams.ExpectedLineSegment.EndY += GetOriginGap().Y;
-            //    }
-            //}
-        }
-
         private void btnAlignInspPos(object sender, EventArgs e)
         {
-            //RadioButton btn = (RadioButton)sender;
-            //PT_Display01.StaticGraphics.Clear();
-            //PT_Display01.InteractiveGraphics.Clear();
-            //int iAlignPos = Convert.ToInt32(btn.Tag.ToString());
+            RadioButton btn = (RadioButton)sender;
 
-            //switch (iAlignPos)
-            //{
-            //    case (int)enumAlignROI.Left1_1:
-            //        m_enumAlignROI = enumAlignROI.Left1_1;
-            //        btn_TOP_Inscription.BackColor = Color.Green;
-            //        btn_Top_Circumcription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Inscription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Circumcription.BackColor = Color.DarkGray;
-            //        m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Left1_1];
-            //        break;
+            ClearDisplayGraphic();
 
-            //    case (int)enumAlignROI.Left1_2:
-            //        m_enumAlignROI = enumAlignROI.Left1_2;
-            //        btn_TOP_Inscription.BackColor = Color.DarkGray;
-            //        btn_Top_Circumcription.BackColor = Color.Green;
-            //        btn_Bottom_Inscription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Circumcription.BackColor = Color.DarkGray;
-            //        m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Left1_2];
-            //        break;
+            int alignNo = Convert.ToInt32(btn.Tag.ToString());
+            _selectedFileROIType = (FilmROIType)alignNo;
 
-            //    case (int)enumAlignROI.Right1_1:
-            //        m_enumAlignROI = enumAlignROI.Right1_1;
-            //        btn_TOP_Inscription.BackColor = Color.DarkGray;
-            //        btn_Top_Circumcription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Inscription.BackColor = Color.Green;
-            //        btn_Bottom_Circumcription.BackColor = Color.DarkGray;
-            //        m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Right1_1];
-            //        break;
+            switch (alignNo)
+            {
+                case (int)FilmROIType.Left_Top:
+                    btn_TOP_Inscription.BackColor = Color.Green;
+                    btn_Top_Circumcription.BackColor = Color.DarkGray;
+                    btn_Bottom_Inscription.BackColor = Color.DarkGray;
+                    btn_Bottom_Circumcription.BackColor = Color.DarkGray;
+                    break;
 
-            //    case (int)enumAlignROI.Right1_2:
-            //        m_enumAlignROI = enumAlignROI.Right1_2;
-            //        btn_TOP_Inscription.BackColor = Color.DarkGray;
-            //        btn_Top_Circumcription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Inscription.BackColor = Color.DarkGray;
-            //        btn_Bottom_Circumcription.BackColor = Color.Green;
-            //        m_TempTrackingLine = m_TeachLine[(int)enumAlignROI.Right1_2];
-            //        break;
+                case (int)FilmROIType.Left_Side:
+                    btn_TOP_Inscription.BackColor = Color.DarkGray;
+                    btn_Top_Circumcription.BackColor = Color.Green;
+                    btn_Bottom_Inscription.BackColor = Color.DarkGray;
+                    btn_Bottom_Circumcription.BackColor = Color.DarkGray;
+                    break;
 
-            //}
+                case (int)FilmROIType.Right_Top:
+                    btn_TOP_Inscription.BackColor = Color.DarkGray;
+                    btn_Top_Circumcription.BackColor = Color.DarkGray;
+                    btn_Bottom_Inscription.BackColor = Color.Green;
+                    btn_Bottom_Circumcription.BackColor = Color.DarkGray;
+                    break;
 
-            //Get_FindConerParameter();
-            //DrawRoiLine();
+                case (int)FilmROIType.Right_Side:
+                    btn_TOP_Inscription.BackColor = Color.DarkGray;
+                    btn_Top_Circumcription.BackColor = Color.DarkGray;
+                    btn_Bottom_Inscription.BackColor = Color.DarkGray;
+                    btn_Bottom_Circumcription.BackColor = Color.Green;
+                    break;
+
+            }
+
+            UpdateFileAlimParam();
+            DrawFilmAlignLine();
         }
 
-        private void Get_FindConerParameter()
+        private void UpdateFileAlimParam()
         {
-            //LAB_Align_Threshold.Text = m_TempTrackingLine.RunParams.CaliperRunParams.ContrastThreshold.ToString();
-            //LAB_Align_Caliper_Cnt.Text = m_TempTrackingLine.RunParams.NumCalipers.ToString();
-            //LAB_Align_CALIPER_PROJECTIONLENTH.Text = string.Format("{0:F3}", m_TempTrackingLine.RunParams.CaliperProjectionLength);
-            //LAB_Align_CALIPER_SEARCHLENTH.Text = string.Format("{0:F3}", m_TempTrackingLine.RunParams.CaliperSearchDirection);
-            //lab_Ignore.Text = m_TempTrackingLine.RunParams.NumToIgnore.ToString();
-            //int nPolarity = (int)m_TempTrackingLine.RunParams.CaliperRunParams.Edge0Polarity;
-            //Combo_Polarity3.SelectedIndex = nPolarity - 1;
-            //lblThetaFilterSizeValue.Text = m_TempTrackingLine.RunParams.CaliperRunParams.FilterHalfSizeInPixels.ToString();
+            var unit = GetUnit();
+            var filmLineTool = unit.FilmAlign.GetTool(_selectedFileROIType);
+            var lineTool = filmLineTool.FindLineTool;
+
+            LAB_Align_Threshold.Text = lineTool.RunParams.CaliperRunParams.ContrastThreshold.ToString();
+            LAB_Align_Caliper_Cnt.Text = lineTool.RunParams.NumCalipers.ToString();
+            LAB_Align_CALIPER_PROJECTIONLENTH.Text = string.Format("{0:F3}", lineTool.RunParams.CaliperProjectionLength);
+            LAB_Align_CALIPER_SEARCHLENTH.Text = string.Format("{0:F3}", lineTool.RunParams.CaliperSearchDirection);
+            lab_Ignore.Text = lineTool.RunParams.NumToIgnore.ToString();
+            int nPolarity = (int)lineTool.RunParams.CaliperRunParams.Edge0Polarity;
+            Combo_FilAlign_Polarity.SelectedIndex = nPolarity - 1;
+            lblThetaFilterSizeValue.Text = lineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels.ToString();
         }
 
-        private void Align_Threshold(object sender, EventArgs e)
+        private void DrawFilmAlignLine()
         {
-            //Button btn = (Button)sender;
-            //int iUpdown = Convert.ToInt32(btn.Tag.ToString());
-            //double dThr = Convert.ToDouble(LAB_Align_Threshold.Text);
-            //if (iUpdown == 0)
-            //{
-            //    if (dThr == 255) return;
-            //    dThr++;
-            //}
-            //else
-            //{
-            //    if (dThr == 1) return;
-            //    dThr--;
-            //}
-            //LAB_Align_Threshold.Text = dThr.ToString();
-            //m_TempTrackingLine.RunParams.CaliperRunParams.ContrastThreshold = dThr;
-        }
-        private void Align_ProjectionLenth(object sender, EventArgs e)
-        {
-            //Button btn = (Button)sender;
-            //int iUpdown = Convert.ToInt32(btn.Tag.ToString());
-            //double dProjectionLenth = Convert.ToDouble(LAB_Align_CALIPER_PROJECTIONLENTH.Text);
-            //if (iUpdown == 0)
-            //{
-            //    dProjectionLenth++;
-            //}
-            //else
-            //{
-            //    if (dProjectionLenth == 1) return;
-            //    dProjectionLenth--;
-            //}
-            //LAB_Align_CALIPER_PROJECTIONLENTH.Text = dProjectionLenth.ToString();
-            //m_TempTrackingLine.RunParams.CaliperProjectionLength = dProjectionLenth;
-        }
-        private void Align_CaliperCnt(object sender, EventArgs e)
-        {
-            //Button btn = (Button)sender;
-            //int iUpdown = Convert.ToInt32(btn.Tag.ToString());
-            //int iCaliperCnt = Convert.ToInt32(LAB_Align_Caliper_Cnt.Text);
-            //if (iUpdown == 0)
-            //{
-            //    iCaliperCnt++;
-            //}
-            //else
-            //{
-            //    if (iCaliperCnt == 1) return;
-            //    iCaliperCnt--;
-            //}
-            //LAB_Align_Caliper_Cnt.Text = iCaliperCnt.ToString();
-            //m_TempTrackingLine.RunParams.NumCalipers = iCaliperCnt;
+            if (CogDisplayImage == null || CogDisplay.Image == null)
+                return;
+
+            var unit = GetUnit();
+            var filmLineTool = unit.FilmAlign.GetTool(_selectedFileROIType);
+            var tool = filmLineTool.FindLineTool;
+            tool.InputImage = CogDisplayImage as CogImage8Grey;
+            tool.CurrentRecordEnable = CogFindLineCurrentRecordConstants.InputImage | CogFindLineCurrentRecordConstants.CaliperRegions | CogFindLineCurrentRecordConstants.ExpectedLineSegment |
+                                                       CogFindLineCurrentRecordConstants.InteractiveCaliperSearchDirection | CogFindLineCurrentRecordConstants.InteractiveCaliperSize;
+
+            SetInteractiveGraphics("tool", tool.CreateCurrentRecord());
         }
 
-        private void LAB_Align_Caliper_Cnt_Click(object sender, EventArgs e)
+        private void UpdateInspParam()
         {
-            //double nCurData = Convert.ToDouble(LAB_Align_Caliper_Cnt.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //int CaliperCnt = (int)KeyPad.m_data;
+            var unit = GetUnit();
+            var inspTool = unit.Insp.GaloInspToolList;
 
-            //m_TempTrackingLine.RunParams.NumCalipers = CaliperCnt;
-            //DrawRoiLine();
+           
+            for (int i = 0; i < unit.Insp.Count; i++)
+            {
+                var tool = inspTool[i];
 
-            //LAB_Align_Caliper_Cnt.Text = CaliperCnt.ToString();
-        }
+                List<string> rowDataList = new List<string>();
+                rowDataList.Add(i.ToString());
 
-        private void LAB_Align_Threshold_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(LAB_Align_Threshold.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //double dThreshold = KeyPad.m_data;
+                if(tool.Type == GaloInspType.Line)
+                {
+                    var runParam = tool.FindLineTool.RunParams;
 
-            //m_TempTrackingLine.RunParams.CaliperRunParams.ContrastThreshold = dThreshold;
+                    rowDataList.Add("Line");
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedLineSegment.StartX));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedLineSegment.StartY));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedLineSegment.EndX));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedLineSegment.EndY));
+                    rowDataList.Add(string.Format("{0:F3}", 0));
+                    rowDataList.Add(string.Format("{0:F3}", 0));
 
-            //LAB_Align_Threshold.Text = ((int)dThreshold).ToString();
-        }
-
-        private void LAB_Align_CALIPER_PROJECTIONLENTH_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(LAB_Align_CALIPER_PROJECTIONLENTH.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //double CaliperProjectionLenth = KeyPad.m_data;
-
-            //m_TempTrackingLine.RunParams.CaliperSearchLength = CaliperProjectionLenth;
-
-            //LAB_Align_CALIPER_PROJECTIONLENTH.Text = string.Format("{0:F3}", CaliperProjectionLenth);
-        }
-
-        private void LAB_Align_CALIPER_SEARCHLENTH_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(LAB_Align_CALIPER_SEARCHLENTH.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //double CaliperSearchLenth = KeyPad.m_data;
-
-            //m_TempTrackingLine.RunParams.CaliperSearchLength = CaliperSearchLenth;
-
-            //LAB_Align_CALIPER_SEARCHLENTH.Text = string.Format("{0:F3}", CaliperSearchLenth);
-        }
-
-        private void lab_Ignore_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(LAB_Align_Caliper_Cnt.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //int iIgnoreCnt = (int)KeyPad.m_data;
-
-            //m_TempTrackingLine.RunParams.NumToIgnore = iIgnoreCnt;
-            //DrawRoiLine();
-
-            //lab_Ignore.Text = iIgnoreCnt.ToString();
-        }
-
-        private void Combo_Polarity3_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            //CogCaliperPolarityConstants Polarity;
-            //int TempIndex = 0;
-            //if (m_enumROIType == enumROIType.Line)
-            //{
-            //    TempIndex = Combo_Polarity3.SelectedIndex;
-            //    Polarity = (CogCaliperPolarityConstants)(TempIndex + 1);
-            //    m_TempTrackingLine.RunParams.CaliperRunParams.Edge0Polarity = Polarity;
-            //}
-            //else
-            //{
-            //    TempIndex = Combo_Polarity3.SelectedIndex;
-            //    Polarity = (CogCaliperPolarityConstants)(TempIndex + 1);
-            //    m_TempTrackingLine.RunParams.CaliperRunParams.Edge0Polarity = Polarity;
-            //}
+                    rowDataList.Add(runParam.CaliperRunParams.ContrastThreshold.ToString());
+                    rowDataList.Add(runParam.NumCalipers.ToString());
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperProjectionLength));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperSearchLength));
+                    rowDataList.Add(((int)runParam.CaliperRunParams.Edge0Polarity).ToString());
+                    rowDataList.Add(((int)runParam.CaliperRunParams.Edge1Polarity).ToString());
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperRunParams.Edge0Position * 2));
+                    rowDataList.Add(tool.IDistgnore.ToString());
+                    rowDataList.Add(string.Format("{0:F2}", tool.dSpecDistance));
+                    rowDataList.Add(runParam.CaliperRunParams.FilterHalfSizeInPixels.ToString());
+                    rowDataList.Add(string.Format("{0:F2}", tool.dSpecDistanceMax));
+                    rowDataList.Add(tool.DarkArea.ThresholdUse.ToString());
+                    rowDataList.Add(tool.DarkArea.Threshold.ToString());
+                }
+                else
+                {
+                    var runParam = tool.FindCircleTool.RunParams;
+                    rowDataList.Add("Circle");
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedCircularArc.CenterX));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedCircularArc.CenterY));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedCircularArc.Radius));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedCircularArc.AngleStart));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.ExpectedCircularArc.AngleSpan));
+                    rowDataList.Add(string.Format("{0:F3}", 0));
+                    rowDataList.Add(runParam.CaliperRunParams.ContrastThreshold.ToString());
+                    rowDataList.Add(runParam.NumCalipers.ToString());
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperProjectionLength));
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperSearchLength));
+                    rowDataList.Add(((int)runParam.CaliperRunParams.Edge0Polarity).ToString());
+                    rowDataList.Add(((int)runParam.CaliperRunParams.Edge1Polarity).ToString());
+                    rowDataList.Add(string.Format("{0:F3}", runParam.CaliperRunParams.Edge0Position * 2));
+                    rowDataList.Add(tool.IDistgnore.ToString());
+                    rowDataList.Add(string.Format("{0:F2}", tool.dSpecDistance));
+                    rowDataList.Add(runParam.CaliperRunParams.FilterHalfSizeInPixels.ToString());
+                    rowDataList.Add(string.Format("{0:F2}", tool.dSpecDistanceMax));
+                    rowDataList.Add(tool.DarkArea.ThresholdUse.ToString());
+                    rowDataList.Add(tool.DarkArea.Threshold.ToString());
+                }
+                DataGridview_Insp.Rows.Add(rowDataList.ToArray());
+            }
         }
 
         private void btn_align_roi_show_Click(object sender, EventArgs e)
@@ -5149,139 +5128,9 @@ namespace COG.UI.Forms
             //m_TeachLine[(int)m_enumAlignROI] = m_TempTrackingLine;
         }
 
-        private void btn_Test_Click(object sender, EventArgs e)
+        private void btn_FilmAlignTest_Click(object sender, EventArgs e)
         {
-            //PT_Display01.Image = OriginImage;
-            //bROIFinealignTeach = false;
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-            //PT_Display01.InteractiveGraphics.Clear();
-            //PT_Display01.StaticGraphics.Clear();
-            //resultGraphics.Clear();
-            //double dInspectionDistanceX;
-            //double[] dx = new double[4];
-            //double[] dy = new double[4];
-            //double Top_AlignX = 0, Top_AlignY = 0, Bottom_AlignX = 0, Bottom_AlignY = 0;
-
-            //chkUseTracking.Checked = false;
-            //bool bSearchRes = Search_PATCNL();
-            //if (bSearchRes == true)
-            //{
-            //    double TranslationX = PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationX - PatResult.TranslationX;
-            //    double TranslationY = PT_Pattern[m_PatNo, m_PatNo_Sub].Pattern.Origin.TranslationY - PatResult.TranslationY;
-            //    CogIntersectLineLineTool[] CrossPoint = new CogIntersectLineLineTool[2];
-            //    CogLine[] Line = new CogLine[4];
-            //    for (int i = 0; i < 4; i++)
-            //    {
-            //        if (i < 2)
-            //        {
-            //            CrossPoint[i] = new CogIntersectLineLineTool();
-            //            CrossPoint[i].InputImage = (CogImage8Grey)PT_Display01.Image;
-            //        }
-            //        Line[i] = new CogLine();
-            //        m_TeachLine[i].InputImage = (CogImage8Grey)PT_Display01.Image;
-            //        double TempStartA_X = m_TeachLine[i].RunParams.ExpectedLineSegment.StartX;
-            //        double TempStartA_Y = m_TeachLine[i].RunParams.ExpectedLineSegment.StartY;
-            //        double TempEndA_X = m_TeachLine[i].RunParams.ExpectedLineSegment.EndX;
-            //        double TempEndA_Y = m_TeachLine[i].RunParams.ExpectedLineSegment.EndY;
-
-            //        double StartA_X = m_TeachLine[i].RunParams.ExpectedLineSegment.StartX - TranslationX;
-            //        double StartA_Y = m_TeachLine[i].RunParams.ExpectedLineSegment.StartY - TranslationY;
-            //        double EndA_X = m_TeachLine[i].RunParams.ExpectedLineSegment.EndX - TranslationX;
-            //        double EndA_Y = m_TeachLine[i].RunParams.ExpectedLineSegment.EndY - TranslationY;
-
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.StartX = StartA_X;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.StartY = StartA_Y;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.EndX = EndA_X;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.EndY = EndA_Y;
-
-            //        m_TeachLine[i].Run();
-
-            //        if (m_TeachLine[i].Results != null)
-            //        {
-            //            Line[i] = m_TeachLine[i].Results.GetLine();
-            //            //shkang_
-            //            if (Line[i] == null)
-            //                Line[i] = new CogLine();
-
-            //            if (i < 2)
-            //                Line[i].Color = CogColorConstants.Blue;
-            //            else
-            //                Line[i].Color = CogColorConstants.Orange;
-            //            resultGraphics.Add(Line[i]);
-            //        }
-            //        else
-            //        {
-            //            m_TeachLine[i].RunParams.ExpectedLineSegment.StartX = TempStartA_X;
-            //            m_TeachLine[i].RunParams.ExpectedLineSegment.StartY = TempStartA_Y;
-            //            m_TeachLine[i].RunParams.ExpectedLineSegment.EndX = TempEndA_X;
-            //            m_TeachLine[i].RunParams.ExpectedLineSegment.EndY = TempEndA_Y;
-            //            MessageBox.Show("Please CrossLine Checking");
-            //            return;
-            //        }
-
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.StartX = TempStartA_X;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.StartY = TempStartA_Y;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.EndX = TempEndA_X;
-            //        m_TeachLine[i].RunParams.ExpectedLineSegment.EndY = TempEndA_Y;
-            //    }
-
-            //    //shkang_s 
-            //    //필름 밀림 융착 검사 (자재 X거리 검출)
-            //    CogGraphicLabel LabelTest = new CogGraphicLabel();
-            //    LabelTest.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //    LabelTest.Color = CogColorConstants.Green;
-            //    double dPixelResoultion = 13.36;
-            //    dInspectionDistanceX = Line[3].X - Line[1].X;   //X 거리 검출
-            //    dInspectionDistanceX = dInspectionDistanceX * dPixelResoultion / 1000;
-            //    if (dObjectDistanceX + dObjectDistanceSpecX <= dInspectionDistanceX) //NG - Film NG
-            //    {
-            //        LabelTest.X = 1000;
-            //        LabelTest.Y = 180;
-            //        LabelTest.Color = CogColorConstants.Red;
-            //        LabelTest.Text = string.Format("Film NG, X:{0:F3}", dInspectionDistanceX);
-            //    }
-            //    else   //OK - Film OK
-            //    {
-            //        LabelTest.X = 1000;
-            //        LabelTest.Y = 180;
-            //        LabelTest.Color = CogColorConstants.Green;
-            //        LabelTest.Text = string.Format("Film OK, X:{0:F3}", dInspectionDistanceX);
-            //    }
-            //    resultGraphics.Add(LabelTest);
-            //    //shkang_e
-
-            //    CrossPoint[0].LineA = Line[0];
-            //    CrossPoint[0].LineB = Line[1];
-            //    CrossPoint[1].LineA = Line[2];
-            //    CrossPoint[1].LineB = Line[3];
-            //    for (int i = 0; i < 2; i++)
-            //    {
-            //        CogGraphicLabel LineLabelTest = new CogGraphicLabel();
-            //        LineLabelTest.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //        LineLabelTest.Color = CogColorConstants.Green;
-
-            //        CrossPoint[i].Run();
-            //        if (CrossPoint[i] != null)
-            //        {
-            //            dCrossX[i] = CrossPoint[i].X;
-            //            dCrossY[i] = CrossPoint[i].Y;
-            //            if (i == 0)
-            //            {
-            //                LineLabelTest.X = 100;
-            //                LineLabelTest.Y = 100;
-            //                LineLabelTest.Text = string.Format("Left Position X:{0:F3}, Y:{1:F3}", dCrossX[i], dCrossY[i]);
-            //            }
-            //            else
-            //            {
-            //                LineLabelTest.X = 100;
-            //                LineLabelTest.Y = 200;
-            //                LineLabelTest.Text = string.Format("Right Position X:{0:F3}, Y:{1:F3}", dCrossX[i], dCrossY[i]);
-            //            }
-            //            //resultGraphics.Add(LineLabelTest);
-            //        }
-            //    }
-            //    PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-            //}
+            RunAmpFilmAlignForTest();
         }
 
         private void Ignore_Distance(object sender, EventArgs e)
@@ -5783,58 +5632,6 @@ namespace COG.UI.Forms
             //}
         }
 
-        private void lblObjectDistanceXSpecValue_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(lblObjectDistanceXSpecValue.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 3000, nCurData, "Input Data", 0);
-            //KeyPad.ShowDialog();
-            //double dDistanceSpecX = KeyPad.m_data;
-
-            //lblObjectDistanceXSpecValue.Text = dDistanceSpecX.ToString();
-            //dObjectDistanceSpecX = Convert.ToDouble(lblObjectDistanceXSpecValue.Text);
-        }
-
-        private void lblObjectDistanceXValue_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(lblObjectDistanceXValue.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 3000, nCurData, "Input Data", 0);
-            //KeyPad.ShowDialog();
-            //double dDistanceX = KeyPad.m_data;
-
-            //lblObjectDistanceXValue.Text = dDistanceX.ToString();
-            //dObjectDistanceX = Convert.ToDouble(lblObjectDistanceXValue.Text);
-        }
-
-        private void lblThetaFilterSizeValue_Click(object sender, EventArgs e)
-        {
-            //double nCurData = Convert.ToDouble(lblThetaFilterSizeValue.Text);
-            //KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
-            //KeyPad.ShowDialog();
-            //int dFilterSize = Convert.ToInt32(KeyPad.m_data);
-
-            //lblThetaFilterSizeValue.Text = Convert.ToString(dFilterSize);
-            //m_TempTrackingLine.RunParams.CaliperRunParams.FilterHalfSizeInPixels = dFilterSize;
-        }
-
-        private void lblThetaFilterSizeValueUpDown_Click(object sender, EventArgs e)
-        {
-            //Button btn = (Button)sender;
-            //int iUpdown = Convert.ToInt32(btn.Tag.ToString());
-            //double dFilterSize = Convert.ToDouble(lblThetaFilterSizeValue.Text);
-            //if (iUpdown == 0)
-            //{
-            //    if (dFilterSize == 255) return;
-            //    dFilterSize++;
-            //}
-            //else
-            //{
-            //    if (dFilterSize == 2) return;
-            //    dFilterSize--;
-            //}
-            //lblThetaFilterSizeValue.Text = dFilterSize.ToString();
-            //m_TempTrackingLine.RunParams.CaliperRunParams.ContrastThreshold = dFilterSize;
-        }
-
         private void RDB_ALIGN_TEACH_MODE_Click(object sender, EventArgs e)
         {
             RadioButton TempRadioButton = (RadioButton)sender;
@@ -5886,35 +5683,45 @@ namespace COG.UI.Forms
 
             var inputImage = CogDisplay.Image;
 
-            double score = 0;
-            if (_selectedAmpMark)
-                score = CurrentUnit.Mark.Amp.Score;
-            else
-                score = CurrentUnit.Mark.Bonding.Score;
-
-            var upMarkToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
-            var upMarkResult = Algorithm.FindMark(inputImage as CogImage8Grey, upMarkToolList, score);
-
-            var downMarkToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
-            var downMarkResult = Algorithm.FindMark(inputImage as CogImage8Grey, downMarkToolList, score);
+            double score = CurrentUnit.Mark.Bonding.Score;
 
             ClearDisplayGraphic();
+            CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
 
-            if(upMarkResult == null || downMarkResult == null)
+            CogGraphicLabel LabelText = new CogGraphicLabel();
+            LabelText.X = CogDisplay.Width /2;
+            LabelText.Y = 0;
+            resultGraphics.Add(LabelText);
+
+            var upMarkToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
+            var downMarkToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
+
+            var reuslt = Algorithm.FindBondingMark(inputImage as CogImage8Grey, upMarkToolList, downMarkToolList, score, CurrentUnit.FilmAlign.AlignSpec_T);
+
+            if(reuslt.Judgement == Judgement.OK)
             {
-                //검사 실패
+                resultGraphics.Add(reuslt.UpMarkResult?.ResultGraphics);
+                resultGraphics.Add(reuslt.DownMarkResult?.ResultGraphics);
+
+                LBL_ROI_FINEALIGN_CURRENT_T.ForeColor = Color.Green;
+                LBL_ROI_FINEALIGN_CURRENT_T.Text = string.Format("{0:F3}°", reuslt.FoundDegree);
+
+                LabelText.Font = new Font(StaticConfig.FontStyle, 20, FontStyle.Bold);
+                LabelText.Color = CogColorConstants.Green;
+                LabelText.Text = "ROI FINEALIGN OK";
+                resultGraphics.Add(LabelText);
             }
             else
             {
-                //Todo : 정환
-                // CurrentUnit.Mark.Bonding.AlignSpec_T
-                //CheckAlignSpec_T();
+                //검사 실패
+                LBL_ROI_FINEALIGN_CURRENT_T.ForeColor = Color.Red;
+                LBL_ROI_FINEALIGN_CURRENT_T.Text = string.Format("{0:F3}°", reuslt.FoundDegree);
 
-                CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
-                resultGraphics.Add(upMarkResult.ResultGraphics);
-                resultGraphics.Add(downMarkResult.ResultGraphics);
-                CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Test", false);
+                LabelText.Font = new Font(StaticConfig.FontStyle, 20, FontStyle.Bold);
+                LabelText.Color = CogColorConstants.Red;
+                LabelText.Text = "ROI FINEALIGN SPEC OUT";
             }
+            CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
         }
 
         private void BTN_ROI_FINEALIGN_Click(object sender, EventArgs e)
@@ -5940,7 +5747,7 @@ namespace COG.UI.Forms
 
             double dTheta = KeyPad.m_data;
 
-            CurrentUnit.Mark.Bonding.AlignSpec_T = dTheta;
+            CurrentUnit.FilmAlign.AlignSpec_T = dTheta;
             LBL_ROI_FINEALIGN_SPEC_T.Text = dTheta.ToString();
         }
 
@@ -6374,6 +6181,302 @@ namespace COG.UI.Forms
             //LAB_EDGE_WIDTH.Text = dEdgeWidth.ToString();
         }
 
+        private void chkUseTracking_CheckedChanged(object sender, EventArgs e)
+        {
+            if (CogDisplayImage == null | CurrentUnit == null)
+            {
+                chkUseTracking.Checked = false;
+                return;
+            }
+
+            SetAmpTrackingOnOff(chkUseTracking.Checked);
+        }
+
+        private bool SetAmpTrackingOnOff(bool isTracking)
+        {
+            double score = (double)NUD_PAT_SCORE.Value;
+            MarkTool markTool = markTool = CurrentUnit.Mark.Amp.MarkToolList[_selectedMarkIndex];
+
+            ClearDisplayGraphic();
+
+            LoggerHelper.Save_SystemLog("Mark Search start", LogType.Cmd);
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            var markResult = Algorithm.FindMark(CogDisplayImage as CogImage8Grey, markTool);
+
+            sw.Stop();
+
+            if (markResult == null)
+                return false;
+
+            if(isTracking)
+            {
+                var coordinate = TeachingData.Instance().AmpCoordinate;
+                coordinate.SetReferenceData(markResult.ReferencePos);
+                coordinate.SetTargetData(markResult.FoundPos);
+                coordinate.ExecuteCoordinate(CurrentUnit);
+
+                DrawFilmAlignLine();
+            }
+            else
+            {
+                var coordinate = TeachingData.Instance().AmpCoordinate;
+                coordinate.SetReferenceData(markResult.FoundPos);
+                coordinate.SetTargetData(markResult.ReferencePos);
+                coordinate.ExecuteCoordinate(CurrentUnit);
+
+                DrawFilmAlignLine();
+            }
+
+            return true;
+        }
+
+        private void NUD_PAT_SCORE_ValueChanged(object sender, EventArgs e)
+        {
+
+        }
+
+        public void DisposeDisplayImage()
+        {
+            if(CogDisplayImage != null)
+            {
+                if (CogDisplayImage is CogImage8Grey grey)
+                {
+                    grey.Dispose();
+                    grey = null;
+                }
+                if (CogDisplayImage is CogImage24PlanarColor color)
+                {
+                    color.Dispose();
+                    color = null;
+                }
+            }
+        }
+
+        #region File Align 값 변경 버튼
+        private void lblObjectDistanceXSpecValue_Click(object sender, EventArgs e)
+        {
+            double curData = Convert.ToDouble(lblObjectDistanceXSpecValue.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 3000, curData, "Input Data", 0);
+            KeyPad.ShowDialog();
+            double specX = KeyPad.m_data;
+
+            CurrentUnit.FilmAlign.FilmAlignSpecX = specX;
+            lblObjectDistanceXSpecValue.Text = specX.ToString();
+        }
+
+        private void lblObjectDistanceXValue_Click(object sender, EventArgs e)
+        {
+            double curData = Convert.ToDouble(lblObjectDistanceXValue.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 3000, curData, "Input Data", 0);
+            KeyPad.ShowDialog();
+            double dDistanceX = KeyPad.m_data;
+
+            CurrentUnit.FilmAlign.AmpModuleDistanceX = dDistanceX;
+            lblObjectDistanceXValue.Text = dDistanceX.ToString();
+        }
+
+        private void LAB_Align_Threshold_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(LAB_Align_Threshold.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            double dThreshold = KeyPad.m_data;
+
+            GetCurrentFilmAlignTool().RunParams.CaliperRunParams.ContrastThreshold = dThreshold;
+
+            LAB_Align_Threshold.Text = ((int)dThreshold).ToString();
+        }
+
+        private void Align_Threshold(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            double dThr = Convert.ToDouble(LAB_Align_Threshold.Text);
+            if (iUpdown == 0)
+            {
+                if (dThr == 255)
+                    return;
+                dThr++;
+            }
+            else
+            {
+                if (dThr == 1)
+                    return;
+                dThr--;
+            }
+            LAB_Align_Threshold.Text = dThr.ToString();
+            GetCurrentFilmAlignTool().RunParams.CaliperRunParams.ContrastThreshold = dThr;
+        }
+
+        private void LAB_Align_Caliper_Cnt_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(LAB_Align_Caliper_Cnt.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            int CaliperCnt = (int)KeyPad.m_data;
+
+            GetCurrentFilmAlignTool().RunParams.NumCalipers = CaliperCnt;
+            DrawFilmAlignLine();
+
+            LAB_Align_Caliper_Cnt.Text = CaliperCnt.ToString();
+        }
+
+        private void Align_CaliperCnt(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            int iCaliperCnt = Convert.ToInt32(LAB_Align_Caliper_Cnt.Text);
+            if (iUpdown == 0)
+            {
+                iCaliperCnt++;
+            }
+            else
+            {
+                if (iCaliperCnt == 1)
+                    return;
+                iCaliperCnt--;
+            }
+            LAB_Align_Caliper_Cnt.Text = iCaliperCnt.ToString();
+            GetCurrentFilmAlignTool().RunParams.NumCalipers = iCaliperCnt;
+        }
+
+        private void lblThetaFilterSizeValue_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(lblThetaFilterSizeValue.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            int dFilterSize = Convert.ToInt32(KeyPad.m_data);
+
+            lblThetaFilterSizeValue.Text = Convert.ToString(dFilterSize);
+            GetCurrentFilmAlignTool().RunParams.CaliperRunParams.FilterHalfSizeInPixels = dFilterSize;
+        }
+
+        private void lblThetaFilterSizeValueUpDown_Click(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            double dFilterSize = Convert.ToDouble(lblThetaFilterSizeValue.Text);
+            if (iUpdown == 0)
+            {
+                if (dFilterSize == 255)
+                    return;
+                dFilterSize++;
+            }
+            else
+            {
+                if (dFilterSize == 2)
+                    return;
+                dFilterSize--;
+            }
+            lblThetaFilterSizeValue.Text = dFilterSize.ToString();
+            GetCurrentFilmAlignTool().RunParams.CaliperRunParams.ContrastThreshold = dFilterSize;
+        }
+
+        private void lab_Ignore_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(LAB_Align_Caliper_Cnt.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            int iIgnoreCnt = (int)KeyPad.m_data;
+
+            GetCurrentFilmAlignTool().RunParams.NumToIgnore = iIgnoreCnt;
+            DrawFilmAlignLine();
+
+            lab_Ignore.Text = iIgnoreCnt.ToString();
+        }
+
+        private void lblIgnoreValueUpDown_Click(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            int ignore = Convert.ToInt32(lab_Ignore.Text);
+            if (iUpdown == 0)
+            {
+                if (ignore == 255)
+                    return;
+                ignore++;
+            }
+            else
+            {
+                if (ignore == 0)
+                    return;
+                ignore--;
+            }
+            lab_Ignore.Text = ignore.ToString();
+            GetCurrentFilmAlignTool().RunParams.NumToIgnore = ignore;
+        }
+
+        private void LAB_Align_CALIPER_PROJECTIONLENTH_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(LAB_Align_CALIPER_PROJECTIONLENTH.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            double CaliperProjectionLenth = KeyPad.m_data;
+
+            GetCurrentFilmAlignTool().RunParams.CaliperSearchLength = CaliperProjectionLenth;
+
+            LAB_Align_CALIPER_PROJECTIONLENTH.Text = string.Format("{0:F3}", CaliperProjectionLenth);
+        }
+
+        private void Align_ProjectionLenth(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            double dProjectionLenth = Convert.ToDouble(LAB_Align_CALIPER_PROJECTIONLENTH.Text);
+            if (iUpdown == 0)
+            {
+                dProjectionLenth++;
+            }
+            else
+            {
+                if (dProjectionLenth == 1)
+                    return;
+                dProjectionLenth--;
+            }
+            LAB_Align_CALIPER_PROJECTIONLENTH.Text = dProjectionLenth.ToString();
+            GetCurrentFilmAlignTool().RunParams.CaliperProjectionLength = dProjectionLenth;
+        }
+
+        private void LAB_Align_CALIPER_SEARCHLENTH_Click(object sender, EventArgs e)
+        {
+            double nCurData = Convert.ToDouble(LAB_Align_CALIPER_SEARCHLENTH.Text);
+            KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+            KeyPad.ShowDialog();
+            double CaliperSearchLenth = KeyPad.m_data;
+
+            GetCurrentFilmAlignTool().RunParams.CaliperSearchLength = CaliperSearchLenth;
+
+            LAB_Align_CALIPER_SEARCHLENTH.Text = string.Format("{0:F3}", CaliperSearchLenth);
+        }
+
+        private void Align_Length_Click(object sender, EventArgs e)
+        {
+            Button btn = (Button)sender;
+            int iUpdown = Convert.ToInt32(btn.Tag.ToString());
+            double length = Convert.ToDouble(LAB_Align_CALIPER_SEARCHLENTH.Text);
+            if (iUpdown == 0)
+            {
+                length++;
+            }
+            else
+            {
+                if (length == 1)
+                    return;
+                length--;
+            }
+            LAB_Align_CALIPER_SEARCHLENTH.Text = length.ToString();
+            GetCurrentFilmAlignTool().RunParams.CaliperSearchLength = length;
+        }
+
+        private void Combo_FilAlign_Polarity_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            int TempIndex = Combo_FilAlign_Polarity.SelectedIndex;
+            GetCurrentFilmAlignTool().RunParams.CaliperRunParams.Edge0Polarity = (CogCaliperPolarityConstants)(TempIndex + 1);
+        }
+        #endregion
+
         private void DrawComboboxCenterAlign(object sender, DrawItemEventArgs e)
         {
             try
@@ -6414,36 +6517,6 @@ namespace COG.UI.Forms
         private void Combo_Polarity_DrawItem(object sender, DrawItemEventArgs e)
         {
             DrawComboboxCenterAlign(sender, e);
-        }
-
-        private void chkUseTracking_CheckedChanged(object sender, EventArgs e)
-        {
-            if (_isFormLoad == false)
-                return;
-
-            TrackingTest(chkUseTracking.Checked);
-        }
-
-        private void NUD_PAT_SCORE_ValueChanged(object sender, EventArgs e)
-        {
-
-        }
-
-        public void DisposeDisplayImage()
-        {
-            if(CogDisplayImage != null)
-            {
-                if (CogDisplayImage is CogImage8Grey grey)
-                {
-                    grey.Dispose();
-                    grey = null;
-                }
-                if (CogDisplayImage is CogImage24PlanarColor color)
-                {
-                    color.Dispose();
-                    color = null;
-                }
-            }
         }
     }
 }

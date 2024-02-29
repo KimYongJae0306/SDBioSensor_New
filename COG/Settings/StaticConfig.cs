@@ -18,8 +18,13 @@ namespace COG.Settings
     public static partial class StaticConfig
     {
         public const bool VirtualMode = true;
+
+        public const double PixelResolution = 13.36;
+
         public const int STAGE_MAX_COUNT = 2;
         public const int PATTERN_MAX_COUNT = 6; // 0번은 MainMark, 나머지는 SubMark
+
+        public const int FILM_ALIGN_MAX_COUNT = 4;
 
         public const int PLC_READ_SIZE = 310;
 
@@ -54,6 +59,8 @@ namespace COG.Settings
 
         public const int M_1CAM2SHOT = 200;   // 1 camera 2 shot , Center Target      
 
+        public const string FontStyle = "test";
+        public const float FontSize = 35.0f;
     }
 
 

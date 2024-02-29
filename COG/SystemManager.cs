@@ -86,6 +86,12 @@ namespace COG
             LoadModel(modelName, true);
         }
 
+        public void ReLoadModel()
+        {
+            string modelName = AppsConfig.Instance().ProjectName;
+            LoadModel(modelName);
+        }
+
         public bool LoadModel(string modelName, bool forceLoading = false)
         {
             return _mainForm.InspModelService.LoadModel(modelName, forceLoading);
