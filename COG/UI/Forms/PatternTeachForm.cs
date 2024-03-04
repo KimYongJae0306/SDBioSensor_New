@@ -1465,13 +1465,17 @@ namespace COG.UI.Forms
         {
             try
             {
-                int nZoomSize = 1;
+                if (OriginMarkPoint != null)
+                {
+                    int nZoomSize = 1;
 
-                nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
-                if (nZoomSize < 1)
-                    OriginMarkPoint.SizeInScreenPixels = ORIGIN_SIZE;
-                else
-                    OriginMarkPoint.SizeInScreenPixels = nZoomSize;
+                    nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
+                    if (nZoomSize < 1)
+                        OriginMarkPoint.SizeInScreenPixels = ORIGIN_SIZE;
+                    else
+                        OriginMarkPoint.SizeInScreenPixels = nZoomSize;
+
+                }
             }
             catch
             {
