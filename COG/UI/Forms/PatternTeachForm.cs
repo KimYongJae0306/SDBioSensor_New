@@ -34,6 +34,8 @@ namespace COG.UI.Forms
 
     public partial class PatternTeachForm : Form
     {
+        private bool _isNotUpdate { get; set; } = false;
+
         private Algorithm Algorithm { get; set; } = new Algorithm();
 
         private TabPageType TabPageType = TabPageType.AmpMark;
@@ -180,6 +182,7 @@ namespace COG.UI.Forms
             _prevSelectedTabNo = -1;
             _prevSelectedRowIndex = -1;
             _tabLock = false;
+            _isNotUpdate = false;
 
             ClearMarkButton();
             ClearDisplayGraphic();
@@ -1814,6 +1817,9 @@ namespace COG.UI.Forms
 
         private void chkUseRoiTracking_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isNotUpdate)
+                return;
+
             if (CogDisplayImage == null | CurrentUnit == null)
             {
                 chkUseRoiTracking.Checked = false;
@@ -4656,6 +4662,9 @@ namespace COG.UI.Forms
 
         private void chkUseTracking_CheckedChanged(object sender, EventArgs e)
         {
+            if (_isNotUpdate)
+                return;
+
             if (CogDisplayImage == null | CurrentUnit == null)
             {
                 chkUseTracking.Checked = false;
@@ -5482,11 +5491,17 @@ namespace COG.UI.Forms
             }
             passwordForm.Dispose();
 
+            _isNotUpdate = true;
+
             if (chkUseTracking.Checked)
+            {
                 SetAmpTrackingOnOff(false);
+            }
 
             if (chkUseRoiTracking.Checked)
+            {
                 SetBondingTrackingOnOff(false);
+            }
 
             if(ModelManager.Instance().CurrentModel is InspModel inspModel)
                 inspModel.Save(StaticConfig.ModelPath);
@@ -5722,6 +5737,20 @@ namespace COG.UI.Forms
 
         private void BTN_EXIT_Click(object sender, EventArgs e)
         {
+            _isNotUpdate = true;
+
+            if (chkUseTracking.Checked)
+            {
+                chkUseTracking.Checked = false;
+                SetAmpTrackingOnOff(false);
+            }
+
+            if (chkUseRoiTracking.Checked)
+            {
+                chkUseRoiTracking.Checked = false;
+                SetBondingTrackingOnOff(false);
+            }
+
             SystemManager.Instance().ReLoadModel();
             //shkang_s 파라미터저장시 로그 변수 초기화
             //tempCaliperNum.Clear();
