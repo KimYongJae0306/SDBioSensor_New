@@ -72,7 +72,7 @@ namespace COG.Class
                 cogSearchMaxTool.InputImage = cogImage;
                 cogSearchMaxTool.Run();
 
-                if (cogSearchMaxTool.Results.Count > 0)
+                if (cogSearchMaxTool.Results?.Count > 0)
                 {
                     var foundResult = cogSearchMaxTool.Results[0];
                     if (foundResult.Score > score)
