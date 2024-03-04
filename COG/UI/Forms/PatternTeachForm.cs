@@ -32,6 +32,13 @@ namespace COG.UI.Forms
         Inspection = 2,
     }
 
+    public enum AddRoiType
+    {
+        None,
+        Line,
+        Circle,
+    }
+
     public partial class PatternTeachForm : Form
     {
         private bool _isNotUpdate { get; set; } = false;
@@ -39,6 +46,8 @@ namespace COG.UI.Forms
         private Algorithm Algorithm { get; set; } = new Algorithm();
 
         private TabPageType TabPageType = TabPageType.AmpMark;
+
+        private AddRoiType AddRoiType { get; set; } = AddRoiType.None;
 
         private bool _tabLock { get; set; } = false;
 
@@ -183,6 +192,7 @@ namespace COG.UI.Forms
             _prevSelectedRowIndex = -1;
             _tabLock = false;
             _isNotUpdate = false;
+            AddRoiType = AddRoiType.None;
 
             ClearMarkButton();
             ClearDisplayGraphic();
@@ -1798,16 +1808,11 @@ namespace COG.UI.Forms
         #region SD BIO
         private void ROIType(object sender, EventArgs e)
         {
-            //Button Btn = (Button)sender;
-            //if (Convert.ToInt32(Btn.Tag.ToString()) == 0)
-            //{
-            //    m_enumROIType = enumROIType.Line;
-            //}
-            //else
-            //{
-            //    m_enumROIType = enumROIType.Circle;
-            //}
-            //Set_InspParams();
+            Button Btn = (Button)sender;
+            if (Convert.ToInt32(Btn.Tag.ToString()) == 0)
+                AddRoiType = AddRoiType.Line;
+            else
+                AddRoiType = AddRoiType.Circle;
         }
 
         private void btn_ROI_SHOW_Click(object sender, EventArgs e)
@@ -1957,89 +1962,40 @@ namespace COG.UI.Forms
 
         private void BTN_INSP_ADD_Click(object sender, EventArgs e)
         {
-            //if (CHK_ROI_CREATE.Checked == false)
-            //{
-            //    CHK_ROI_CREATE.Checked = true;
-            //}
-            //if (MessageBox.Show("Are you sure you want to ROI Copy it?", "ROI Copy", MessageBoxButtons.YesNo) == DialogResult.Yes)
-            //{
-            //    PT_Display01.InteractiveGraphics.Clear();
-            //    PT_Display01.StaticGraphics.Clear();
-            //    string[] strData = new string[19];
-            //    int iNo = DataGridview_Insp.RowCount;
-            //    if (iNo == 0)
-            //        iNo = 0;
-            //    else
-            //        iNo -= 1;
+            //AddRoiType
+            var unit = GetUnit();
+            bool isEdit = false;
+            if (AddRoiType == AddRoiType.None)
+            {
+                if(GetCurrentInspParam() is GaloInspTool inspTool)
+                {
+                    if (MessageBox.Show("Are you sure you want to ROI Copy it?", "ROI Copy", MessageBoxButtons.YesNo) == DialogResult.Yes)
+                    {
+                        isEdit = true;
+                        unit.Insp.GaloInspToolList.Add(inspTool.DeepCopy());
+                    }
+                }
+            }
+            else if(AddRoiType == AddRoiType.Line)
+            {
+                isEdit = true;
+                GaloInspTool inspTool = new GaloInspTool();
+                inspTool.Type = GaloInspType.Line;
+                unit.Insp.GaloInspToolList.Add(inspTool);
+            }
+            else if(AddRoiType == AddRoiType.Circle)
+            {
+                isEdit = true;
+                GaloInspTool inspTool = new GaloInspTool();
+                inspTool.Type = GaloInspType.Circle;
+                unit.Insp.GaloInspToolList.Add(inspTool);
+            }
 
-            //    CogCaliperPolarityConstants Polarity;
-            //    if (m_TeachParameter.Count < iNo)
-            //        m_TeachParameter.Add(ResetStruct());
-            //    var TempData = m_TeachParameter[iNo];
-            //    TempData.m_enumROIType = (Main.PatternTag.SDParameter.enumROIType)m_enumROIType;
-            //    strData[0] = string.Format("{0:00}", (iNo + 1).ToString());
-
-            //    if (m_enumROIType == enumROIType.Line)
-            //    {
-            //        strData[1] = "Line";
-            //        strData[2] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.ExpectedLineSegment.StartX);
-            //        strData[3] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.ExpectedLineSegment.StartY);
-            //        strData[4] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.ExpectedLineSegment.EndX);
-            //        strData[5] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.ExpectedLineSegment.EndY);
-            //        strData[6] = string.Format("{0:F3}", 0);
-            //        strData[7] = string.Format("{0:F3}", 0);
-            //        strData[8] = m_TempFindLineTool.RunParams.CaliperRunParams.ContrastThreshold.ToString();
-            //        strData[9] = m_TempFindLineTool.RunParams.NumCalipers.ToString();
-            //        strData[10] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperProjectionLength);
-            //        strData[11] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperSearchLength);
-            //        Polarity = m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Polarity;
-            //        strData[12] = ((int)Polarity).ToString();
-            //        Polarity = m_TempFindLineTool.RunParams.CaliperRunParams.Edge1Polarity;
-            //        strData[13] = ((int)Polarity).ToString();
-            //        strData[14] = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //        strData[15] = m_dDist_ignore.ToString();
-            //        strData[16] = string.Format("{0:F2}", m_SpecDist);
-            //        //strData[17] = string.Format("{0:F2}", m_TempFindLineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels);
-            //        strData[17] = m_TempFindLineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels.ToString();
-            //        strData[18] = string.Format("{0:F2}", m_SpecDistMax);
-
-            //        TempData.m_FindLineTool = m_TempFindLineTool;
-            //    }
-            //    else
-            //    {
-
-            //        strData[1] = "Circle";
-            //        strData[2] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterX);
-            //        strData[3] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterY);
-            //        strData[4] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.ExpectedCircularArc.Radius);
-            //        strData[5] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleStart);
-            //        strData[6] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleSpan);
-            //        strData[7] = string.Format("{0:F3}", 0);
-            //        strData[8] = m_TempFindCircleTool.RunParams.CaliperRunParams.ContrastThreshold.ToString();
-            //        strData[9] = m_TempFindCircleTool.RunParams.NumCalipers.ToString();
-            //        strData[10] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperProjectionLength);
-            //        strData[11] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperSearchLength);
-            //        Polarity = m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Polarity;
-            //        strData[12] = ((int)Polarity).ToString();
-            //        Polarity = m_TempFindCircleTool.RunParams.CaliperRunParams.Edge1Polarity;
-            //        strData[13] = ((int)Polarity).ToString();
-            //        TempData.m_FindCircleTool = m_TempFindCircleTool;
-            //        strData[14] = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //        strData[15] = m_dDist_ignore.ToString();
-            //        strData[16] = string.Format("{0:F2}", m_SpecDist);
-            //        //strData[17] = string.Format("{0:F2}", m_TempFindLineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels);
-            //        strData[17] = m_TempFindCircleTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels.ToString();
-            //        strData[18] = string.Format("{0:F2}", m_SpecDistMax);
-            //    }
-            //    DataGridview_Insp.Rows.Add(strData);
-            //    m_TeachParameter.Add(TempData);
-            //    CHK_ROI_CREATE.Checked = false;
-            //}
-            //else
-            //{
-            //    CHK_ROI_CREATE.Checked = false;
-            //    return;
-            //}
+            if(isEdit)
+            {
+                UpdateInspInfo(unit.Insp.GaloInspToolList.Count);
+                UpdateInspParam();
+            }
         }
 
         private void BTN_INSP_DELETE_Click(object sender, EventArgs e)
@@ -2060,9 +2016,7 @@ namespace COG.UI.Forms
                     UpdateInspParam();
                 }
                 else
-                {
                     return;
-                }
             }
         }
       
@@ -2073,117 +2027,10 @@ namespace COG.UI.Forms
                 return;
 
             _prevSelectedRowIndex = e.RowIndex;
+            AddRoiType = AddRoiType.None;
+
             UpdateInspParam();
             DrawInspParam();
-            //int itype;
-            //string strTemp = Convert.ToString(DataGridview_Insp.Rows[m_iGridIndex].Cells[1].Value);
-            //if (strTemp == "Line")
-            //    itype = 0;
-            //else
-            //    itype = 1;
-
-            //m_enumROIType = (enumROIType)itype;
-            //double dEdgeWidth;
-
-            //if (m_enumROIType == enumROIType.Line)
-            //{
-            //    CogFindLineTool m_FL = new CogFindLineTool();
-            //    m_FL.RunParams.ExpectedLineSegment.StartX = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[2].Value);
-            //    m_FL.RunParams.ExpectedLineSegment.StartY = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[3].Value);
-            //    m_FL.RunParams.ExpectedLineSegment.EndX = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[4].Value);
-            //    m_FL.RunParams.ExpectedLineSegment.EndY = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[5].Value);
-            //    m_FL.RunParams.CaliperRunParams.ContrastThreshold = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value);
-            //    m_FL.RunParams.NumCalipers = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value);
-            //    m_FL.RunParams.CaliperProjectionLength = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value);
-            //    m_FL.RunParams.CaliperSearchLength = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value);
-            //    m_FL.RunParams.CaliperRunParams.Edge0Polarity = (CogCaliperPolarityConstants)Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[12].Value);
-            //    m_FL.RunParams.CaliperRunParams.Edge1Polarity = (CogCaliperPolarityConstants)Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[13].Value);
-            //    m_FL.RunParams.CaliperRunParams.Edge0Position = (Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value) / 2) * -1;
-            //    m_FL.RunParams.CaliperRunParams.Edge1Position = (Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value) / 2);
-            //    m_dDist_ignore = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[15].Value);
-            //    m_SpecDist = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[16].Value);
-            //    m_SpecDistMax = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[18].Value);
-            //    dEdgeWidth = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value);
-            //    //m_FL.RunParams.CaliperRunParams.FilterHalfSizeInPixels = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value);
-
-            //    LAB_Insp_Threshold.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value).ToString();
-            //    LAB_Caliper_Cnt.Text = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value).ToString();
-            //    LAB_CALIPER_PROJECTIONLENTH.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value).ToString();
-            //    LAB_CALIPER_SEARCHLENTH.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value).ToString();
-            //    lblParamFilterSizeValue.Text = Convert.ToString(DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value);
-            //    LAB_EDGE_WIDTH.Text = string.Format("{0:F2}", Math.Abs(dEdgeWidth));
-
-            //    m_TeachParameter[m_iGridIndex].bThresholdUse = Convert.ToBoolean(DataGridview_Insp.Rows[m_iGridIndex].Cells[19].Value);
-            //    m_TeachParameter[m_iGridIndex].iThreshold = Convert.ToInt16(DataGridview_Insp.Rows[m_iGridIndex].Cells[20].Value);
-
-            //    m_TempFindLineTool = new CogFindLineTool();
-
-            //    if (bROICopy)
-            //        m_TempFindLineTool = m_FL;
-            //    else
-            //        m_TempFindLineTool = m_TeachParameter[m_iGridIndex].m_FindLineTool;
-
-            //    // Line은 EdgeWidth, Polarity2 미사용
-            //    label59.Visible = false;
-            //    LAB_EDGE_WIDTH.Visible = false;
-            //    lblParamEdgeWidthValueUp.Visible = false;
-            //    lblParamEdgeWidthValueDown.Visible = false;
-            //    label58.Visible = false;
-            //    Combo_Polarity2.Visible = false;
-            //}
-            //else
-            //{
-            //    CogFindCircleTool m_FC = new CogFindCircleTool();
-            //    m_FC.RunParams.ExpectedCircularArc.CenterX = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[2].Value);
-            //    m_FC.RunParams.ExpectedCircularArc.CenterY = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[3].Value);
-            //    m_FC.RunParams.ExpectedCircularArc.Radius = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[4].Value);
-            //    m_FC.RunParams.ExpectedCircularArc.AngleStart = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[5].Value);
-            //    m_FC.RunParams.ExpectedCircularArc.AngleSpan = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[6].Value);
-            //    m_FC.RunParams.CaliperRunParams.ContrastThreshold = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value);
-            //    m_FC.RunParams.NumCalipers = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value);
-            //    m_FC.RunParams.CaliperProjectionLength = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value);
-            //    m_FC.RunParams.CaliperSearchLength = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value);
-            //    m_FC.RunParams.CaliperRunParams.Edge0Polarity = (CogCaliperPolarityConstants)Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[12].Value);
-            //    m_FC.RunParams.CaliperRunParams.Edge1Polarity = (CogCaliperPolarityConstants)Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[13].Value);
-            //    m_FC.RunParams.CaliperRunParams.Edge0Position = (Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value) / 2) * -1;
-            //    m_FC.RunParams.CaliperRunParams.Edge1Position = (Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value) / 2);
-            //    m_dDist_ignore = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[15].Value);
-            //    m_SpecDist = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[16].Value);
-            //    m_SpecDistMax = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[18].Value);
-            //    m_FC.RunParams.CaliperRunParams.FilterHalfSizeInPixels = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value);
-
-            //    LAB_Insp_Threshold.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value).ToString();
-            //    LAB_Caliper_Cnt.Text = Convert.ToInt32(DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value).ToString();
-            //    LAB_CALIPER_PROJECTIONLENTH.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value).ToString();
-            //    LAB_CALIPER_SEARCHLENTH.Text = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value).ToString();
-            //    lblParamFilterSizeValue.Text = Convert.ToString(DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value);
-
-            //    dEdgeWidth = Convert.ToDouble(DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value);
-            //    LAB_EDGE_WIDTH.Text = string.Format("{0:F2}", Math.Abs(dEdgeWidth));
-
-            //    m_TeachParameter[m_iGridIndex].bThresholdUse = Convert.ToBoolean(DataGridview_Insp.Rows[m_iGridIndex].Cells[19].Value);
-            //    m_TeachParameter[m_iGridIndex].iThreshold = Convert.ToInt16(DataGridview_Insp.Rows[m_iGridIndex].Cells[20].Value);
-
-            //    m_TempFindCircleTool = new CogFindCircleTool();
-
-            //    if (bROICopy)
-            //        m_TempFindCircleTool = m_FC;
-            //    else
-            //        m_TempFindCircleTool = m_TeachParameter[m_iGridIndex].m_FindCircleTool;
-
-            //    // Circle은 EdgeWidth, Polarity2 미사용
-            //    label59.Visible = true;
-            //    LAB_EDGE_WIDTH.Visible = true;
-            //    lblParamEdgeWidthValueUp.Visible = true;
-            //    lblParamEdgeWidthValueDown.Visible = true;
-            //    label58.Visible = true;
-            //    Combo_Polarity2.Visible = true;
-            //}
-            //SetText();
-            //UpdateParamUI();
-
-            //btn_ROI_SHOW.PerformClick();
-            ////Set_InspParams();
         }
 
 
