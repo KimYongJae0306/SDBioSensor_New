@@ -301,9 +301,9 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.pnlDisplay = new System.Windows.Forms.Panel();
-            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.txtOffsetX = new System.Windows.Forms.TextBox();
             this.txtOffsetY = new System.Windows.Forms.TextBox();
+            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.groupBoxLightSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBAR_LIGHT)).BeginInit();
             this.gbxToolSetting.SuspendLayout();
@@ -2543,6 +2543,7 @@
             this.DataGridview_Insp.Name = "DataGridview_Insp";
             this.DataGridview_Insp.ReadOnly = true;
             this.DataGridview_Insp.RowTemplate.Height = 23;
+            this.DataGridview_Insp.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             this.DataGridview_Insp.Size = new System.Drawing.Size(445, 264);
             this.DataGridview_Insp.TabIndex = 1;
             this.DataGridview_Insp.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridview_Insp_CellClick);
@@ -4037,20 +4038,6 @@
             this.pnlDisplay.Size = new System.Drawing.Size(896, 798);
             this.pnlDisplay.TabIndex = 365;
             // 
-            // PT_DISPLAY_CONTROL
-            // 
-            this.PT_DISPLAY_CONTROL.BackColor = System.Drawing.Color.DarkGray;
-            this.PT_DISPLAY_CONTROL.CustomCross = ((System.Drawing.PointF)(resources.GetObject("PT_DISPLAY_CONTROL.CustomCross")));
-            this.PT_DISPLAY_CONTROL.DisplayManuConstants = JAS.Controls.Display.DisplayEnableConstants.All;
-            this.PT_DISPLAY_CONTROL.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PT_DISPLAY_CONTROL.Image = null;
-            this.PT_DISPLAY_CONTROL.Location = new System.Drawing.Point(0, 0);
-            this.PT_DISPLAY_CONTROL.Name = "PT_DISPLAY_CONTROL";
-            this.PT_DISPLAY_CONTROL.Resuloution = 1D;
-            this.PT_DISPLAY_CONTROL.Size = new System.Drawing.Size(896, 798);
-            this.PT_DISPLAY_CONTROL.TabIndex = 278;
-            this.PT_DISPLAY_CONTROL.UseCustomCross = false;
-            // 
             // txtOffsetX
             // 
             this.txtOffsetX.Location = new System.Drawing.Point(434, 876);
@@ -4064,6 +4051,20 @@
             this.txtOffsetY.Name = "txtOffsetY";
             this.txtOffsetY.Size = new System.Drawing.Size(100, 21);
             this.txtOffsetY.TabIndex = 363;
+            // 
+            // PT_DISPLAY_CONTROL
+            // 
+            this.PT_DISPLAY_CONTROL.BackColor = System.Drawing.Color.DarkGray;
+            this.PT_DISPLAY_CONTROL.CustomCross = ((System.Drawing.PointF)(resources.GetObject("PT_DISPLAY_CONTROL.CustomCross")));
+            this.PT_DISPLAY_CONTROL.DisplayManuConstants = JAS.Controls.Display.DisplayEnableConstants.All;
+            this.PT_DISPLAY_CONTROL.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PT_DISPLAY_CONTROL.Image = null;
+            this.PT_DISPLAY_CONTROL.Location = new System.Drawing.Point(0, 0);
+            this.PT_DISPLAY_CONTROL.Name = "PT_DISPLAY_CONTROL";
+            this.PT_DISPLAY_CONTROL.Resuloution = 1D;
+            this.PT_DISPLAY_CONTROL.Size = new System.Drawing.Size(896, 798);
+            this.PT_DISPLAY_CONTROL.TabIndex = 278;
+            this.PT_DISPLAY_CONTROL.UseCustomCross = false;
             // 
             // PatternTeachForm
             // 
