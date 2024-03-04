@@ -154,6 +154,13 @@ namespace COG.Core
 
             return true;
         }
+
+        public void SetStageUnit(int stageNo, StageUnit stageUnit)
+        {
+            StageUnitList[stageNo].Dispose();
+            StageUnitList[stageNo] = null;
+            StageUnitList[stageNo] = stageUnit;
+        }
     }
 
     public partial class InspModel

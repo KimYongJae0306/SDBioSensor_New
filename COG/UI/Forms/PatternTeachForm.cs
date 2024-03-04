@@ -1068,19 +1068,43 @@ namespace COG.UI.Forms
         {
             if (CogDisplayImage == null | _prevSelectedRowIndex < 0)
                 return;
+            LoggerHelper.Save_SystemLog("Inspection start", LogType.Cmd);
+            Stopwatch sw = Stopwatch.StartNew();
 
-            if(GetCurrentInspParam() is GaloInspTool inspTool)
+            if (GetCurrentInspParam() is GaloInspTool inspTool)
             {
                 if(inspTool.Type == GaloInspType.Line)
                 {
-                    CogFindLineTool tool = new CogFindLineTool(inspTool.FindLineTool);
+                    Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
                 }
                 else
                 {
 
-                   Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                   var circleInspResult = Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
 
+                    sw.Stop();
 
+                    Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
+                    LoggerHelper.Save_SystemLog($"Inspection Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
+
+                    CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+
+                    foreach (var result in circleInspResult.ResultGraphics)
+                        resultGraphics.Add(result);
+
+                    CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
+
+                    dataGridView_Result.Rows.Clear();
+
+                    var distanceList = circleInspResult.GetDistance();
+                    string[] strResultData = new string[4];
+                    for (int i = 0; i < distanceList.Count; i++)
+                    {
+                        strResultData[0] = i.ToString();
+                        strResultData[1] = "0";
+                        strResultData[3] = string.Format("{0:F3}", distanceList[i]);
+                        dataGridView_Result.Rows.Add(strResultData);
+                    }
                 }
             }
         }
@@ -4014,7 +4038,7 @@ namespace COG.UI.Forms
                 LAB_CALIPER_SEARCHLENTH.Text = string.Format("{0:F3}", param.FindCircleTool.RunParams.CaliperSearchLength);
                 lblParamFilterSizeValue.Text = param.FindCircleTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels.ToString();
 
-                double dEdgeWidth =Convert.ToDouble(DataGridview_Insp.Rows[_prevSelectedTabNo].Cells[14].Value);
+                double dEdgeWidth =Convert.ToDouble(DataGridview_Insp.Rows[_prevSelectedRowIndex].Cells[14].Value);
                 LAB_EDGE_WIDTH.Text = string.Format("{0:F2}", Math.Abs(dEdgeWidth));
 
                 param.FindCircleTool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.Pair;
@@ -5403,7 +5427,6 @@ namespace COG.UI.Forms
             passwordForm.Dispose();
 
             _isNotUpdate = true;
-
             if (chkUseTracking.Checked)
             {
                 chkUseTracking.Checked = false;
@@ -5416,10 +5439,13 @@ namespace COG.UI.Forms
                 SetBondingTrackingOnOff(false);
             }
 
+            UpdateData();
+            
             if(ModelManager.Instance().CurrentModel is InspModel inspModel)
             {
                 SystemManager.Instance().ShowProgerssBar(1, true, 0);
-                inspModel.Save(StaticConfig.ModelPath, StageUnitNo);
+                string filePath = StaticConfig.ModelPath + AppsConfig.Instance().ProjectName;
+                inspModel.Save(filePath, StageUnitNo);
 
                 SystemManager.Instance().ShowProgerssBar(1, true, 1);
             }

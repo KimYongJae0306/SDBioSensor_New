@@ -34,8 +34,8 @@ namespace COG.Class
             var inspModel = ModelManager.Instance().CurrentModel as InspModel;
             if (inspModel != null)
             {
-                StageUnitList.ForEach(x => x.Dispose());
-                StageUnitList.Clear();
+                //StageUnitList.ForEach(x => x.Dispose());
+                //StageUnitList.Clear();
                 Initialize(inspModel);
             }
         }
@@ -44,17 +44,19 @@ namespace COG.Class
         {
             lock (StageUnitList)
             {
-                foreach (var unit in inspModel.StageUnitList)
-                    StageUnitList.Add(unit);
+                StageUnitList = inspModel.StageUnitList;
+
+                //foreach (var unit in inspModel.StageUnitList)
+                //    StageUnitList.Add(unit);
             }
         }
 
-        public StageUnit GetStageUnit(int alignNo)
+        public StageUnit GetStageUnit(int stageNo)
         {
-            if (StageUnitList.Count - 1 < alignNo)
+            if (StageUnitList.Count - 1 < stageNo)
                 return null;
 
-            var unit = StageUnitList[alignNo];
+            var unit = StageUnitList[stageNo];
             return unit;
         }
 

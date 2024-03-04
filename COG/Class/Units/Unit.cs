@@ -32,5 +32,10 @@ namespace COG.Class.Units
             FilmAlign.Dispose();
             Insp.Dispose();
         }
+
+        internal void Save()
+        {
+            throw new NotImplementedException();
+        }
     }
 }
