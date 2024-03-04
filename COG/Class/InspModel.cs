@@ -187,7 +187,7 @@ namespace COG.Core
             return lineToolList;
         }
         
-        private void Save(string modelDir, int stageIndex)
+        public void Save(string modelDir, int stageIndex)
         {
             var stageUnit = StageUnitList[stageIndex];
 

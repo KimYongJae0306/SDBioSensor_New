@@ -1498,17 +1498,13 @@ namespace COG.UI.Forms
         {
             try
             {
-                if (OriginMarkPoint != null)
-                {
-                    int nZoomSize = 1;
+                int nZoomSize = 1;
 
-                    nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
-                    if (nZoomSize < 1)
-                        OriginMarkPoint.SizeInScreenPixels = ORIGIN_SIZE;
-                    else
-                        OriginMarkPoint.SizeInScreenPixels = nZoomSize;
-
-                }
+                nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
+                if (nZoomSize < 1)
+                    OriginMarkPoint.SizeInScreenPixels = ORIGIN_SIZE;
+                else
+                    OriginMarkPoint.SizeInScreenPixels = nZoomSize;
             }
             catch
             {
@@ -2018,6 +2014,8 @@ namespace COG.UI.Forms
                 isEdit = true;
                 GaloInspTool inspTool = new GaloInspTool();
                 inspTool.Type = GaloInspType.Line;
+                inspTool.SetLineTool(new CogFindLineTool());
+                inspTool.SetCircleTool(new CogFindCircleTool());
                 unit.Insp.GaloInspToolList.Add(inspTool);
             }
             else if(AddRoiType == AddRoiType.Circle)
@@ -2025,11 +2023,14 @@ namespace COG.UI.Forms
                 isEdit = true;
                 GaloInspTool inspTool = new GaloInspTool();
                 inspTool.Type = GaloInspType.Circle;
+                inspTool.SetLineTool(new CogFindLineTool());
+                inspTool.SetCircleTool(new CogFindCircleTool());
                 unit.Insp.GaloInspToolList.Add(inspTool);
             }
 
             if(isEdit)
             {
+                DataGridview_Insp.Rows.Clear();
                 UpdateInspInfo(unit.Insp.GaloInspToolList.Count);
                 UpdateInspParam();
             }
@@ -5379,16 +5380,23 @@ namespace COG.UI.Forms
 
             if (chkUseTracking.Checked)
             {
+                chkUseTracking.Checked = false;
                 SetAmpTrackingOnOff(false);
             }
 
             if (chkUseRoiTracking.Checked)
             {
+                chkUseRoiTracking.Checked = false;
                 SetBondingTrackingOnOff(false);
             }
 
             if(ModelManager.Instance().CurrentModel is InspModel inspModel)
-                inspModel.Save(StaticConfig.ModelPath);
+            {
+                SystemManager.Instance().ShowProgerssBar(1, true, 0);
+                inspModel.Save(StaticConfig.ModelPath, StageUnitNo);
+
+                SystemManager.Instance().ShowProgerssBar(1, true, 1);
+            }
             // Todo : 누가할래?
             //for (int i = 0; i < Main.AlignUnit[m_AlignNo].m_AlignPatMax[m_PatTagNo]; i++)
             //{

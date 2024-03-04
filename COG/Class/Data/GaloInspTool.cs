@@ -52,9 +52,9 @@ namespace COG.Class.Data
             param.SpecDistanceMax = SpecDistanceMax;
             param.DarkArea = DarkArea.DeepCopy();
 
-            if (param.FindLineTool != null)
+            if (FindLineTool != null)
                 param.FindLineTool = new CogFindLineTool(FindLineTool);
-            if (param.FindCircleTool != null)
+            if (FindCircleTool != null)
                 param.FindCircleTool = new CogFindCircleTool(FindCircleTool);
 
             return param;
