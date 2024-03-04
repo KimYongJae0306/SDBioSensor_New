@@ -219,8 +219,6 @@
             this.btn_ignore_dist_up = new System.Windows.Forms.Button();
             this.text_Spec_Dist_Max = new System.Windows.Forms.Label();
             this.btn_ignore_dist_down = new System.Windows.Forms.Button();
-            this.lblParamEdgeWidthValueDown = new System.Windows.Forms.Button();
-            this.lblParamEdgeWidthValueUp = new System.Windows.Forms.Button();
             this.label78 = new System.Windows.Forms.Label();
             this.LAB_Insp_Threshold = new System.Windows.Forms.Label();
             this.button2 = new System.Windows.Forms.Button();
@@ -230,8 +228,6 @@
             this.label55 = new System.Windows.Forms.Label();
             this.lblEdgeDirection = new System.Windows.Forms.Button();
             this.btn_THRESHOLD_Up = new System.Windows.Forms.Button();
-            this.label59 = new System.Windows.Forms.Label();
-            this.LAB_EDGE_WIDTH = new System.Windows.Forms.Label();
             this.LAB_Caliper_Cnt = new System.Windows.Forms.Label();
             this.btn_Threshold_Down = new System.Windows.Forms.Button();
             this.btn_Caliper_SearchLenth_Down = new System.Windows.Forms.Button();
@@ -246,8 +242,6 @@
             this.LAB_CALIPER_SEARCHLENTH = new System.Windows.Forms.Label();
             this.lblPolarity1 = new System.Windows.Forms.Label();
             this.Combo_Polarity1 = new System.Windows.Forms.ComboBox();
-            this.label58 = new System.Windows.Forms.Label();
-            this.Combo_Polarity2 = new System.Windows.Forms.ComboBox();
             this.pnlEdgeParam = new System.Windows.Forms.Panel();
             this.lblIgnoreSize = new System.Windows.Forms.Label();
             this.label83 = new System.Windows.Forms.Label();
@@ -272,14 +266,6 @@
             this.Column6 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column5 = new System.Windows.Forms.DataGridViewTextBoxColumn();
             this.Column7 = new System.Windows.Forms.DataGridViewTextBoxColumn();
-            this.btn_HistogramTest = new System.Windows.Forms.Button();
-            this.btn_Histogram_Apply = new System.Windows.Forms.Button();
-            this.button8 = new System.Windows.Forms.Button();
-            this.lab_Spec_GrayVale = new System.Windows.Forms.Label();
-            this.label73 = new System.Windows.Forms.Label();
-            this.combo_Histogram_ROI_NO = new System.Windows.Forms.ComboBox();
-            this.label70 = new System.Windows.Forms.Label();
-            this.lab_Histogram_ROI_Count = new System.Windows.Forms.Label();
             this.btn_Inspection_Test = new System.Windows.Forms.Button();
             this.label61 = new System.Windows.Forms.Label();
             this.Lab_Tact = new System.Windows.Forms.Label();
@@ -306,11 +292,16 @@
             this.btnImageNext = new System.Windows.Forms.Button();
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.chkUseLoadImageTeachMode = new System.Windows.Forms.CheckBox();
-            this.gbxHistogram = new System.Windows.Forms.GroupBox();
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.pnlDisplay = new System.Windows.Forms.Panel();
             this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
+            this.lblParamEdgeWidthValueDown = new System.Windows.Forms.Button();
+            this.lblParamEdgeWidthValueUp = new System.Windows.Forms.Button();
+            this.label59 = new System.Windows.Forms.Label();
+            this.LAB_EDGE_WIDTH = new System.Windows.Forms.Label();
+            this.label58 = new System.Windows.Forms.Label();
+            this.Combo_Polarity2 = new System.Windows.Forms.ComboBox();
             this.groupBoxLightSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBAR_LIGHT)).BeginInit();
             this.gbxToolSetting.SuspendLayout();
@@ -356,7 +347,6 @@
             this.GB_MOVE_.SuspendLayout();
             this.GB_SIZE.SuspendLayout();
             this.groupBox2.SuspendLayout();
-            this.gbxHistogram.SuspendLayout();
             this.groupBox5.SuspendLayout();
             this.groupBox6.SuspendLayout();
             this.pnlDisplay.SuspendLayout();
@@ -2828,9 +2818,13 @@
             // 
             // pnlOrgParam
             // 
-            this.pnlOrgParam.Controls.Add(this.groupBox3);
             this.pnlOrgParam.Controls.Add(this.lblParamEdgeWidthValueDown);
             this.pnlOrgParam.Controls.Add(this.lblParamEdgeWidthValueUp);
+            this.pnlOrgParam.Controls.Add(this.label59);
+            this.pnlOrgParam.Controls.Add(this.LAB_EDGE_WIDTH);
+            this.pnlOrgParam.Controls.Add(this.label58);
+            this.pnlOrgParam.Controls.Add(this.Combo_Polarity2);
+            this.pnlOrgParam.Controls.Add(this.groupBox3);
             this.pnlOrgParam.Controls.Add(this.label78);
             this.pnlOrgParam.Controls.Add(this.LAB_Insp_Threshold);
             this.pnlOrgParam.Controls.Add(this.button2);
@@ -2840,8 +2834,6 @@
             this.pnlOrgParam.Controls.Add(this.label55);
             this.pnlOrgParam.Controls.Add(this.lblEdgeDirection);
             this.pnlOrgParam.Controls.Add(this.btn_THRESHOLD_Up);
-            this.pnlOrgParam.Controls.Add(this.label59);
-            this.pnlOrgParam.Controls.Add(this.LAB_EDGE_WIDTH);
             this.pnlOrgParam.Controls.Add(this.LAB_Caliper_Cnt);
             this.pnlOrgParam.Controls.Add(this.btn_Threshold_Down);
             this.pnlOrgParam.Controls.Add(this.btn_Caliper_SearchLenth_Down);
@@ -2856,8 +2848,6 @@
             this.pnlOrgParam.Controls.Add(this.LAB_CALIPER_SEARCHLENTH);
             this.pnlOrgParam.Controls.Add(this.lblPolarity1);
             this.pnlOrgParam.Controls.Add(this.Combo_Polarity1);
-            this.pnlOrgParam.Controls.Add(this.label58);
-            this.pnlOrgParam.Controls.Add(this.Combo_Polarity2);
             this.pnlOrgParam.Location = new System.Drawing.Point(261, 3);
             this.pnlOrgParam.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOrgParam.Name = "pnlOrgParam";
@@ -2983,34 +2973,6 @@
             this.btn_ignore_dist_down.UseVisualStyleBackColor = false;
             this.btn_ignore_dist_down.Click += new System.EventHandler(this.Ignore_Distance);
             // 
-            // lblParamEdgeWidthValueDown
-            // 
-            this.lblParamEdgeWidthValueDown.BackColor = System.Drawing.Color.DarkGray;
-            this.lblParamEdgeWidthValueDown.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            this.lblParamEdgeWidthValueDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblParamEdgeWidthValueDown.Location = new System.Drawing.Point(297, 253);
-            this.lblParamEdgeWidthValueDown.Name = "lblParamEdgeWidthValueDown";
-            this.lblParamEdgeWidthValueDown.Size = new System.Drawing.Size(48, 48);
-            this.lblParamEdgeWidthValueDown.TabIndex = 357;
-            this.lblParamEdgeWidthValueDown.Tag = "1";
-            this.lblParamEdgeWidthValueDown.Text = "↓";
-            this.lblParamEdgeWidthValueDown.UseVisualStyleBackColor = false;
-            this.lblParamEdgeWidthValueDown.Click += new System.EventHandler(this.lblParamEdgeWidthValueUpDown_Click);
-            // 
-            // lblParamEdgeWidthValueUp
-            // 
-            this.lblParamEdgeWidthValueUp.BackColor = System.Drawing.Color.DarkGray;
-            this.lblParamEdgeWidthValueUp.FlatAppearance.BorderColor = System.Drawing.Color.White;
-            this.lblParamEdgeWidthValueUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblParamEdgeWidthValueUp.Location = new System.Drawing.Point(247, 253);
-            this.lblParamEdgeWidthValueUp.Name = "lblParamEdgeWidthValueUp";
-            this.lblParamEdgeWidthValueUp.Size = new System.Drawing.Size(48, 48);
-            this.lblParamEdgeWidthValueUp.TabIndex = 356;
-            this.lblParamEdgeWidthValueUp.Tag = "0";
-            this.lblParamEdgeWidthValueUp.Text = "↑";
-            this.lblParamEdgeWidthValueUp.UseVisualStyleBackColor = false;
-            this.lblParamEdgeWidthValueUp.Click += new System.EventHandler(this.lblParamEdgeWidthValueUpDown_Click);
-            // 
             // label78
             // 
             this.label78.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
@@ -3124,30 +3086,6 @@
             this.btn_THRESHOLD_Up.Text = "↑";
             this.btn_THRESHOLD_Up.UseVisualStyleBackColor = false;
             this.btn_THRESHOLD_Up.Click += new System.EventHandler(this.Insp_Threshold);
-            // 
-            // label59
-            // 
-            this.label59.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label59.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label59.Location = new System.Drawing.Point(3, 253);
-            this.label59.Name = "label59";
-            this.label59.Size = new System.Drawing.Size(120, 48);
-            this.label59.TabIndex = 305;
-            this.label59.Text = "EDGE WIDTH";
-            this.label59.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // LAB_EDGE_WIDTH
-            // 
-            this.LAB_EDGE_WIDTH.BackColor = System.Drawing.Color.White;
-            this.LAB_EDGE_WIDTH.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.LAB_EDGE_WIDTH.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.LAB_EDGE_WIDTH.Location = new System.Drawing.Point(125, 253);
-            this.LAB_EDGE_WIDTH.Name = "LAB_EDGE_WIDTH";
-            this.LAB_EDGE_WIDTH.Size = new System.Drawing.Size(120, 48);
-            this.LAB_EDGE_WIDTH.TabIndex = 306;
-            this.LAB_EDGE_WIDTH.Text = "0";
-            this.LAB_EDGE_WIDTH.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.LAB_EDGE_WIDTH.Click += new System.EventHandler(this.LAB_EDGE_WIDTH_Click);
             // 
             // LAB_Caliper_Cnt
             // 
@@ -3334,32 +3272,6 @@
             this.Combo_Polarity1.TabIndex = 300;
             this.Combo_Polarity1.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
             this.Combo_Polarity1.SelectedIndexChanged += new System.EventHandler(this.Combo_Polarity1_SelectedIndexChanged);
-            // 
-            // label58
-            // 
-            this.label58.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label58.Location = new System.Drawing.Point(356, 253);
-            this.label58.Name = "label58";
-            this.label58.Size = new System.Drawing.Size(120, 48);
-            this.label58.TabIndex = 301;
-            this.label58.Text = "POLARITY 2";
-            this.label58.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            // 
-            // Combo_Polarity2
-            // 
-            this.Combo_Polarity2.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
-            this.Combo_Polarity2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.Combo_Polarity2.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.Combo_Polarity2.FormattingEnabled = true;
-            this.Combo_Polarity2.Items.AddRange(new object[] {
-            "DARK TO LIGHT",
-            "LIGHT TO DARK"});
-            this.Combo_Polarity2.Location = new System.Drawing.Point(478, 253);
-            this.Combo_Polarity2.Name = "Combo_Polarity2";
-            this.Combo_Polarity2.Size = new System.Drawing.Size(189, 34);
-            this.Combo_Polarity2.TabIndex = 302;
-            this.Combo_Polarity2.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
-            this.Combo_Polarity2.SelectedIndexChanged += new System.EventHandler(this.Combo_Polarity2_SelectedIndexChanged);
             // 
             // pnlEdgeParam
             // 
@@ -3638,115 +3550,6 @@
             this.Column7.Name = "Column7";
             this.Column7.ReadOnly = true;
             this.Column7.Width = 110;
-            // 
-            // btn_HistogramTest
-            // 
-            this.btn_HistogramTest.BackColor = System.Drawing.Color.DarkGray;
-            this.btn_HistogramTest.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn_HistogramTest.Location = new System.Drawing.Point(249, 96);
-            this.btn_HistogramTest.Name = "btn_HistogramTest";
-            this.btn_HistogramTest.Size = new System.Drawing.Size(87, 39);
-            this.btn_HistogramTest.TabIndex = 344;
-            this.btn_HistogramTest.Text = "Test";
-            this.btn_HistogramTest.UseVisualStyleBackColor = false;
-            this.btn_HistogramTest.Visible = false;
-            this.btn_HistogramTest.Click += new System.EventHandler(this.btn_HistogramTest_Click);
-            // 
-            // btn_Histogram_Apply
-            // 
-            this.btn_Histogram_Apply.BackColor = System.Drawing.Color.DarkGray;
-            this.btn_Histogram_Apply.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.btn_Histogram_Apply.Location = new System.Drawing.Point(155, 97);
-            this.btn_Histogram_Apply.Name = "btn_Histogram_Apply";
-            this.btn_Histogram_Apply.Size = new System.Drawing.Size(93, 38);
-            this.btn_Histogram_Apply.TabIndex = 344;
-            this.btn_Histogram_Apply.Text = "Apply";
-            this.btn_Histogram_Apply.UseVisualStyleBackColor = false;
-            this.btn_Histogram_Apply.Visible = false;
-            this.btn_Histogram_Apply.Click += new System.EventHandler(this.btn_Histogram_Apply_Click);
-            // 
-            // button8
-            // 
-            this.button8.BackColor = System.Drawing.Color.DarkGray;
-            this.button8.Font = new System.Drawing.Font("맑은 고딕", 9F, ((System.Drawing.FontStyle)((System.Drawing.FontStyle.Bold | System.Drawing.FontStyle.Underline))), System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.button8.Location = new System.Drawing.Point(249, 56);
-            this.button8.Name = "button8";
-            this.button8.Size = new System.Drawing.Size(87, 39);
-            this.button8.TabIndex = 344;
-            this.button8.Text = "ROI Show";
-            this.button8.UseVisualStyleBackColor = false;
-            this.button8.Visible = false;
-            this.button8.Click += new System.EventHandler(this.button8_Click);
-            // 
-            // lab_Spec_GrayVale
-            // 
-            this.lab_Spec_GrayVale.BackColor = System.Drawing.Color.White;
-            this.lab_Spec_GrayVale.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_Spec_GrayVale.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_Spec_GrayVale.Location = new System.Drawing.Point(124, 59);
-            this.lab_Spec_GrayVale.Name = "lab_Spec_GrayVale";
-            this.lab_Spec_GrayVale.Size = new System.Drawing.Size(122, 36);
-            this.lab_Spec_GrayVale.TabIndex = 346;
-            this.lab_Spec_GrayVale.Text = "0";
-            this.lab_Spec_GrayVale.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lab_Spec_GrayVale.Visible = false;
-            this.lab_Spec_GrayVale.Click += new System.EventHandler(this.lab_Spec_GrayVale_Click);
-            // 
-            // label73
-            // 
-            this.label73.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label73.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label73.Location = new System.Drawing.Point(6, 59);
-            this.label73.Name = "label73";
-            this.label73.Size = new System.Drawing.Size(114, 36);
-            this.label73.TabIndex = 345;
-            this.label73.Text = "Spec Gray Value";
-            this.label73.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label73.Visible = false;
-            // 
-            // combo_Histogram_ROI_NO
-            // 
-            this.combo_Histogram_ROI_NO.DisplayMember = "1";
-            this.combo_Histogram_ROI_NO.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.combo_Histogram_ROI_NO.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.combo_Histogram_ROI_NO.FormattingEnabled = true;
-            this.combo_Histogram_ROI_NO.Items.AddRange(new object[] {
-            "LEFT TO RIGHT",
-            "TOP TO BOTTOM",
-            "RIGHT TO LEFT",
-            "BOTTOM TO TOP"});
-            this.combo_Histogram_ROI_NO.Location = new System.Drawing.Point(250, 20);
-            this.combo_Histogram_ROI_NO.Name = "combo_Histogram_ROI_NO";
-            this.combo_Histogram_ROI_NO.Size = new System.Drawing.Size(85, 33);
-            this.combo_Histogram_ROI_NO.TabIndex = 344;
-            this.combo_Histogram_ROI_NO.Visible = false;
-            this.combo_Histogram_ROI_NO.SelectedIndexChanged += new System.EventHandler(this.combo_Histogram_ROI_NO_SelectedIndexChanged);
-            // 
-            // label70
-            // 
-            this.label70.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label70.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label70.Location = new System.Drawing.Point(6, 19);
-            this.label70.Name = "label70";
-            this.label70.Size = new System.Drawing.Size(114, 36);
-            this.label70.TabIndex = 342;
-            this.label70.Text = "Histogram ROI";
-            this.label70.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.label70.Visible = false;
-            // 
-            // lab_Histogram_ROI_Count
-            // 
-            this.lab_Histogram_ROI_Count.BackColor = System.Drawing.Color.White;
-            this.lab_Histogram_ROI_Count.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lab_Histogram_ROI_Count.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lab_Histogram_ROI_Count.Location = new System.Drawing.Point(124, 19);
-            this.lab_Histogram_ROI_Count.Name = "lab_Histogram_ROI_Count";
-            this.lab_Histogram_ROI_Count.Size = new System.Drawing.Size(122, 36);
-            this.lab_Histogram_ROI_Count.TabIndex = 343;
-            this.lab_Histogram_ROI_Count.Text = "0";
-            this.lab_Histogram_ROI_Count.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lab_Histogram_ROI_Count.Visible = false;
-            this.lab_Histogram_ROI_Count.Click += new System.EventHandler(this.lab_Histogram_ROI_Count_Click);
             // 
             // btn_Inspection_Test
             // 
@@ -4123,24 +3926,6 @@
             this.chkUseLoadImageTeachMode.Visible = false;
             this.chkUseLoadImageTeachMode.CheckedChanged += new System.EventHandler(this.chkUseLoadImageTeachMode_CheckedChanged);
             // 
-            // gbxHistogram
-            // 
-            this.gbxHistogram.Controls.Add(this.label70);
-            this.gbxHistogram.Controls.Add(this.lab_Histogram_ROI_Count);
-            this.gbxHistogram.Controls.Add(this.combo_Histogram_ROI_NO);
-            this.gbxHistogram.Controls.Add(this.label73);
-            this.gbxHistogram.Controls.Add(this.lab_Spec_GrayVale);
-            this.gbxHistogram.Controls.Add(this.button8);
-            this.gbxHistogram.Controls.Add(this.btn_HistogramTest);
-            this.gbxHistogram.Controls.Add(this.btn_Histogram_Apply);
-            this.gbxHistogram.Location = new System.Drawing.Point(5, 45);
-            this.gbxHistogram.Name = "gbxHistogram";
-            this.gbxHistogram.Size = new System.Drawing.Size(347, 141);
-            this.gbxHistogram.TabIndex = 364;
-            this.gbxHistogram.TabStop = false;
-            this.gbxHistogram.Text = "Histogram";
-            this.gbxHistogram.Visible = false;
-            // 
             // groupBox5
             // 
             this.groupBox5.Controls.Add(this.List_NG);
@@ -4154,7 +3939,6 @@
             // groupBox6
             // 
             this.groupBox6.Controls.Add(this.dataGridView_Result);
-            this.groupBox6.Controls.Add(this.gbxHistogram);
             this.groupBox6.Location = new System.Drawing.Point(905, 805);
             this.groupBox6.Name = "groupBox6";
             this.groupBox6.Size = new System.Drawing.Size(344, 227);
@@ -4187,13 +3971,91 @@
             this.PT_DISPLAY_CONTROL.TabIndex = 278;
             this.PT_DISPLAY_CONTROL.UseCustomCross = false;
             // 
+            // lblParamEdgeWidthValueDown
+            // 
+            this.lblParamEdgeWidthValueDown.BackColor = System.Drawing.Color.DarkGray;
+            this.lblParamEdgeWidthValueDown.FlatAppearance.BorderColor = System.Drawing.Color.White;
+            this.lblParamEdgeWidthValueDown.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblParamEdgeWidthValueDown.Location = new System.Drawing.Point(297, 253);
+            this.lblParamEdgeWidthValueDown.Name = "lblParamEdgeWidthValueDown";
+            this.lblParamEdgeWidthValueDown.Size = new System.Drawing.Size(48, 48);
+            this.lblParamEdgeWidthValueDown.TabIndex = 364;
+            this.lblParamEdgeWidthValueDown.Tag = "1";
+            this.lblParamEdgeWidthValueDown.Text = "↓";
+            this.lblParamEdgeWidthValueDown.UseVisualStyleBackColor = false;
+            this.lblParamEdgeWidthValueDown.Click += new System.EventHandler(this.lblParamEdgeWidthValueUpDown_Click);
+            // 
+            // lblParamEdgeWidthValueUp
+            // 
+            this.lblParamEdgeWidthValueUp.BackColor = System.Drawing.Color.DarkGray;
+            this.lblParamEdgeWidthValueUp.FlatAppearance.BorderColor = System.Drawing.Color.White;
+            this.lblParamEdgeWidthValueUp.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblParamEdgeWidthValueUp.Location = new System.Drawing.Point(247, 253);
+            this.lblParamEdgeWidthValueUp.Name = "lblParamEdgeWidthValueUp";
+            this.lblParamEdgeWidthValueUp.Size = new System.Drawing.Size(48, 48);
+            this.lblParamEdgeWidthValueUp.TabIndex = 363;
+            this.lblParamEdgeWidthValueUp.Tag = "0";
+            this.lblParamEdgeWidthValueUp.Text = "↑";
+            this.lblParamEdgeWidthValueUp.UseVisualStyleBackColor = false;
+            this.lblParamEdgeWidthValueUp.Click += new System.EventHandler(this.lblParamEdgeWidthValueUpDown_Click);
+            // 
+            // label59
+            // 
+            this.label59.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label59.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.label59.Location = new System.Drawing.Point(3, 253);
+            this.label59.Name = "label59";
+            this.label59.Size = new System.Drawing.Size(120, 48);
+            this.label59.TabIndex = 361;
+            this.label59.Text = "EDGE WIDTH";
+            this.label59.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // LAB_EDGE_WIDTH
+            // 
+            this.LAB_EDGE_WIDTH.BackColor = System.Drawing.Color.White;
+            this.LAB_EDGE_WIDTH.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.LAB_EDGE_WIDTH.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.LAB_EDGE_WIDTH.Location = new System.Drawing.Point(125, 253);
+            this.LAB_EDGE_WIDTH.Name = "LAB_EDGE_WIDTH";
+            this.LAB_EDGE_WIDTH.Size = new System.Drawing.Size(120, 48);
+            this.LAB_EDGE_WIDTH.TabIndex = 362;
+            this.LAB_EDGE_WIDTH.Text = "0";
+            this.LAB_EDGE_WIDTH.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.LAB_EDGE_WIDTH.Click += new System.EventHandler(this.LAB_EDGE_WIDTH_Click);
+            // 
+            // label58
+            // 
+            this.label58.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label58.Location = new System.Drawing.Point(356, 253);
+            this.label58.Name = "label58";
+            this.label58.Size = new System.Drawing.Size(120, 48);
+            this.label58.TabIndex = 359;
+            this.label58.Text = "POLARITY 2";
+            this.label58.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // Combo_Polarity2
+            // 
+            this.Combo_Polarity2.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.Combo_Polarity2.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.Combo_Polarity2.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.Combo_Polarity2.FormattingEnabled = true;
+            this.Combo_Polarity2.Items.AddRange(new object[] {
+            "DARK TO LIGHT",
+            "LIGHT TO DARK"});
+            this.Combo_Polarity2.Location = new System.Drawing.Point(478, 253);
+            this.Combo_Polarity2.Name = "Combo_Polarity2";
+            this.Combo_Polarity2.Size = new System.Drawing.Size(189, 34);
+            this.Combo_Polarity2.TabIndex = 360;
+            this.Combo_Polarity2.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
+            this.Combo_Polarity2.SelectedIndexChanged += new System.EventHandler(this.Combo_Polarity2_SelectedIndexChanged);
+            // 
             // PatternTeachForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1912, 957);
+            this.ClientSize = new System.Drawing.Size(1913, 941);
             this.ControlBox = false;
             this.Controls.Add(this.pnlDisplay);
             this.Controls.Add(this.groupBox5);
@@ -4277,7 +4139,6 @@
             this.GB_SIZE.ResumeLayout(false);
             this.groupBox2.ResumeLayout(false);
             this.groupBox2.PerformLayout();
-            this.gbxHistogram.ResumeLayout(false);
             this.groupBox5.ResumeLayout(false);
             this.groupBox6.ResumeLayout(false);
             this.pnlDisplay.ResumeLayout(false);
@@ -4422,8 +4283,6 @@
         private System.Windows.Forms.Button btn_ROI_SHOW;
         private System.Windows.Forms.ComboBox Combo_Polarity1;
         private System.Windows.Forms.Label lblPolarity1;
-        private System.Windows.Forms.ComboBox Combo_Polarity2;
-        private System.Windows.Forms.Label label58;
         private System.Windows.Forms.DataGridView dataGridView_Result;
         private System.Windows.Forms.Button btn_Inspection_Test;
         private System.Windows.Forms.Label label61;
@@ -4467,14 +4326,6 @@
         private System.Windows.Forms.ListBox List_NG;
         private System.Windows.Forms.CheckBox chkUseRoiTracking;
         private System.Windows.Forms.CheckBox Chk_All_Select;
-        private System.Windows.Forms.Button button8;
-        private System.Windows.Forms.Label lab_Spec_GrayVale;
-        private System.Windows.Forms.Label label73;
-        private System.Windows.Forms.ComboBox combo_Histogram_ROI_NO;
-        private System.Windows.Forms.Label label70;
-        private System.Windows.Forms.Label lab_Histogram_ROI_Count;
-        private System.Windows.Forms.Button btn_HistogramTest;
-        private System.Windows.Forms.Button btn_Histogram_Apply;
         private System.Windows.Forms.CheckBox chkUseTracking;
         private System.Windows.Forms.Button lblParamFilterSizeValueDown;
         private System.Windows.Forms.Button lblParamFilterSizeValueUp;
@@ -4533,12 +4384,7 @@
         private System.Windows.Forms.Label label90;
         private System.Windows.Forms.Label lblEdgeCaliperFilterSize;
         private System.Windows.Forms.Panel pnlOrgParam;
-        private System.Windows.Forms.Label label59;
-        private System.Windows.Forms.Label LAB_EDGE_WIDTH;
-        private System.Windows.Forms.GroupBox gbxHistogram;
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Button lblParamEdgeWidthValueDown;
-        private System.Windows.Forms.Button lblParamEdgeWidthValueUp;
         private System.Windows.Forms.GroupBox groupBox4;
         private System.Windows.Forms.CheckBox chkUseLoadImageTeachMode;
         private System.Windows.Forms.GroupBox groupBox5;
@@ -4569,5 +4415,11 @@
         private System.Windows.Forms.GroupBox groupBox8;
         private System.Windows.Forms.GroupBox groupBox7;
         private System.Windows.Forms.GroupBox gbxThetaSpecSetting;
+        private System.Windows.Forms.Button lblParamEdgeWidthValueDown;
+        private System.Windows.Forms.Button lblParamEdgeWidthValueUp;
+        private System.Windows.Forms.Label label59;
+        private System.Windows.Forms.Label LAB_EDGE_WIDTH;
+        private System.Windows.Forms.Label label58;
+        private System.Windows.Forms.ComboBox Combo_Polarity2;
     }
 }

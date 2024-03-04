@@ -11,13 +11,12 @@ namespace COG.Class.Data
 {
     public class AmpCoordinate
     {
-        private bool _enableCoordinate { get; set; } = false;
-
         public PointF ReferencePoint { get; private set; } = new PointF();
 
         public PointF TargetPoint { get; private set; } = new PointF();
 
         public PointF Offset { get; set; } = new PointF();
+
         public double OffsetX { get; private set; } = 0;
 
         public double OffsetY { get; private set; } = 0;
@@ -48,7 +47,6 @@ namespace COG.Class.Data
                 toolList.FindLineTool.RunParams.ExpectedLineSegment.EndX += offsetX;
                 toolList.FindLineTool.RunParams.ExpectedLineSegment.EndY += offsetY;
             }
-            _enableCoordinate = true;
         }
 
         private PointF GetCoordinate(PointF inputPoint)

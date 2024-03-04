@@ -63,5 +63,17 @@ namespace COG.Class
 
             return true;
         }
+
+        public bool SaveModel()
+        {
+
+            InspModel inspModel = ModelManager.Instance().CurrentModel;
+            if (inspModel == null)
+                return false;
+
+            inspModel.Save(StaticConfig.ModelPath);
+
+            return true;
+        }
     }
 }

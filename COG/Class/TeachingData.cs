@@ -15,6 +15,8 @@ namespace COG.Class
 
         public AmpCoordinate AmpCoordinate { get; set; } = new AmpCoordinate();
 
+        public BondingCoordinate BondingCoordinate { get; set; } = new BondingCoordinate();
+
         private List<StageUnit> StageUnitList { get; set; } = new List<StageUnit>();
 
         public BondingMarkDirection BondingMarkDirection { get; set; } = BondingMarkDirection.Up;

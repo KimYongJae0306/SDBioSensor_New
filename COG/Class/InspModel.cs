@@ -146,11 +146,10 @@ namespace COG.Core
             StaticConfig.SystemFile.SetData("SYSTEM", "LAST_PROJECT", ModelName);
             StaticConfig.ModelFile.SetData("PROJECT", "NAME", ModelInfo);
 
+            string path = modelDir + AppsConfig.Instance().ProjectName;
             for (int i = 0; i < StageUnitList.Count; i++)
             {
-                SaveAmpMark(modelDir, i);
-                SaveBondingMark(modelDir, i);
-                SaveUnitParam(StageUnitList[i]);
+                Save(path, i);
             }
 
             return true;
@@ -188,51 +187,21 @@ namespace COG.Core
             return lineToolList;
         }
         
-        private void SaveAmpMark(string modelDir, int stageIndex)
+        private void Save(string modelDir, int stageIndex)
         {
             var stageUnit = StageUnitList[stageIndex];
-            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-            {
-                //#region Left
-                //var leftMarkUnit = stageUnit.LeftUnit.AmpMark;
-                //var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Mark.Name}_{i}.vpp");
 
-                //var leftMarkTag = leftMarkUnit.Mark.TagList[i];
-                //leftMarkTag.SaveTool(leftVppFileName);
-                //#endregion
+            StaticConfig.ModelFile.SetData(stageUnit.Name, "GD_IMAGE", stageUnit.m_GD_ImageSave_Use);
+            StaticConfig.ModelFile.SetData(stageUnit.Name, "NG_IMAGE", stageUnit.m_NG_ImageSave_Use);
 
-                //#region Right
-                //var rightMarkUnit = stageUnit.RightUnit.AmpMark;
-                //var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Mark.Name}_{i}.vpp");
+            stageUnit.Left.Mark.Save(modelDir);
+            stageUnit.Right.Mark.Save(modelDir);
 
-                //var rightMarkTag = rightMarkUnit.Mark.TagList[i];
-                //rightMarkTag.SaveTool(rightVppFileName);
-                //#endregion
-            }
-        }
+            stageUnit.Left.FilmAlign.Save(modelDir);
+            stageUnit.Right.FilmAlign.Save(modelDir);
 
-        private void SaveBondingMark(string modelDir, int stageIndex)
-        {
-            var stageUnit = StageUnitList[stageIndex];
-            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
-            {
-                //
-                //#region Left
-                //var leftMarkUnit = stageUnit.LeftUnit.BondingMark;
-                //var leftVppFileName = Path.Combine(modelDir, $"{leftMarkUnit.Name}_{i:D2}.vpp");
-
-                //var leftMarkTag = leftMarkUnit.TagList[i];
-                //leftMarkTag.SaveTool(leftVppFileName);
-                //#endregion
-
-                //#region Right
-                //var rightMarkUnit = stageUnit.RightUnit.BondingMark;
-                //var rightVppFileName = Path.Combine(modelDir, $"{rightMarkUnit.Name}_{i:D2}.vpp");
-
-                //var rightMarkTag = rightMarkUnit.TagList[i];
-                //rightMarkTag.SaveTool(rightVppFileName);
-                //#endregion
-            }
+            stageUnit.Left.Insp.Save(modelDir);
+            stageUnit.Right.Insp.Save(modelDir);
         }
 
         private void Load(string modelDir, int stageIndex)

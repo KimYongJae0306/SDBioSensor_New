@@ -65,5 +65,23 @@ namespace COG.Class.Data
                 }
             }
         }
+
+        public void Save(string modelDir)
+        {
+            StaticConfig.ModelFile.SetData(ModelSection, "ROIFinealign_T_Spec", AlignSpec_T);
+            StaticConfig.ModelFile.SetData(ModelSection, "Object_Distance_X", AmpModuleDistanceX);
+            StaticConfig.ModelFile.SetData(ModelSection, "Object_Distance_X_Spec", FilmAlignSpecX);
+
+            foreach (var filmTool in ToolList)
+            {
+                var vppFileName = Path.Combine(modelDir, $"{VppTitleName}_{filmTool.Index}.vpp");
+                if (File.Exists(vppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(filmTool.FindLineTool, vppFileName,
+                                    typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                     CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
+            }
+        }
     }
 }

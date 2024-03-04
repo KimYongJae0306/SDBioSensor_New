@@ -51,8 +51,8 @@ namespace COG.Class.Data
                 newModelSection = $"{ModelSection}_{i}";
                 GaloInspTool galo = new GaloInspTool();
                 galo.Type = (GaloInspType)StaticConfig.ModelFile.GetIData(newModelSection, $"INSPECTION TYPE" + i.ToString());
-                galo.IDistgnore = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Dist_Ingnore" + i.ToString());
-                galo.dSpecDistanceMax = StaticConfig.ModelFile.GetFData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString());
+                galo.Distgnore = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Dist_Ingnore" + i.ToString());
+                galo.SpecDistanceMax = StaticConfig.ModelFile.GetFData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString());
 
                 galo.DarkArea.ThresholdUse = StaticConfig.ModelFile.GetBData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString());
                 galo.DarkArea.Threshold = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Edge_Threshold" + i.ToString());
@@ -78,6 +78,48 @@ namespace COG.Class.Data
                     galo.SetCircleTool(tool);
                 }
                 GaloInspToolList.Add(galo);
+            }
+        }
+
+        public void Save(string modelDir)
+        {
+            string newModelSection = ModelSection + "_0";
+            Count = GaloInspToolList.Count;
+            StaticConfig.ModelFile.SetData(newModelSection, "COUNT", Count);
+            for (int i = 0; i < Count; i++)
+            {
+                var galo = GaloInspToolList[i];
+
+                newModelSection = $"{ModelSection}_{i}";
+
+                StaticConfig.ModelFile.SetData(newModelSection, $"INSPECTION TYPE" + i.ToString(), (int)galo.Type);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Dist_Ingnore" + i.ToString(), galo.Distgnore);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString(), galo.SpecDistanceMax);
+
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString(), galo.DarkArea.ThresholdUse);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Threshold" + i.ToString(), galo.DarkArea.Threshold);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Top_Cut_Pixel" + i.ToString(), galo.DarkArea.TopCutPixel);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Bottom_Cut_Pixel" + i.ToString(), galo.DarkArea.BottomCutPixel);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Ignore_Size" + i.ToString(), galo.DarkArea.IgnoreSize);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Masking_Value" + i.ToString(), galo.DarkArea.MaskingValue);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Caliper_TH" + i.ToString(), galo.DarkArea.EdgeCaliperThreshold);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Caliper_Filter_Size" + i.ToString(), galo.DarkArea.EdgeCaliperFilterSize);
+
+                var lineVppFileName = Path.Combine(modelDir, $"{LineVppTitleName}_{i}.vpp");
+                if (File.Exists(lineVppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(galo.FindLineTool, lineVppFileName,
+                                       typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                        CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
+
+                var circleVppFileName = Path.Combine(modelDir, $"{CircleVppTitleName}_{i}.vpp");
+                if (File.Exists(circleVppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(galo.FindCircleTool, circleVppFileName,
+                                    typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                     CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
             }
         }
     }

@@ -1,4 +1,5 @@
 ﻿using COG.Class.Core;
+using COG.Class.Units;
 using COG.Helper;
 using System;
 using System.Collections.Generic;

@@ -86,9 +86,51 @@ namespace COG.Class.Units
             #endregion
         }
 
-        public void Save()
+        public void Save(string modelDir)
         {
+            #region Amp Mark
+            StaticConfig.ModelFile.SetData(Amp.ModelSection, "ACCEPT_SCORE", Amp.Score);
 
+            for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
+            {
+                string key = "PATUSE" + i.ToString();
+                StaticConfig.ModelFile.SetData(Amp.VppTitleName, key, Use[i]);
+            }
+            
+            foreach (var markTool in Amp.MarkToolList)
+            {
+                var vppFileName = Path.Combine(modelDir, $"{Amp.VppTitleName}_{markTool.Index}.vpp");
+                if (File.Exists(vppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(markTool.SearchMaxTool, vppFileName, typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                         CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
+            }
+            #endregion
+
+            #region Bonding Mark
+            StaticConfig.ModelFile.SetData(Bonding.ModelSection, "ROIFinealign_MarkScore", Bonding.Score);
+
+            foreach (var upMarkTool in Bonding.UpMarkToolList)
+            {
+                var vppFileName = Path.Combine(modelDir, $"{Bonding.VppTitleName}_0{upMarkTool.Index}.vpp");
+                if (File.Exists(vppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(upMarkTool.SearchMaxTool, vppFileName, typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                     CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
+            }
+
+            foreach (var downMarkTool in Bonding.DownMarkToolList)
+            {
+                var vppFileName = Path.Combine(modelDir, $"{Bonding.VppTitleName}_1{downMarkTool.Index}.vpp");
+                if (File.Exists(vppFileName))
+                {
+                    CogSerializer.SaveObjectToFile(downMarkTool.SearchMaxTool, vppFileName, typeof(System.Runtime.Serialization.Formatters.Binary.BinaryFormatter),
+                                     CogSerializationOptionsConstants.ExcludeDataBindings);
+                }
+            }
+            #endregion
         }
     }
 

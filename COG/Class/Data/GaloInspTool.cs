@@ -11,11 +11,11 @@ namespace COG.Class.Data
     {
         public GaloInspType Type { get; set; }
 
-        public int IDistgnore { get; set; }
+        public int Distgnore { get; set; }
 
-        public double dSpecDistance { get; set; }
+        public double SpecDistance { get; set; }
 
-        public double dSpecDistanceMax { get; set; }
+        public double SpecDistanceMax { get; set; }
 
         public DarkAreaInspParam DarkArea = new DarkAreaInspParam();
 
@@ -47,9 +47,9 @@ namespace COG.Class.Data
         {
             GaloInspTool param = new GaloInspTool();
             param.Type = Type;
-            param.IDistgnore = IDistgnore;
-            param.dSpecDistance = dSpecDistance;
-            param.dSpecDistanceMax = dSpecDistanceMax;
+            param.Distgnore = Distgnore;
+            param.SpecDistance = SpecDistance;
+            param.SpecDistanceMax = SpecDistanceMax;
             param.DarkArea = DarkArea.DeepCopy();
 
             if (param.FindLineTool != null)
