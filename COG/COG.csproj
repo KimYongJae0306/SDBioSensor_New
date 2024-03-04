@@ -692,6 +692,7 @@
     <Compile Include="Class\Algorithm.cs" />
     <Compile Include="Class\Core\EnumType.cs" />
     <Compile Include="Class\Core\FilmAlignResult.cs" />
+    <Compile Include="Class\Core\GaloCircleInspResult.cs" />
     <Compile Include="Class\Core\MarkResult.cs" />
     <Compile Include="Class\Data\AmpCoordinate.cs" />
     <Compile Include="Class\Data\FilmAlignParam.cs" />

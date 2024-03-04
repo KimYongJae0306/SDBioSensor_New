@@ -89,7 +89,7 @@ namespace COG
         public void ReLoadModel()
         {
             string modelName = AppsConfig.Instance().ProjectName;
-            LoadModel(modelName);
+            LoadModel(modelName, true);
         }
 
         public bool LoadModel(string modelName, bool forceLoading = false)

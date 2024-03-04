@@ -930,6 +930,10 @@ namespace COG.UI.Forms
                     LoggerHelper.Save_SystemLog("Amp Film Align", LogType.Cmd);
                     RunAmpFilmAlignForTest();
                     break;
+                case 2: // Insp
+                    LoggerHelper.Save_SystemLog("Galo Inspection", LogType.Cmd);
+                    RunGaloInspectForTest();
+                    break;
                 default:
                     break;
             }
@@ -1058,6 +1062,28 @@ namespace COG.UI.Forms
 
             CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
         }
+
+        private void RunGaloInspectForTest()
+        {
+            if (CogDisplayImage == null | _prevSelectedRowIndex < 0)
+                return;
+
+            if(GetCurrentInspParam() is GaloInspTool inspTool)
+            {
+                if(inspTool.Type == GaloInspType.Line)
+                {
+                    CogFindLineTool tool = new CogFindLineTool(inspTool.FindLineTool);
+                }
+                else
+                {
+
+                   Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
+
+
+                }
+            }
+        }
+
 
         private void DrawDisplayLabel(CogRecordDisplay display, string message, int index)
         {

@@ -3,6 +3,7 @@ using COG.Class.Data;
 using COG.Class.Units;
 using COG.Helper;
 using Cognex.VisionPro;
+using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.SearchMax;
 using System;
 using System.Collections.Generic;
@@ -15,6 +16,49 @@ namespace COG.Class
 {
     public class Algorithm
     {
+        public GaloCircleInspResult RunGaloCircleInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+            if (cogImage == null)
+                return null;
+
+            CogFindCircleTool tool = new CogFindCircleTool(inspTool.FindCircleTool);
+            tool.InputImage = cogImage as CogImage8Grey;
+            tool.Run();
+
+            GaloCircleInspResult result = new GaloCircleInspResult();
+            if (tool.Results?.Count > 0)
+            {
+                for (int i = 0; i < tool.Results.Count; i++)
+                {
+                    if(tool.Results[i].CaliperResults.Count > 0)
+                    {
+                        var caliperResult = tool.Results[i].CaliperResults;
+                        PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionX);
+                        result.Edge0PointList.Add(edge0Point);
+
+                        PointF edge1Point = new PointF((float)caliperResult[0].Edge1.PositionX, (float)caliperResult[0].Edge1.PositionX);
+                        result.Edge1PointList.Add(edge1Point);
+                    }
+                    else
+                    {
+                        result.Edge0PointList.Add(new PointF());
+                        result.Edge1PointList.Add(new PointF());
+                    }
+                }
+            }
+
+            if (result.Edge0PointList.Count <= 0)
+                result.Judgement = Judgement.FAIL;
+            else
+            {
+
+            }
+
+
+
+            return null;
+        }
+
         public AmpFilmAlignResult RunAmpFlimAlign(CogImage8Grey cogImage, FilmAlignParam filmParam)
         {
             if (cogImage == null)

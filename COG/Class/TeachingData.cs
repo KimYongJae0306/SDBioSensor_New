@@ -33,7 +33,11 @@ namespace COG.Class
         {
             var inspModel = ModelManager.Instance().CurrentModel as InspModel;
             if (inspModel != null)
+            {
+                StageUnitList.ForEach(x => x.Dispose());
+                StageUnitList.Clear();
                 Initialize(inspModel);
+            }
         }
 
         public void Initialize(InspModel inspModel)
