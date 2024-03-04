@@ -4057,6 +4057,7 @@
             this.txtOffsetX.Name = "txtOffsetX";
             this.txtOffsetX.Size = new System.Drawing.Size(100, 21);
             this.txtOffsetX.TabIndex = 362;
+            this.txtOffsetX.Text = "1";
             // 
             // txtOffsetY
             // 
@@ -4064,6 +4065,7 @@
             this.txtOffsetY.Name = "txtOffsetY";
             this.txtOffsetY.Size = new System.Drawing.Size(100, 21);
             this.txtOffsetY.TabIndex = 363;
+            this.txtOffsetY.Text = "1";
             // 
             // PatternTeachForm
             // 
@@ -4071,7 +4073,7 @@
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1909, 937);
+            this.ClientSize = new System.Drawing.Size(1905, 933);
             this.ControlBox = false;
             this.Controls.Add(this.txtOffsetY);
             this.Controls.Add(this.txtOffsetX);

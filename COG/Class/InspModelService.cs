@@ -29,10 +29,10 @@ namespace COG.Class
             {
                 return false;
             }
-            if (AppsConfig.Instance().ProjectName == newModelName && forceLoading == false)
-            {
-                return true;
-            }
+            //if (AppsConfig.Instance().ProjectName == newModelName && forceLoading == false)
+            //{
+            //    return true;
+            //}
 
             InspModel inspModel = new InspModel();
             inspModel.Load(newModelName);

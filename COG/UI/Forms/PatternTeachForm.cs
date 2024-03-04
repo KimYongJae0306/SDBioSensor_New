@@ -16,6 +16,7 @@ using Cognex.VisionPro.LineMax;
 using Cognex.VisionPro.PMAlign;
 using Cognex.VisionPro.SearchMax;
 using Cognex.VisionPro.ToolBlock;
+using Emgu.CV.Flann;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
@@ -1163,6 +1164,9 @@ namespace COG.UI.Forms
         {
             double nMoveDataX = 0, nMoveDataY = 0; //공통으로 쓸수 있도록 코딩.
 
+            double jogMoveX = Convert.ToDouble(txtOffsetX.Text);
+            double jogMoveY = Convert.ToDouble(txtOffsetY.Text);
+
             int nMode = 0;
             nMode = Convert.ToInt32(TABC_MANU.SelectedTab.Tag);
             try
@@ -1171,23 +1175,23 @@ namespace COG.UI.Forms
                 switch (TempBTN.Text.ToUpper().Trim())
                 {
                     case "LEFT":
-                        nMoveDataX = -1;
+                        nMoveDataX = -1 * jogMoveX;
                         nMoveDataY = 0;
                         break;
 
                     case "RIGHT":
-                        nMoveDataX = 1;
+                        nMoveDataX = 1 * jogMoveX;
                         nMoveDataY = 0;
                         break;
 
                     case "UP":
                         nMoveDataX = 0;
-                        nMoveDataY = -1;
+                        nMoveDataY = -1 * jogMoveY;
                         break;
 
                     case "DOWN":
                         nMoveDataX = 0;
-                        nMoveDataY = 1;
+                        nMoveDataY = 1 * jogMoveY;
                         break;
                 }
 
@@ -1269,28 +1273,57 @@ namespace COG.UI.Forms
 
         private void MoveInspParam(double offsetX, double offsetY)
         {
-            if(GetCurrentInspParam() is GaloInspTool inspTool)
+            List<int> selectedIndexList = new List<int>();
+
+            foreach (DataGridViewRow item in DataGridview_Insp.SelectedRows)
             {
-                if (inspTool.Type == GaloInspType.Line)
+                var index = Convert.ToInt32(item.Cells[0].Value);
+
+                selectedIndexList.Add(index);
+
+                var param = GetUnit().Insp.GaloInspToolList[index];
+
+                if (param is GaloInspTool inspTool)
                 {
-                    inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartX += offsetX;
-                    inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartY += offsetY;
+                    if (inspTool.Type == GaloInspType.Line)
+                    {
+                        inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartX += offsetX;
+                        inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartY += offsetY;
 
-                    inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndX += offsetX;
-                    inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndY += offsetY;
+                        inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndX += offsetX;
+                        inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndY += offsetY;
+                    }
+                    else
+                    {
+                        double centerX = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.CenterX + offsetX;
+                        double centerY = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.CenterY + offsetY;
+
+                        double radius = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.Radius;
+                        double angleStart = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.AngleStart;
+                        double angleSpan = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.AngleSpan;
+
+                        inspTool.FindCircleTool.RunParams.ExpectedCircularArc.SetCenterRadiusAngleStartAngleSpan(centerX, centerY, radius, angleStart, angleSpan);
+                    }
                 }
-                else
+            }
+
+            DrawGaloRois(selectedIndexList);
+        }
+
+        private void DrawGaloRois(List<int> selectedIndex)
+        {
+            foreach (var index in selectedIndex)
+            {
+                var galoTool = GetUnit().Insp.GaloInspToolList[index];
+
+                if (galoTool is GaloInspTool inspTool)
                 {
-                    double centerX = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.CenterX + offsetX;
-                    double centerY = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.CenterY + offsetY;
+                    if (galoTool.Type == GaloInspType.Line)
+                        SetInteractiveGraphics("tool", inspTool.FindLineTool.CreateCurrentRecord());
 
-                    double radius = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.Radius;
-                    double angleStart = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.AngleStart;
-                    double angleSpan = inspTool.FindCircleTool.RunParams.ExpectedCircularArc.AngleSpan;
-
-                    inspTool.FindCircleTool.RunParams.ExpectedCircularArc.SetCenterRadiusAngleStartAngleSpan(centerX, centerY, radius, angleStart, angleSpan);
+                    if (galoTool.Type == GaloInspType.Circle)
+                        SetInteractiveGraphics("tool", inspTool.FindCircleTool.CreateCurrentRecord());
                 }
-                DrawInspParam();
             }
         }
 
@@ -5626,6 +5659,5 @@ namespace COG.UI.Forms
             //}
             this.Hide();
         }
-
     }
 }
