@@ -143,16 +143,19 @@ namespace COG.Class
             GaloLineToolResult result = new GaloLineToolResult();
             if (cogImage == null)
                 return result;
-            Test3(cogImage, inspTool);
+            //Test3(cogImage, inspTool);
 
             CogFindLineTool tool = inspTool.FindLineTool;
+            List<CogCompositeShape> resultGraphics0 = null;
+            List<CogCompositeShape> resultGraphics1 = null;
+
             RollBackLineTool rollbackValue = new RollBackLineTool();
             rollbackValue.SetValue(tool);
 
             try
             {
-                InspectLine0(cogImage, tool, ref result);
-                InspectLine1(cogImage, tool, ref result);
+                resultGraphics0 = InspectLine0(cogImage, tool, ref result);
+                resultGraphics1 = InspectLine1(cogImage, tool, ref result);
 
                 rollbackValue.RollBack(ref tool);
             }
@@ -161,9 +164,27 @@ namespace COG.Class
                 rollbackValue.RollBack(ref tool);
             }
 
+            var distanceList = result.GetDistance();
+            if (distanceList.Count == 0)
+            {
+                result.Judgement = Judgement.FAIL;
+                return result;
+            }
+
+            foreach (var distance in distanceList)
+            {
+                if (distance < inspTool.SpecDistance || inspTool.SpecDistanceMax < distance)
+                {
+                    result.Judgement = Judgement.NG;
+                    return result;
+                }
+            }
+            result.Judgement = Judgement.OK;
+            result.Line0.ResultGraphics.AddRange(resultGraphics0);
+            result.Line1.ResultGraphics.AddRange(resultGraphics1);
+
             return result;
         }
-
       
         public Mat GetConvertMatImage(CogImage8Grey cogImage)
         {
@@ -224,13 +245,14 @@ namespace COG.Class
         }
 
 
-        private void InspectLine0(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
+        private List<CogCompositeShape> InspectLine0(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
         {
             tool.InputImage = cogImage as CogImage8Grey;
             tool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
             tool.LastRunRecordDiagEnable = CogFindLineLastRunRecordDiagConstants.None;
             tool.Run();
 
+            List<CogCompositeShape> resultGraphicsList = new List<CogCompositeShape>();
             if (tool.Results?.Count > 0)
             {
                 for (int i = 0; i < tool.Results.Count; i++)
@@ -242,7 +264,7 @@ namespace COG.Class
                         result.Line0.Edge0PointList.Add(edge0Point);
 
                         var graphics = tool.Results[i].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
-                        result.Line0.ResultGraphics.Add(graphics);
+                        resultGraphicsList.Add(graphics);
                     }
                     else
                     {
@@ -250,9 +272,10 @@ namespace COG.Class
                     }
                 }
             }
+            return resultGraphicsList;
         }
 
-        private void InspectLine1(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
+        private List<CogCompositeShape> InspectLine1(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
         {
             tool.InputImage = cogImage as CogImage8Grey;
             tool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
@@ -281,7 +304,7 @@ namespace COG.Class
             tool.RunParams.ExpectedLineSegment.EndY = calcEnd.Y;
 
             tool.Run();
-
+            List<CogCompositeShape> resultGraphicsList = new List<CogCompositeShape>();
             if (tool.Results?.Count > 0)
             {
                 UI.Forms.PatternTeachForm.CogRecord = tool.CreateCurrentRecord();
@@ -294,7 +317,7 @@ namespace COG.Class
                         result.Line1.Edge0PointList.Add(edge0Point);
 
                         var graphics = tool.Results[i].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
-                        result.Line1.ResultGraphics.Add(graphics);
+                        resultGraphicsList.Add(graphics);
                     }
                     else
                     {
@@ -302,6 +325,7 @@ namespace COG.Class
                     }
                 }
             }
+            return resultGraphicsList;
         }
 
         void calcMovePoint(PointF point1, PointF point2, double distance, out PointF calcPoint1, out PointF calcPoint2)
@@ -361,24 +385,25 @@ namespace COG.Class
             }
 
             if (result.Edge0PointList.Count <= 0)
-                result.Judgement = Judgement.FAIL;
-            else
             {
-                var distanceList = result.GetDistance();
+                result.Judgement = Judgement.FAIL;
+                return result;
+            }
+            var distanceList = result.GetDistance();
 
-                result.Judgement = Judgement.NG;
+            for (int i = 0; i < distanceList.Count(); i++)
+            {
+                var distance = distanceList[i];
+                distance *= (StaticConfig.PixelResolution / 1000);
 
-                for (int i = 0; i < distanceList.Count(); i++)
+                if (inspTool.SpecDistance > distance && distance > inspTool.SpecDistanceMax)
                 {
-                    var distance = distanceList[i];
-                    distance *= (StaticConfig.PixelResolution / 1000);
-
-                    if (inspTool.SpecDistance <= distance && distance <= inspTool.SpecDistanceMax)
-                        result.Judgement = Judgement.OK;
-                    else
-                        result.Judgement = Judgement.NG;
+                    result.Judgement = Judgement.NG;
+                    return result;
                 }
             }
+
+            result.Judgement = Judgement.OK;
 
             return result;
         }
