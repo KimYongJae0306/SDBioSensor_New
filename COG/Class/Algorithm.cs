@@ -43,7 +43,7 @@ namespace COG.Class
 
         public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool)
         {
-
+            var boundingBox = VisionProHelper.GetBoundingRect(cogImage, inspTool.FindCircleTool);
         }
 
         public GaloLineToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool, ref CogRectangleAffine affineRect)
