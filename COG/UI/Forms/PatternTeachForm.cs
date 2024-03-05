@@ -3490,8 +3490,9 @@ namespace COG.UI.Forms
             ClearDisplayGraphic();
             CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
 
+            dataGridView_Result.Rows.Clear();
+            List_NG.Items.Clear();
             Stopwatch sw = Stopwatch.StartNew();
-
             for (int i = 0; i < GetUnit().Insp.GaloInspToolList.Count; i++)
             {
                 var inspTool = GetUnit().Insp.GaloInspToolList[i];
@@ -3510,13 +3511,33 @@ namespace COG.UI.Forms
 
                     foreach (var result in lineResult.Line1.ResultGraphics)
                         resultGraphics.Add(result);
+
+                    if(lineResult.Judgement != Judgement.OK)
+                    {
+                        List_NG.Items.Add($"Inspection NG ROI:{i}");
+
+                        double dCenterX = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointX;
+                        double dCenterY = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointY;
+                        double dAngle = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Rotation;
+                        double dLenth = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Length;
+                        CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
+                        CogNGRectAffine.Color = CogColorConstants.Red;
+                        CogNGRectAffine.CenterX = dCenterX;
+                        CogNGRectAffine.CenterY = dCenterY;
+                        CogNGRectAffine.SideXLength = dLenth;
+                        CogNGRectAffine.SideYLength = 100;
+                        CogNGRectAffine.Rotation = dAngle;
+                        resultGraphics.Add(CogNGRectAffine);
+                    }
                 }
                 else
                 {
-
                     var circleInspResult = Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
                     foreach (var result in circleInspResult.ResultGraphics)
                         resultGraphics.Add(result);
+
+                    if (circleInspResult.Judgement != Judgement.OK)
+                        List_NG.Items.Add($"Inspection NG ROI:{i}");
                 }
             }
             sw.Stop();
@@ -4476,7 +4497,7 @@ namespace COG.UI.Forms
                 CogDisplay.Image = CogDisplayImage;
                 ClearDisplayGraphic();
             }
-
+            _isNotUpdate = true;
             if (chkUseTracking.Checked)
             {
                 chkUseTracking.Checked = false;
@@ -4492,15 +4513,15 @@ namespace COG.UI.Forms
             chkUseRoiTracking.Checked = true;
             if (SetBondingTrackingOnOff(true) == false)
             {
-                SetBondingTrackingOnOff(true);
+                chkUseRoiTracking.Checked = false;
+            }
+            else
+            {
                 //검사
                 btn_Inspection_Test.PerformClick();
                 btnImagePrev.Enabled = true;
             }
-            else
-            {
-                chkUseRoiTracking.Checked = false;
-            }
+            _isNotUpdate = false;
         }
 
         private void btnImageNext_Click(object sender, EventArgs e)
@@ -4538,7 +4559,7 @@ namespace COG.UI.Forms
                 btnImageNext.Enabled = true;
                 return;
             }
-
+            _isNotUpdate = true;
             if (chkUseTracking.Checked)
             {
                 chkUseTracking.Checked = false;
@@ -4554,14 +4575,15 @@ namespace COG.UI.Forms
             chkUseRoiTracking.Checked = true;
             if(SetBondingTrackingOnOff(true) == false)
             {
+                chkUseRoiTracking.Checked = false;
+            }
+            else
+            {
                 //검사
                 btn_Inspection_Test.PerformClick();
                 btnImageNext.Enabled = true;
             }
-            else
-            {
-                chkUseRoiTracking.Checked = false;
-            }
+            _isNotUpdate = false;
         }
 
         private void chkUseInspDirectionChange_CheckedChanged(object sender, EventArgs e)
