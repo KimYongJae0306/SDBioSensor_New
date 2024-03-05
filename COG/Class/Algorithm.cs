@@ -59,25 +59,14 @@ namespace COG.Class
             return sum / data.Length;
         }
 
-        public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool, out CogRectangleAffine outputRect)
+      
+
+        public void GetBinaryImage(CogImage8Grey cogImage, GaloInspTool inspTool)
         {
-            outputRect = new CogRectangleAffine();
-            outputRect.CenterX = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointX;
-            outputRect.CenterY = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointY;
-            var sideXLength = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Length;
-            var sideYLength = inspTool.FindLineTool.RunParams.CaliperSearchLength;
-            outputRect.Rotation = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Rotation;// + CogMisc.DegToRad(90);
+            var boundingBox = VisionProHelper.GetBoundingRect(cogImage, inspTool.FindLineTool);
+            var cropImage = VisionProHelper.CropImage(cogImage, boundingBox, 255);
 
-            double x = Math.Abs(inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartX - inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndX);
-            double y = Math.Abs(inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartY - inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndY);
-
-            outputRect.SideXLength = sideXLength;
-            outputRect.SideYLength = sideYLength;
-            return;
-
-            //tool.RunParams
-            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage2.bmp";
-            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
+            Mat mat = GetConvertMatImage(cogImage);
             float alpha = 1.0f;
 
             MCvScalar meanScalar = new MCvScalar();
@@ -86,22 +75,8 @@ namespace COG.Class
             Mat resultMat = mat + meanScalar;
             CvInvoke.MeanStdDev(resultMat, ref meanScalar, ref stddevScalar);
             double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
-        }
 
-        public void Test2(CogImage8Grey cogImage, GaloInspTool inspTool)
-        {
-
-            //tool.RunParams
-            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage2.bmp";
-            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
-            float alpha = 1.0f;
-
-            MCvScalar meanScalar = new MCvScalar();
-            MCvScalar stddevScalar = new MCvScalar();
-
-            Mat resultMat = mat + meanScalar;
-            CvInvoke.MeanStdDev(resultMat, ref meanScalar, ref stddevScalar);
-            double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
+            resultMat.Save(@"D:\123.bmp");
         }
 
 
@@ -156,7 +131,9 @@ namespace COG.Class
             GaloLineToolResult result = new GaloLineToolResult();
             if (cogImage == null)
                 return result;
-            Test3(cogImage, inspTool, out affineRect);
+            ////VisionProHelper.Save(g1, @"D:\123.bmp");
+            //GetBinaryImage(g1 as CogImage8Grey, inspTool);
+
 
             CogFindLineTool tool = inspTool.FindLineTool;
             List<CogCompositeShape> resultGraphics0 = null;

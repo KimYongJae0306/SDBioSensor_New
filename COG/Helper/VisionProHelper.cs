@@ -2,6 +2,7 @@
 using COG.Settings;
 using Cognex.VisionPro;
 using Cognex.VisionPro.CalibFix;
+using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.ImageFile;
 using Cognex.VisionPro.ImageProcessing;
 using Cognex.VisionPro.ToolBlock;
@@ -21,6 +22,28 @@ namespace COG.Helper
             regionTool.Region = rect;
             regionTool.Run();
             return regionTool.OutputImage;
+        }
+
+        public static ICogImage CropImage(ICogImage sourceImage, CogRectangleAffine rect, int definePixelValue = 0)
+        {
+            CogCopyRegionTool regionTool = new CogCopyRegionTool();
+            regionTool.InputImage = sourceImage;
+            regionTool.Region = rect;
+            regionTool.RunParams.FillBoundingBoxValue = definePixelValue;
+            regionTool.Run();
+            return regionTool.OutputImage;
+        }
+
+        public static CogRectangleAffine GetBoundingRect(CogImage8Grey cogImage, CogFindLineTool cogFindLineTool)
+        {
+            CogRectangleAffine boundingBox = new CogRectangleAffine();
+            boundingBox.CenterX = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointX;
+            boundingBox.CenterY = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointY;
+            boundingBox.Rotation = cogFindLineTool.RunParams.ExpectedLineSegment.Rotation;// + CogMisc.DegToRad(90);
+            boundingBox.SideXLength = cogFindLineTool.RunParams.ExpectedLineSegment.Length;
+            boundingBox.SideYLength = cogFindLineTool.RunParams.CaliperSearchLength;
+
+            return boundingBox;
         }
 
         public static void GetImageFile(CogImageFileTool ImageFileTool, String FileName)
@@ -185,6 +208,38 @@ namespace COG.Helper
                 return sourcePath = null;
             }
             return sourcePath;
+        }
+
+        public static void Save(ICogImage image, string fileName)
+        {
+            if (image == null)
+                return;
+
+            lock (image)
+            {
+                string extension = Path.GetExtension(fileName);
+                if (extension == ".bmp")
+                {
+                    CogImageFileBMP bmp = new CogImageFileBMP();
+                    bmp.Open(fileName, CogImageFileModeConstants.Write);
+                    bmp.Append(image);
+                    bmp.Close();
+                }
+                else if (extension == ".jpg" || extension == ".jpeg")
+                {
+                    CogImageFileJPEG jpg = new CogImageFileJPEG();
+                    jpg.Open(fileName, CogImageFileModeConstants.Write);
+                    jpg.Append(image);
+                    jpg.Close();
+                }
+                else if (extension == ".png")
+                {
+                    CogImageFilePNG png = new CogImageFilePNG();
+                    png.Open(fileName, CogImageFileModeConstants.Write);
+                    png.Append(image);
+                    png.Close();
+                }
+            }
         }
     }
 }
