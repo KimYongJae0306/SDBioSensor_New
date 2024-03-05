@@ -59,8 +59,21 @@ namespace COG.Class
             return sum / data.Length;
         }
 
-        public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool)
+        public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool, out CogRectangleAffine outputRect)
         {
+            outputRect = new CogRectangleAffine();
+            outputRect.CenterX = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointX;
+            outputRect.CenterY = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointY;
+            var sideXLength = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Length;
+            var sideYLength = inspTool.FindLineTool.RunParams.CaliperSearchLength;
+            outputRect.Rotation = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Rotation;// + CogMisc.DegToRad(90);
+
+            double x = Math.Abs(inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartX - inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndX);
+            double y = Math.Abs(inspTool.FindLineTool.RunParams.ExpectedLineSegment.StartY - inspTool.FindLineTool.RunParams.ExpectedLineSegment.EndY);
+
+            outputRect.SideXLength = sideXLength;
+            outputRect.SideYLength = sideYLength;
+            return;
 
             //tool.RunParams
             string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage2.bmp";
@@ -138,12 +151,12 @@ namespace COG.Class
             return histo;
         }
 
-        public GaloLineToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+        public GaloLineToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool, ref CogRectangleAffine affineRect)
         {
             GaloLineToolResult result = new GaloLineToolResult();
             if (cogImage == null)
                 return result;
-            Test3(cogImage, inspTool);
+            Test3(cogImage, inspTool, out affineRect);
 
             CogFindLineTool tool = inspTool.FindLineTool;
             RollBackLineTool rollbackValue = new RollBackLineTool();

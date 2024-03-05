@@ -1116,14 +1116,19 @@ namespace COG.UI.Forms
             {
                 if(inspTool.Type == GaloInspType.Line)
                 {
+                    CogRectangleAffine rect = new CogRectangleAffine();
 
-                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool, ref rect);
                     sw.Stop();
                     
                     Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
                     LoggerHelper.Save_SystemLog($"Inspection Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
 
                     CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+
+                    // pjh_test
+                    rect.Color = CogColorConstants.Red;
+                    resultGraphics.Add(rect);
 
                     SetInteractiveGraphics("tool", CogRecord);
                     foreach (var result in lineResult.Line0.ResultGraphics)
@@ -1617,6 +1622,9 @@ namespace COG.UI.Forms
         {
             try
             {
+                if (OriginMarkPoint == null)
+                    return;
+
                 int nZoomSize = 1;
 
                 nZoomSize = (int)(CogDisplay.Zoom * ORIGIN_SIZE);
@@ -3490,7 +3498,12 @@ namespace COG.UI.Forms
 
                 if (inspTool.Type == GaloInspType.Line)
                 {
-                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                    CogRectangleAffine rect = new CogRectangleAffine();
+
+                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool, ref rect);
+
+                    rect.Color = CogColorConstants.Red;
+                    resultGraphics.Add(rect);
 
                     foreach (var result in lineResult.Line0.ResultGraphics)
                         resultGraphics.Add(result);
