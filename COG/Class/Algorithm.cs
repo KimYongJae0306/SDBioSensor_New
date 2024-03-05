@@ -24,106 +24,26 @@ namespace COG.Class
 {
     public class Algorithm
     {
-        // 배열의 표준 편차를 계산하는 메서드
-        double CalculateStandardDeviation(double[] data)
+        public void GetBinaryImage(CogImage8Grey cogImage, CogRectangleAffine boundingBox)
         {
-            // 평균 계산
-            double mean = CalculateMean(data);
-
-            // 각 요소의 편차 제곱의 합 계산
-            double sumOfSquaredDifferences = 0.0;
-            foreach (double value in data)
-            {
-                double difference = value - mean;
-                sumOfSquaredDifferences += difference * difference;
-            }
-
-            // 분산 계산
-            double variance = sumOfSquaredDifferences / data.Length;
-
-            // 표준 편차는 분산의 제곱근
-            double standardDeviation = Math.Sqrt(variance);
-
-            return standardDeviation;
-        }
-
-        // 배열의 평균을 계산하는 메서드
-        double CalculateMean(double[] data)
-        {
-            double sum = 0.0;
-            foreach (double value in data)
-            {
-                sum += value;
-            }
-
-            return sum / data.Length;
-        }
-
-      
-
-        public void GetBinaryImage(CogImage8Grey cogImage, GaloInspTool inspTool)
-        {
-            var boundingBox = VisionProHelper.GetBoundingRect(cogImage, inspTool.FindLineTool);
             var cropImage = VisionProHelper.CropImage(cogImage, boundingBox, 255);
 
             Mat mat = GetConvertMatImage(cogImage);
-            float alpha = 1.0f;
 
             MCvScalar meanScalar = new MCvScalar();
             MCvScalar stddevScalar = new MCvScalar();
 
-            Mat resultMat = mat + meanScalar;
-            CvInvoke.MeanStdDev(resultMat, ref meanScalar, ref stddevScalar);
-            double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
-
-            resultMat.Save(@"D:\123.bmp");
-        }
-
-
-        public void Test(CogImage8Grey cogImage, GaloInspTool inspTool)
-        {
-            //tool.RunParams
-            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage6.bmp";
-            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
-            float alpha = 1.0f;
-           
-            MCvScalar meanScalar = new MCvScalar();
-            MCvScalar stddevScalar = new MCvScalar();
-
-            Mat resultMat = new Mat();
             CvInvoke.MeanStdDev(mat, ref meanScalar, ref stddevScalar);
-            resultMat = mat + meanScalar.V0 - 50;
-            resultMat.Save(@"D:\123.bmp");
+            Mat resultMat = mat + meanScalar;
+
             double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
-            resultMat.Save(@"D:\123.bmp");
-            
+
+            //VisionProHelper.convert
         }
 
-        public double[] GetHistogram(Mat srcMat, Mat maskMat)
+        public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool)
         {
-            int hbins = 256;
-            int[] histSize = { hbins };
-            float[] ranges = { 0, 256 };
-            Mat hist = new Mat();
-            int[] channels = { 0 };
 
-            using (var vector = new VectorOfMat(srcMat))
-                CvInvoke.CalcHist(vector, channels, maskMat, hist, histSize, ranges, false);
-
-            var datas = hist.GetData();
-            double[] histo = new double[256];
-
-            //int ntot = CvInvoke.CountNonZero(maskMat);
-            //if (ntot == 0)
-                //return null;
-
-            for (int i = 0; i < datas.Length; i++)
-            {
-                var data = datas.GetValue(i, 0);
-                histo[i] = Convert.ToDouble(data);// / ntot;
-            }
-
-            return histo;
         }
 
         public GaloLineToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool, ref CogRectangleAffine affineRect)
@@ -131,8 +51,9 @@ namespace COG.Class
             GaloLineToolResult result = new GaloLineToolResult();
             if (cogImage == null)
                 return result;
-            ////VisionProHelper.Save(g1, @"D:\123.bmp");
-            //GetBinaryImage(g1 as CogImage8Grey, inspTool);
+
+            var boundingBox = VisionProHelper.GetBoundingRect(cogImage, inspTool.FindLineTool);
+            GetBinaryImage(cogImage, boundingBox);
 
 
             CogFindLineTool tool = inspTool.FindLineTool;
@@ -345,6 +266,7 @@ namespace COG.Class
             if (cogImage == null)
                 return result;
 
+            Test3(cogImage, inspTool);
             //CogFindCircleTool tool = new CogFindCircleTool(inspTool.FindCircleTool);
             CogFindCircleTool tool = inspTool.FindCircleTool;
             tool.InputImage = cogImage as CogImage8Grey;
