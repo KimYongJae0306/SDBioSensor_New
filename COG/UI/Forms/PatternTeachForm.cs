@@ -42,6 +42,10 @@ namespace COG.UI.Forms
 
     public partial class PatternTeachForm : Form
     {
+        private string _currentImageDir { get; set; } = "";
+
+        private int _currentImageIndex { get; set; } = -1;
+
         private bool _isNotUpdate { get; set; } = false;
 
         private Algorithm Algorithm { get; set; } = new Algorithm();
@@ -90,7 +94,7 @@ namespace COG.UI.Forms
 
         private CogRecordDisplay CogDisplay = null;
 
-        private ICogImage CogDisplayImage { get; set; } = null;
+        private CogImage8Grey CogDisplayImage { get; set; } = null;
 
         private CogPointMarker OriginMarkPoint { get; set; } = null;
 
@@ -563,10 +567,46 @@ namespace COG.UI.Forms
             {
                 if (openFileDlg.FileName == "")
                     return;
+                if(openFileDlg.FileName.Contains("OV.jpg"))
+                {
+                    MessageBox.Show("This JPG File is 'Overlay Image'.\r\nSelect Origin JPG Image.");
+                    return;
+                }
+
                 DisposeDisplayImage();
 
 
                 CogDisplayImage = LoadImage(openFileDlg.FileName);
+
+                string extenstion = Path.GetExtension(openFileDlg.FileName);
+                _currentImageDir = Path.GetDirectoryName(openFileDlg.FileName);
+
+
+                if (extenstion == ".jpg")
+                {
+                    string[] files = Directory.GetFiles(_currentImageDir, "*UP.jpg");
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        if (openFileDlg.FileName == files[i])
+                        {
+                            _currentImageIndex = i;
+                            break;
+                        }
+                    }
+                }
+                else if(extenstion == ".bmp")
+                {
+                    string[] files = Directory.GetFiles(_currentImageDir, "*.bmp");
+
+                    for (int i = 0; i < files.Length; i++)
+                    {
+                        if (openFileDlg.FileName == files[i])
+                        {
+                            _currentImageIndex = i;
+                            break;
+                        }
+                    }
+                }
 
                 CogDisplay.Image = CogDisplayImage;
                 CogDisplay.DrawingEnabled = false;
@@ -1064,6 +1104,7 @@ namespace COG.UI.Forms
             CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
         }
 
+        public static ICogRecord CogRecord;
         private void RunGaloInspectForTest()
         {
             if (CogDisplayImage == null | _prevSelectedRowIndex < 0)
@@ -1075,7 +1116,35 @@ namespace COG.UI.Forms
             {
                 if(inspTool.Type == GaloInspType.Line)
                 {
-                    Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
+
+                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                    sw.Stop();
+                    
+                    Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
+                    LoggerHelper.Save_SystemLog($"Inspection Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
+
+                    CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+
+                    SetInteractiveGraphics("tool", CogRecord);
+                    foreach (var result in lineResult.Line0.ResultGraphics)
+                        resultGraphics.Add(result);
+
+                    foreach (var result in lineResult.Line1.ResultGraphics)
+                        resultGraphics.Add(result);
+
+                    CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
+
+                    dataGridView_Result.Rows.Clear();
+
+                    var distanceList = lineResult.GetDistance();
+                    string[] strResultData = new string[4];
+                    for (int i = 0; i < distanceList.Count; i++)
+                    {
+                        strResultData[0] = i.ToString();
+                        strResultData[1] = "0";
+                        strResultData[3] = string.Format("{0:F3}", distanceList[i]);
+                        dataGridView_Result.Rows.Add(strResultData);
+                    }
                 }
                 else
                 {
@@ -3410,7 +3479,40 @@ namespace COG.UI.Forms
 
         private void btn_Inspection_Test_Click(object sender, EventArgs e)
         {
-            //CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+            ClearDisplayGraphic();
+            CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
+
+            Stopwatch sw = Stopwatch.StartNew();
+
+            for (int i = 0; i < GetUnit().Insp.GaloInspToolList.Count; i++)
+            {
+                var inspTool = GetUnit().Insp.GaloInspToolList[i];
+
+                if (inspTool.Type == GaloInspType.Line)
+                {
+                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool);
+
+                    foreach (var result in lineResult.Line0.ResultGraphics)
+                        resultGraphics.Add(result);
+
+                    foreach (var result in lineResult.Line1.ResultGraphics)
+                        resultGraphics.Add(result);
+                }
+                else
+                {
+
+                    var circleInspResult = Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                    foreach (var result in circleInspResult.ResultGraphics)
+                        resultGraphics.Add(result);
+                }
+            }
+            sw.Stop();
+
+            Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
+            LoggerHelper.Save_SystemLog($"Inspection Full Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
+
+            CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
+            //
             //try
             //{
             //    CogStopwatch Stopwatch = new CogStopwatch();
@@ -4018,10 +4120,16 @@ namespace COG.UI.Forms
                 param.FindLineTool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.Pair;
 
                 Polarity = param.FindLineTool.RunParams.CaliperRunParams.Edge0Polarity;
-                Combo_Polarity1.SelectedIndex = (int)Polarity - 1;
+                if (Polarity == CogCaliperPolarityConstants.DontCare)
+                    Combo_Polarity1.SelectedIndex = 0;
+                else
+                    Combo_Polarity1.SelectedIndex = (int)Polarity - 1;
 
                 Polarity = param.FindLineTool.RunParams.CaliperRunParams.Edge1Polarity;
-                Combo_Polarity2.SelectedIndex = (int)Polarity - 1;
+                if (Polarity == CogCaliperPolarityConstants.DontCare)
+                    Combo_Polarity2.SelectedIndex = 0;
+                else
+                    Combo_Polarity2.SelectedIndex = (int)Polarity - 1;
 
                 label59.Visible = false;
                 LAB_EDGE_WIDTH.Visible = false;
@@ -4320,130 +4428,127 @@ namespace COG.UI.Forms
 
         private void btnImagePrev_Click(object sender, EventArgs e)
         {
-            //btnImagePrev.Enabled = false;
-            //if (CurrentImageNumber < 0) return;
-            //string[] files;
-            //if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "jpg")
-            //{
-            //    files = Directory.GetFiles(CurrentFolderPath, "*UP.jpg");
-            //}
-            //else
-            //{
-            //    files = Directory.GetFiles(CurrentFolderPath, "*.bmp");
-            //}
+            btnImagePrev.Enabled = false;
+            if (_currentImageIndex < 0)
+                return;
 
-            //if (CurrentImageNumber < files.Length)
-            //{
-            //    if (CurrentImageNumber != 0) CurrentImageNumber--;
-            //    else
-            //    {
-            //        MessageBox.Show("First Image!!");
-            //        btnImagePrev.Enabled = true;
-            //        return;
-            //    }
-            //    string FileName = "";
+            btnImageNext.Enabled = true;
 
-            //    FileName = files[CurrentImageNumber];
+            string[] files;
+            if (openFileDlg.SafeFileName.Substring(openFileDlg.SafeFileName.Length - 3) == "jpg")
+            {
+                files = Directory.GetFiles(_currentImageDir, "*UP.jpg");
+            }
+            else
+            {
+                files = Directory.GetFiles(_currentImageDir, "*.bmp");
+            }
 
-            //    //ICogImage RefCogImage = null;
-            //    if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "jpg")
-            //    {
-            //        if (FileName != "")
-            //        {
-            //            if (Main.vision.CogImgTool[m_CamNo] == null)
-            //                Main.vision.CogImgTool[m_CamNo] = new CogImageFileTool();
-            //            Main.GetImageFile(Main.vision.CogImgTool[m_CamNo], FileName);
-            //            CogImageConvertTool img = new CogImageConvertTool();
-            //            img.InputImage = Main.vision.CogImgTool[m_CamNo].OutputImage;
-            //            img.Run();
-            //            Main.vision.CogCamBuf[m_CamNo] = img.OutputImage;
-            //            //Main.vision.CogCamBuf[m_CamNo] = RefCogImage;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        if (FileName != "")
-            //        {
-            //            if (Main.vision.CogImgTool[m_CamNo] == null)
-            //                Main.vision.CogImgTool[m_CamNo] = new CogImageFileTool();
-            //            Main.GetImageFile(Main.vision.CogImgTool[m_CamNo], FileName);
-            //            Main.vision.CogCamBuf[m_CamNo] = Main.vision.CogImgTool[m_CamNo].OutputImage;
-            //            //Main.vision.CogCamBuf[m_CamNo] = RefCogImage;
-            //        }
-            //    }
-            //    PT_Display01.Image = Main.vision.CogCamBuf[m_CamNo];
-            //    OriginImage = (CogImage8Grey)Main.vision.CogCamBuf[m_CamNo];
-            //    DisplayClear();
-            //    Main.DisplayRefresh(PT_Display01);
-            //}
+            if (_currentImageIndex < files.Length)
+            {
+                if (_currentImageIndex != 0)
+                    _currentImageIndex--;
+                else
+                {
+                    MessageBox.Show("First Image!!");
+                    btnImagePrev.Enabled = true;
+                    return;
+                }
 
-            ////검사
-            //btn_Inspection_Test.PerformClick();
-            //btnImagePrev.Enabled = true;
+                string fileName = files[_currentImageIndex];
+
+                CogDisplayImage?.Dispose();
+                CogDisplayImage = LoadImage(fileName);
+
+                CogDisplay.Image = CogDisplayImage;
+                ClearDisplayGraphic();
+            }
+
+            if (chkUseTracking.Checked)
+            {
+                chkUseTracking.Checked = false;
+                SetAmpTrackingOnOff(false);
+            }
+
+            if (chkUseRoiTracking.Checked)
+            {
+                chkUseRoiTracking.Checked = false;
+                SetBondingTrackingOnOff(false);
+            }
+
+            chkUseRoiTracking.Checked = true;
+            if (SetBondingTrackingOnOff(true) == false)
+            {
+                SetBondingTrackingOnOff(true);
+                //검사
+                btn_Inspection_Test.PerformClick();
+                btnImagePrev.Enabled = true;
+            }
+            else
+            {
+                chkUseRoiTracking.Checked = false;
+            }
         }
 
         private void btnImageNext_Click(object sender, EventArgs e)
         {
-            //btnImageNext.Enabled = false;
-            //if (CurrentImageNumber < 0) return;
-            //string[] files;
-            //if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "jpg")
-            //{
-            //    files = Directory.GetFiles(CurrentFolderPath, "*UP.jpg");
-            //}
-            //else
-            //{
-            //    files = Directory.GetFiles(CurrentFolderPath, "*.bmp");
-            //}
+            btnImageNext.Enabled = false;
+            if (_currentImageIndex < 0)
+                return;
+            btnImagePrev.Enabled = true;
 
-            //if (CurrentImageNumber < files.Length - 1)
-            //{
-            //    CurrentImageNumber++;
-            //    string FileName = "";
+            string[] files;
+            if (openFileDlg.SafeFileName.Substring(openFileDlg.SafeFileName.Length - 3) == "jpg")
+            {
+                files = Directory.GetFiles(_currentImageDir, "*UP.jpg");
+            }
+            else
+            {
+                files = Directory.GetFiles(_currentImageDir, "*.bmp");
+            }
 
-            //    FileName = files[CurrentImageNumber];
+            if (_currentImageIndex < files.Length - 1)
+            {
+                _currentImageIndex++;
 
-            //    //ICogImage RefCogImage = null;
-            //    //shkang_s
-            //    if (openFileDialog1.SafeFileName.Substring(openFileDialog1.SafeFileName.Length - 3) == "jpg")
-            //    {
-            //        if (FileName != "")
-            //        {
-            //            if (Main.vision.CogImgTool[m_CamNo] == null)
-            //                Main.vision.CogImgTool[m_CamNo] = new CogImageFileTool();
-            //            Main.GetImageFile(Main.vision.CogImgTool[m_CamNo], FileName);
-            //            CogImageConvertTool img = new CogImageConvertTool();
-            //            img.InputImage = Main.vision.CogImgTool[m_CamNo].OutputImage;
-            //            img.Run();
-            //            Main.vision.CogCamBuf[m_CamNo] = img.OutputImage;
-            //            //Main.vision.CogCamBuf[m_CamNo] = RefCogImage;
-            //        }
-            //    }
-            //    else
-            //    {
-            //        if (FileName != "")
-            //        {
-            //            if (Main.vision.CogImgTool[m_CamNo] == null)
-            //                Main.vision.CogImgTool[m_CamNo] = new CogImageFileTool();
-            //            Main.GetImageFile(Main.vision.CogImgTool[m_CamNo], FileName);
-            //            Main.vision.CogCamBuf[m_CamNo] = Main.vision.CogImgTool[m_CamNo].OutputImage;
-            //            //Main.vision.CogCamBuf[m_CamNo] = RefCogImage;
-            //        }
-            //    }
-            //    PT_Display01.Image = Main.vision.CogCamBuf[m_CamNo];
-            //    OriginImage = (CogImage8Grey)Main.vision.CogCamBuf[m_CamNo];
-            //    DisplayClear();
-            //    Main.DisplayRefresh(PT_Display01);
-            //}
-            //else
-            //{
-            //    MessageBox.Show("Last Image!!");
-            //    btnImageNext.Enabled = true;
-            //    return;
-            //}
-            ////검사
-            //btn_Inspection_Test.PerformClick();
-            //btnImageNext.Enabled = true;
+                string fileName = files[_currentImageIndex];
+
+                CogDisplayImage?.Dispose();
+                CogDisplayImage = LoadImage(fileName);
+
+                CogDisplay.Image = CogDisplayImage;
+                ClearDisplayGraphic();
+            }
+            else
+            {
+                MessageBox.Show("Last Image!!");
+                btnImageNext.Enabled = true;
+                return;
+            }
+
+            if (chkUseTracking.Checked)
+            {
+                chkUseTracking.Checked = false;
+                SetAmpTrackingOnOff(false);
+            }
+
+            if (chkUseRoiTracking.Checked)
+            {
+                chkUseRoiTracking.Checked = false;
+                SetBondingTrackingOnOff(false);
+            }
+
+            chkUseRoiTracking.Checked = true;
+            if(SetBondingTrackingOnOff(true) == false)
+            {
+                //검사
+                btn_Inspection_Test.PerformClick();
+                btnImageNext.Enabled = true;
+            }
+            else
+            {
+                chkUseRoiTracking.Checked = false;
+            }
         }
 
         private void chkUseInspDirectionChange_CheckedChanged(object sender, EventArgs e)
@@ -4662,11 +4767,6 @@ namespace COG.UI.Forms
                 {
                     grey.Dispose();
                     grey = null;
-                }
-                if (CogDisplayImage is CogImage24PlanarColor color)
-                {
-                    color.Dispose();
-                    color = null;
                 }
             }
         }

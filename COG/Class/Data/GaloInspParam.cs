@@ -52,6 +52,7 @@ namespace COG.Class.Data
                 GaloInspTool galo = new GaloInspTool();
                 galo.Type = (GaloInspType)StaticConfig.ModelFile.GetIData(newModelSection, $"INSPECTION TYPE" + i.ToString());
                 galo.Distgnore = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Dist_Ingnore" + i.ToString());
+                galo.SpecDistance = StaticConfig.ModelFile.GetFData(newModelSection, "Insp_Spec_Dist" + i.ToString());
                 galo.SpecDistanceMax = StaticConfig.ModelFile.GetFData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString());
 
                 galo.DarkArea.ThresholdUse = StaticConfig.ModelFile.GetBData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString());
@@ -94,6 +95,8 @@ namespace COG.Class.Data
 
                 StaticConfig.ModelFile.SetData(newModelSection, $"INSPECTION TYPE" + i.ToString(), (int)galo.Type);
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Dist_Ingnore" + i.ToString(), galo.Distgnore);
+                
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Spec_Dist" + i.ToString(), galo.SpecDistance);
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString(), galo.SpecDistanceMax);
 
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString(), galo.DarkArea.ThresholdUse);

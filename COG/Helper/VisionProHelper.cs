@@ -14,6 +14,15 @@ namespace COG.Helper
 {
     public static class VisionProHelper
     {
+        public static ICogImage CropImage(ICogImage sourceImage, CogRectangle rect)
+        {
+            CogCopyRegionTool regionTool = new CogCopyRegionTool();
+            regionTool.InputImage = sourceImage;
+            regionTool.Region = rect;
+            regionTool.Run();
+            return regionTool.OutputImage;
+        }
+
         public static void GetImageFile(CogImageFileTool ImageFileTool, String FileName)
         {
             try

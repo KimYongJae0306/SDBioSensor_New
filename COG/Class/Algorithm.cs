@@ -6,11 +6,17 @@ using COG.Settings;
 using Cognex.VisionPro;
 using Cognex.VisionPro.Caliper;
 using Cognex.VisionPro.SearchMax;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using Emgu.CV.Util;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Drawing;
+using System.Drawing.Imaging;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -18,51 +24,135 @@ namespace COG.Class
 {
     public class Algorithm
     {
-        public GaloInspToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+        // 배열의 표준 편차를 계산하는 메서드
+        double CalculateStandardDeviation(double[] data)
         {
-            GaloInspToolResult result = new GaloInspToolResult();
+            // 평균 계산
+            double mean = CalculateMean(data);
+
+            // 각 요소의 편차 제곱의 합 계산
+            double sumOfSquaredDifferences = 0.0;
+            foreach (double value in data)
+            {
+                double difference = value - mean;
+                sumOfSquaredDifferences += difference * difference;
+            }
+
+            // 분산 계산
+            double variance = sumOfSquaredDifferences / data.Length;
+
+            // 표준 편차는 분산의 제곱근
+            double standardDeviation = Math.Sqrt(variance);
+
+            return standardDeviation;
+        }
+
+        // 배열의 평균을 계산하는 메서드
+        double CalculateMean(double[] data)
+        {
+            double sum = 0.0;
+            foreach (double value in data)
+            {
+                sum += value;
+            }
+
+            return sum / data.Length;
+        }
+
+        public void Test3(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+
+            //tool.RunParams
+            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage2.bmp";
+            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
+            float alpha = 1.0f;
+
+            MCvScalar meanScalar = new MCvScalar();
+            MCvScalar stddevScalar = new MCvScalar();
+
+            Mat resultMat = mat + meanScalar;
+            CvInvoke.MeanStdDev(resultMat, ref meanScalar, ref stddevScalar);
+            double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
+        }
+
+        public void Test2(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+
+            //tool.RunParams
+            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage2.bmp";
+            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
+            float alpha = 1.0f;
+
+            MCvScalar meanScalar = new MCvScalar();
+            MCvScalar stddevScalar = new MCvScalar();
+
+            Mat resultMat = mat + meanScalar;
+            CvInvoke.MeanStdDev(resultMat, ref meanScalar, ref stddevScalar);
+            double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
+        }
+
+
+        public void Test(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+            //tool.RunParams
+            string filePath = @"D:\01.테스트이미지\관로\새 폴더\Montage6.bmp";
+            Mat mat = new Mat(filePath, ImreadModes.Grayscale);
+            float alpha = 1.0f;
+           
+            MCvScalar meanScalar = new MCvScalar();
+            MCvScalar stddevScalar = new MCvScalar();
+
+            Mat resultMat = new Mat();
+            CvInvoke.MeanStdDev(mat, ref meanScalar, ref stddevScalar);
+            resultMat = mat + meanScalar.V0 - 50;
+            resultMat.Save(@"D:\123.bmp");
+            double th = CvInvoke.Threshold(resultMat, resultMat, 0, 255, ThresholdType.Otsu);
+            resultMat.Save(@"D:\123.bmp");
+            
+        }
+
+        public double[] GetHistogram(Mat srcMat, Mat maskMat)
+        {
+            int hbins = 256;
+            int[] histSize = { hbins };
+            float[] ranges = { 0, 256 };
+            Mat hist = new Mat();
+            int[] channels = { 0 };
+
+            using (var vector = new VectorOfMat(srcMat))
+                CvInvoke.CalcHist(vector, channels, maskMat, hist, histSize, ranges, false);
+
+            var datas = hist.GetData();
+            double[] histo = new double[256];
+
+            //int ntot = CvInvoke.CountNonZero(maskMat);
+            //if (ntot == 0)
+                //return null;
+
+            for (int i = 0; i < datas.Length; i++)
+            {
+                var data = datas.GetValue(i, 0);
+                histo[i] = Convert.ToDouble(data);// / ntot;
+            }
+
+            return histo;
+        }
+
+        public GaloLineToolResult RunGaloLineInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+            GaloLineToolResult result = new GaloLineToolResult();
             if (cogImage == null)
                 return result;
-            CogFindLineTool tool = inspTool.FindLineTool;
+            Test3(cogImage, inspTool);
 
+            CogFindLineTool tool = inspTool.FindLineTool;
             RollBackLineTool rollbackValue = new RollBackLineTool();
             rollbackValue.SetValue(tool);
 
             try
             {
-
-                //for (int index = 0; index < 2; index++)
-                {
-                    tool.InputImage = cogImage as CogImage8Grey;
-
-                    tool.Run();
-
-                    if (tool.Results?.Count > 0)
-                    {
-                        for (int i = 0; i < tool.Results.Count; i++)
-                        {
-                            if (tool.Results[i].CaliperResults.Count > 0)
-                            {
-                                var caliperResult = tool.Results[i].CaliperResults;
-                                PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionX);
-                                result.Edge0PointList.Add(edge0Point);
-
-                                PointF edge1Point = new PointF((float)caliperResult[0].Edge1.PositionX, (float)caliperResult[0].Edge1.PositionX);
-                                result.Edge1PointList.Add(edge1Point);
-
-                                var graphics = tool.Results[i].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
-                                result.ResultGraphics.Add(graphics);
-                            }
-                            else
-                            {
-                                result.Edge0PointList.Add(new PointF());
-                                result.Edge1PointList.Add(new PointF());
-                            }
-                        }
-                    }
-
-                }
-
+                InspectLine0(cogImage, tool, ref result);
+                InspectLine1(cogImage, tool, ref result);
 
                 rollbackValue.RollBack(ref tool);
             }
@@ -74,9 +164,170 @@ namespace COG.Class
             return result;
         }
 
-        public GaloInspToolResult RunGaloCircleInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+      
+        public Mat GetConvertMatImage(CogImage8Grey cogImage)
         {
-            GaloInspToolResult result = new GaloInspToolResult(); 
+            IntPtr cogIntptr = GetIntptr(cogImage, out int stride);
+            byte[] byteArray = new byte[stride * cogImage.Height];
+            Marshal.Copy(cogIntptr, byteArray, 0, byteArray.Length);
+            Mat matImage = new Mat(new Size(cogImage.Width, cogImage.Height), DepthType.Cv8U, 1, cogIntptr, stride);
+            //Marshal.Copy(byteArray, 0, matImage.DataPointer, matImage.Step * matImage.Height);
+
+            return matImage;
+        }
+
+        public IntPtr GetIntptr(CogImage8Grey image, out int stride)
+        {
+            unsafe
+            {
+                var cogPixelData = image.Get8GreyPixelMemory(CogImageDataModeConstants.Read, 0, 0, image.Width, image.Height);
+                IntPtr ptrData = cogPixelData.Scan0;
+                stride = cogPixelData.Stride;
+
+                return ptrData;
+            }
+        }
+        private CogRectangle GetROI(CogFindLineTool cogFindLine)
+        {
+            double length = cogFindLine.RunParams.CaliperSearchLength / 2;
+            double startX = cogFindLine.RunParams.ExpectedLineSegment.StartX;
+            double startY = cogFindLine.RunParams.ExpectedLineSegment.StartY;
+
+            double endX = cogFindLine.RunParams.ExpectedLineSegment.EndX;
+            double endY = cogFindLine.RunParams.ExpectedLineSegment.EndY;
+
+            double left = startX < endX ? startX : endX;
+            double top = startY < endY ? startY : endY;
+
+            
+
+            double right = startX > endX ? startX : endX;
+            double bottom = startY > endY ? startY : endY;
+
+            CogRectangle rect = new CogRectangle();
+
+            rect.X = left;
+            rect.Y = top;
+            rect.Width = Math.Abs(left - right);
+            rect.Height = Math.Abs(top- bottom);
+
+            return rect;
+        }
+
+        private void InspectEdge(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+            EdgeAlgorithm algorithm = new EdgeAlgorithm();
+            algorithm.Threshold = inspTool.DarkArea.Threshold;
+            algorithm.IgnoreSize = inspTool.DarkArea.IgnoreSize;
+            algorithm.MaskingValue = inspTool.DarkArea.MaskingValue;
+            //algorithm.Inspect()
+        }
+
+
+        private void InspectLine0(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
+        {
+            tool.InputImage = cogImage as CogImage8Grey;
+            tool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
+            tool.LastRunRecordDiagEnable = CogFindLineLastRunRecordDiagConstants.None;
+            tool.Run();
+
+            if (tool.Results?.Count > 0)
+            {
+                for (int i = 0; i < tool.Results.Count; i++)
+                {
+                    if (tool.Results[i].CaliperResults.Count > 0)
+                    {
+                        var caliperResult = tool.Results[i].CaliperResults;
+                        PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionY);
+                        result.Line0.Edge0PointList.Add(edge0Point);
+
+                        var graphics = tool.Results[i].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
+                        result.Line0.ResultGraphics.Add(graphics);
+                    }
+                    else
+                    {
+                        result.Line0.Edge0PointList.Add(new PointF());
+                    }
+                }
+            }
+        }
+
+        private void InspectLine1(CogImage8Grey cogImage, CogFindLineTool tool, ref GaloLineToolResult result)
+        {
+            tool.InputImage = cogImage as CogImage8Grey;
+            tool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
+            tool.LastRunRecordDiagEnable = CogFindLineLastRunRecordDiagConstants.None;
+            tool.RunParams.CaliperSearchDirection *= (-1);
+            tool.RunParams.CaliperRunParams.Edge0Polarity = tool.RunParams.CaliperRunParams.Edge1Polarity;
+            //tool.RunParams.CaliperRunParams.Edge0Polarity = CogCaliperPolarityConstants.DontCare;
+
+            double length = tool.RunParams.CaliperSearchLength / 2;
+            double radian = tool.RunParams.ExpectedLineSegment.Rotation;
+            double direction = tool.RunParams.CaliperSearchDirection;
+
+            double startX = tool.RunParams.ExpectedLineSegment.StartX;
+            double startY = tool.RunParams.ExpectedLineSegment.StartY;
+            double endX = tool.RunParams.ExpectedLineSegment.EndX;
+            double endY = tool.RunParams.ExpectedLineSegment.EndY;
+
+            PointF startPoint = new PointF((float)startX, (float)startY);
+            PointF endPoint = new PointF((float)endX, (float)endY);
+
+            calcMovePoint(startPoint, endPoint, -length, out PointF calcStart, out PointF calcEnd);
+            tool.RunParams.ExpectedLineSegment.StartX = calcStart.X;
+            tool.RunParams.ExpectedLineSegment.StartY = calcStart.Y;
+
+            tool.RunParams.ExpectedLineSegment.EndX = calcEnd.X;
+            tool.RunParams.ExpectedLineSegment.EndY = calcEnd.Y;
+
+            tool.Run();
+
+            if (tool.Results?.Count > 0)
+            {
+                UI.Forms.PatternTeachForm.CogRecord = tool.CreateCurrentRecord();
+                for (int i = 0; i < tool.Results.Count; i++)
+                {
+                    if (tool.Results[i].CaliperResults.Count > 0)
+                    {
+                        var caliperResult = tool.Results[i].CaliperResults;
+                        PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionY);
+                        result.Line1.Edge0PointList.Add(edge0Point);
+
+                        var graphics = tool.Results[i].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
+                        result.Line1.ResultGraphics.Add(graphics);
+                    }
+                    else
+                    {
+                        result.Line1.Edge0PointList.Add(new PointF());
+                    }
+                }
+            }
+        }
+
+        void calcMovePoint(PointF point1, PointF point2, double distance, out PointF calcPoint1, out PointF calcPoint2)
+        {
+            // 직선의 방정식을 기준으로 직교하는 방향 벡터 계산
+            double deltaX = point2.X - point1.X;
+            double deltaY = point2.Y - point1.Y;
+            double magnitude = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
+
+            double unitVectorX = deltaX / magnitude;
+            double unitVectorY = deltaY / magnitude;
+
+            // 각 점에 대해 이동 벡터 계산 및 적용
+
+            calcPoint1 = new PointF();
+            calcPoint1.X = (float)(point1.X + (distance * unitVectorY));
+            calcPoint1.Y = (float)(point1.Y - (distance * unitVectorX));
+
+            calcPoint2 = new PointF();
+            calcPoint2.X = (float)(point2.X + (distance * unitVectorY));
+            calcPoint2.Y = (float)(point2.Y - (distance * unitVectorX));
+        }
+
+        public GaloCircleToolResult RunGaloCircleInspection(CogImage8Grey cogImage, GaloInspTool inspTool)
+        {
+            GaloCircleToolResult result = new GaloCircleToolResult(); 
             if (cogImage == null)
                 return result;
 
@@ -92,10 +343,10 @@ namespace COG.Class
                     if(tool.Results[i].CaliperResults.Count > 0)
                     {
                         var caliperResult = tool.Results[i].CaliperResults;
-                        PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionX);
+                        PointF edge0Point = new PointF((float)caliperResult[0].Edge0.PositionX, (float)caliperResult[0].Edge0.PositionY);
                         result.Edge0PointList.Add(edge0Point);
 
-                        PointF edge1Point = new PointF((float)caliperResult[0].Edge1.PositionX, (float)caliperResult[0].Edge1.PositionX);
+                        PointF edge1Point = new PointF((float)caliperResult[0].Edge1.PositionX, (float)caliperResult[0].Edge1.PositionY);
                         result.Edge1PointList.Add(edge1Point);
 
                         var graphics = tool.Results[i].CreateResultGraphics(CogFindCircleResultGraphicConstants.CaliperEdge);
@@ -130,6 +381,12 @@ namespace COG.Class
             }
 
             return result;
+        }
+
+        private void Position_Calculate(double x, double y, double length, double radian, out double calcX, out double calcY)
+        {
+            calcX = x + (length * Math.Sin(radian));
+            calcY = y + (length * Math.Cos(radian));
         }
 
         public AmpFilmAlignResult RunAmpFlimAlign(CogImage8Grey cogImage, FilmAlignParam filmParam)

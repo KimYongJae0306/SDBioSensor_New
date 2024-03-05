@@ -692,14 +692,15 @@
     <Compile Include="Class\Algorithm.cs" />
     <Compile Include="Class\Core\EnumType.cs" />
     <Compile Include="Class\Core\FilmAlignResult.cs" />
-    <Compile Include="Class\Core\GaloCircleInspResult.cs" />
-    <Compile Include="Class\Core\GaloLineInspResult.cs" />
+    <Compile Include="Class\Core\GaloCircleToolResult.cs" />
+    <Compile Include="Class\Core\GaloLineToolResult.cs" />
     <Compile Include="Class\Core\MarkResult.cs" />
     <Compile Include="Class\Data\AmpCoordinate.cs" />
     <Compile Include="Class\Data\FilmAlignParam.cs" />
     <Compile Include="Class\Data\GaloInspParam.cs" />
     <Compile Include="Class\Data\GaloInspTool.cs" />
     <Compile Include="Class\Data\BondingCoordinate.cs" />
+    <Compile Include="Class\EdgeAlgorithm.cs" />
     <Compile Include="Class\InspModel.cs" />
     <Compile Include="Class\InspModelService.cs" />
     <Compile Include="Class\TeachingData.cs" />

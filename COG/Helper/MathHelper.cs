@@ -19,6 +19,14 @@ namespace COG.Helper
             return rad * 180.0 / Math.PI;
         }
 
+        public static double GetSlope(PointF point1, PointF point2)
+        {
+            double deltaX = Math.Abs(point1.X - point2.X);
+            double deltaY = Math.Abs(point1.Y - point2.Y);
+
+            return deltaY / deltaX;
+        }
+
         public static PointF GetOffset(PointF point1, PointF point2)
         {
             PointF offset = new PointF();
