@@ -249,6 +249,17 @@
             this.lblPolarity1 = new System.Windows.Forms.Label();
             this.Combo_Polarity1 = new System.Windows.Forms.ComboBox();
             this.pnlEdgeParam = new System.Windows.Forms.Panel();
+            this.lblOutsideBottomCutPixel = new System.Windows.Forms.Label();
+            this.lblOutsideTopCutPixel = new System.Windows.Forms.Label();
+            this.label9 = new System.Windows.Forms.Label();
+            this.label11 = new System.Windows.Forms.Label();
+            this.label5 = new System.Windows.Forms.Label();
+            this.label6 = new System.Windows.Forms.Label();
+            this.cogDisplayOutSide = new Cognex.VisionPro.CogRecordDisplay();
+            this.cogDisplayInSide = new Cognex.VisionPro.CogRecordDisplay();
+            this.label4 = new System.Windows.Forms.Label();
+            this.cbxDarkMaskingEdgeType = new System.Windows.Forms.ComboBox();
+            this.ckbUseDarkEdge = new System.Windows.Forms.CheckBox();
             this.lblIgnoreSize = new System.Windows.Forms.Label();
             this.label83 = new System.Windows.Forms.Label();
             this.label84 = new System.Windows.Forms.Label();
@@ -257,13 +268,13 @@
             this.label77 = new System.Windows.Forms.Label();
             this.label86 = new System.Windows.Forms.Label();
             this.lblEdgeCaliperFilterSize = new System.Windows.Forms.Label();
-            this.lblBottomCutPixel = new System.Windows.Forms.Label();
+            this.lblInsideBottomCutPixel = new System.Windows.Forms.Label();
             this.lblEdgeThreshold = new System.Windows.Forms.Label();
-            this.lblTopCutPixel = new System.Windows.Forms.Label();
+            this.lblInsideTopCutPixel = new System.Windows.Forms.Label();
             this.label82 = new System.Windows.Forms.Label();
             this.label79 = new System.Windows.Forms.Label();
             this.label90 = new System.Windows.Forms.Label();
-            this.chkUseEdgeThreshold = new System.Windows.Forms.CheckBox();
+            this.chkDarkAlgorithm = new System.Windows.Forms.CheckBox();
             this.Chk_All_Select = new System.Windows.Forms.CheckBox();
             this.chkUseInspDirectionChange = new System.Windows.Forms.CheckBox();
             this.List_NG = new System.Windows.Forms.ListBox();
@@ -301,9 +312,9 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.pnlDisplay = new System.Windows.Forms.Panel();
+            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.txtOffsetX = new System.Windows.Forms.TextBox();
             this.txtOffsetY = new System.Windows.Forms.TextBox();
-            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.groupBoxLightSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBAR_LIGHT)).BeginInit();
             this.gbxToolSetting.SuspendLayout();
@@ -345,6 +356,8 @@
             this.pnlOrgParam.SuspendLayout();
             this.groupBox3.SuspendLayout();
             this.pnlEdgeParam.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cogDisplayOutSide)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cogDisplayInSide)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Result)).BeginInit();
             this.GB_MOVE_.SuspendLayout();
             this.GB_SIZE.SuspendLayout();
@@ -376,7 +389,7 @@
             this.BTN_PATTERN_RUN.FlatAppearance.BorderColor = System.Drawing.Color.Navy;
             this.BTN_PATTERN_RUN.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BTN_PATTERN_RUN.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_PATTERN_RUN.Location = new System.Drawing.Point(775, 813);
+            this.BTN_PATTERN_RUN.Location = new System.Drawing.Point(767, 813);
             this.BTN_PATTERN_RUN.Name = "BTN_PATTERN_RUN";
             this.BTN_PATTERN_RUN.Size = new System.Drawing.Size(120, 48);
             this.BTN_PATTERN_RUN.TabIndex = 9;
@@ -397,7 +410,7 @@
             this.groupBoxLightSetting.Controls.Add(this.TBAR_LIGHT);
             this.groupBoxLightSetting.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
             this.groupBoxLightSetting.ForeColor = System.Drawing.Color.White;
-            this.groupBoxLightSetting.Location = new System.Drawing.Point(10, 870);
+            this.groupBoxLightSetting.Location = new System.Drawing.Point(2, 870);
             this.groupBoxLightSetting.Name = "groupBoxLightSetting";
             this.groupBoxLightSetting.Size = new System.Drawing.Size(238, 167);
             this.groupBoxLightSetting.TabIndex = 33;
@@ -640,7 +653,7 @@
             this.GB_PANEL_WIN.Controls.Add(this.PB_TFOF_PANEL);
             this.GB_PANEL_WIN.Font = new System.Drawing.Font("맑은 고딕", 12F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.GB_PANEL_WIN.ForeColor = System.Drawing.Color.White;
-            this.GB_PANEL_WIN.Location = new System.Drawing.Point(10, 797);
+            this.GB_PANEL_WIN.Location = new System.Drawing.Point(2, 797);
             this.GB_PANEL_WIN.Name = "GB_PANEL_WIN";
             this.GB_PANEL_WIN.Size = new System.Drawing.Size(238, 75);
             this.GB_PANEL_WIN.TabIndex = 48;
@@ -2547,6 +2560,8 @@
             this.DataGridview_Insp.Size = new System.Drawing.Size(445, 264);
             this.DataGridview_Insp.TabIndex = 1;
             this.DataGridview_Insp.CellClick += new System.Windows.Forms.DataGridViewCellEventHandler(this.DataGridview_Insp_CellClick);
+            this.DataGridview_Insp.KeyDown += new System.Windows.Forms.KeyEventHandler(this.DataGridview_Insp_KeyDown);
+            this.DataGridview_Insp.KeyPress += new System.Windows.Forms.KeyPressEventHandler(this.DataGridview_Insp_KeyPress);
             // 
             // COL_00
             // 
@@ -2799,7 +2814,7 @@
             // groupBox1
             // 
             this.groupBox1.Controls.Add(this.pnlParam);
-            this.groupBox1.Controls.Add(this.chkUseEdgeThreshold);
+            this.groupBox1.Controls.Add(this.chkDarkAlgorithm);
             this.groupBox1.Controls.Add(this.Chk_All_Select);
             this.groupBox1.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.groupBox1.Location = new System.Drawing.Point(3, 289);
@@ -2851,10 +2866,10 @@
             this.pnlOrgParam.Controls.Add(this.LAB_CALIPER_SEARCHLENTH);
             this.pnlOrgParam.Controls.Add(this.lblPolarity1);
             this.pnlOrgParam.Controls.Add(this.Combo_Polarity1);
-            this.pnlOrgParam.Location = new System.Drawing.Point(261, 3);
+            this.pnlOrgParam.Location = new System.Drawing.Point(711, 3);
             this.pnlOrgParam.Margin = new System.Windows.Forms.Padding(0);
             this.pnlOrgParam.Name = "pnlOrgParam";
-            this.pnlOrgParam.Size = new System.Drawing.Size(796, 313);
+            this.pnlOrgParam.Size = new System.Drawing.Size(346, 128);
             this.pnlOrgParam.TabIndex = 365;
             this.pnlOrgParam.Visible = false;
             // 
@@ -3356,6 +3371,17 @@
             // 
             // pnlEdgeParam
             // 
+            this.pnlEdgeParam.Controls.Add(this.lblOutsideBottomCutPixel);
+            this.pnlEdgeParam.Controls.Add(this.lblOutsideTopCutPixel);
+            this.pnlEdgeParam.Controls.Add(this.label9);
+            this.pnlEdgeParam.Controls.Add(this.label11);
+            this.pnlEdgeParam.Controls.Add(this.label5);
+            this.pnlEdgeParam.Controls.Add(this.label6);
+            this.pnlEdgeParam.Controls.Add(this.cogDisplayOutSide);
+            this.pnlEdgeParam.Controls.Add(this.cogDisplayInSide);
+            this.pnlEdgeParam.Controls.Add(this.label4);
+            this.pnlEdgeParam.Controls.Add(this.cbxDarkMaskingEdgeType);
+            this.pnlEdgeParam.Controls.Add(this.ckbUseDarkEdge);
             this.pnlEdgeParam.Controls.Add(this.lblIgnoreSize);
             this.pnlEdgeParam.Controls.Add(this.label83);
             this.pnlEdgeParam.Controls.Add(this.label84);
@@ -3364,25 +3390,162 @@
             this.pnlEdgeParam.Controls.Add(this.label77);
             this.pnlEdgeParam.Controls.Add(this.label86);
             this.pnlEdgeParam.Controls.Add(this.lblEdgeCaliperFilterSize);
-            this.pnlEdgeParam.Controls.Add(this.lblBottomCutPixel);
+            this.pnlEdgeParam.Controls.Add(this.lblInsideBottomCutPixel);
             this.pnlEdgeParam.Controls.Add(this.lblEdgeThreshold);
-            this.pnlEdgeParam.Controls.Add(this.lblTopCutPixel);
+            this.pnlEdgeParam.Controls.Add(this.lblInsideTopCutPixel);
             this.pnlEdgeParam.Controls.Add(this.label82);
             this.pnlEdgeParam.Controls.Add(this.label79);
             this.pnlEdgeParam.Controls.Add(this.label90);
             this.pnlEdgeParam.Location = new System.Drawing.Point(3, 3);
             this.pnlEdgeParam.Margin = new System.Windows.Forms.Padding(0);
             this.pnlEdgeParam.Name = "pnlEdgeParam";
-            this.pnlEdgeParam.Size = new System.Drawing.Size(258, 364);
+            this.pnlEdgeParam.Size = new System.Drawing.Size(708, 364);
             this.pnlEdgeParam.TabIndex = 364;
             this.pnlEdgeParam.Visible = false;
+            // 
+            // lblOutsideBottomCutPixel
+            // 
+            this.lblOutsideBottomCutPixel.BackColor = System.Drawing.Color.White;
+            this.lblOutsideBottomCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblOutsideBottomCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblOutsideBottomCutPixel.Location = new System.Drawing.Point(626, 108);
+            this.lblOutsideBottomCutPixel.Name = "lblOutsideBottomCutPixel";
+            this.lblOutsideBottomCutPixel.Size = new System.Drawing.Size(120, 48);
+            this.lblOutsideBottomCutPixel.TabIndex = 381;
+            this.lblOutsideBottomCutPixel.Text = "0";
+            this.lblOutsideBottomCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblOutsideBottomCutPixel.Click += new System.EventHandler(this.lblOutsideBottomCutPixel_Click);
+            // 
+            // lblOutsideTopCutPixel
+            // 
+            this.lblOutsideTopCutPixel.BackColor = System.Drawing.Color.White;
+            this.lblOutsideTopCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblOutsideTopCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblOutsideTopCutPixel.Location = new System.Drawing.Point(626, 58);
+            this.lblOutsideTopCutPixel.Name = "lblOutsideTopCutPixel";
+            this.lblOutsideTopCutPixel.Size = new System.Drawing.Size(120, 48);
+            this.lblOutsideTopCutPixel.TabIndex = 380;
+            this.lblOutsideTopCutPixel.Text = "0";
+            this.lblOutsideTopCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblOutsideTopCutPixel.Click += new System.EventHandler(this.lblOutsideTopCutPixel_Click);
+            // 
+            // label9
+            // 
+            this.label9.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label9.Location = new System.Drawing.Point(504, 108);
+            this.label9.Name = "label9";
+            this.label9.Size = new System.Drawing.Size(120, 48);
+            this.label9.TabIndex = 379;
+            this.label9.Text = "Outside\r\nEnd Cut Pixel";
+            this.label9.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label11
+            // 
+            this.label11.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label11.Location = new System.Drawing.Point(504, 58);
+            this.label11.Name = "label11";
+            this.label11.Size = new System.Drawing.Size(120, 48);
+            this.label11.TabIndex = 378;
+            this.label11.Text = "Outside\r\nStart Cut Pixel";
+            this.label11.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label5
+            // 
+            this.label5.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.label5.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label5.Location = new System.Drawing.Point(504, 158);
+            this.label5.Name = "label5";
+            this.label5.Size = new System.Drawing.Size(192, 25);
+            this.label5.TabIndex = 377;
+            this.label5.Text = "OutSide";
+            this.label5.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // label6
+            // 
+            this.label6.BackColor = System.Drawing.Color.WhiteSmoke;
+            this.label6.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label6.Location = new System.Drawing.Point(275, 158);
+            this.label6.Name = "label6";
+            this.label6.Size = new System.Drawing.Size(192, 25);
+            this.label6.TabIndex = 376;
+            this.label6.Text = "Inside";
+            this.label6.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // cogDisplayOutSide
+            // 
+            this.cogDisplayOutSide.ColorMapLowerClipColor = System.Drawing.Color.Black;
+            this.cogDisplayOutSide.ColorMapLowerRoiLimit = 0D;
+            this.cogDisplayOutSide.ColorMapPredefined = Cognex.VisionPro.Display.CogDisplayColorMapPredefinedConstants.None;
+            this.cogDisplayOutSide.ColorMapUpperClipColor = System.Drawing.Color.Black;
+            this.cogDisplayOutSide.ColorMapUpperRoiLimit = 1D;
+            this.cogDisplayOutSide.DoubleTapZoomCycleLength = 2;
+            this.cogDisplayOutSide.DoubleTapZoomSensitivity = 2.5D;
+            this.cogDisplayOutSide.Location = new System.Drawing.Point(504, 181);
+            this.cogDisplayOutSide.MouseWheelMode = Cognex.VisionPro.Display.CogDisplayMouseWheelModeConstants.Zoom1;
+            this.cogDisplayOutSide.MouseWheelSensitivity = 1D;
+            this.cogDisplayOutSide.Name = "cogDisplayOutSide";
+            this.cogDisplayOutSide.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("cogDisplayOutSide.OcxState")));
+            this.cogDisplayOutSide.Size = new System.Drawing.Size(192, 168);
+            this.cogDisplayOutSide.TabIndex = 375;
+            // 
+            // cogDisplayInSide
+            // 
+            this.cogDisplayInSide.ColorMapLowerClipColor = System.Drawing.Color.Black;
+            this.cogDisplayInSide.ColorMapLowerRoiLimit = 0D;
+            this.cogDisplayInSide.ColorMapPredefined = Cognex.VisionPro.Display.CogDisplayColorMapPredefinedConstants.None;
+            this.cogDisplayInSide.ColorMapUpperClipColor = System.Drawing.Color.Black;
+            this.cogDisplayInSide.ColorMapUpperRoiLimit = 1D;
+            this.cogDisplayInSide.DoubleTapZoomCycleLength = 2;
+            this.cogDisplayInSide.DoubleTapZoomSensitivity = 2.5D;
+            this.cogDisplayInSide.Location = new System.Drawing.Point(275, 183);
+            this.cogDisplayInSide.MouseWheelMode = Cognex.VisionPro.Display.CogDisplayMouseWheelModeConstants.Zoom1;
+            this.cogDisplayInSide.MouseWheelSensitivity = 1D;
+            this.cogDisplayInSide.Name = "cogDisplayInSide";
+            this.cogDisplayInSide.OcxState = ((System.Windows.Forms.AxHost.State)(resources.GetObject("cogDisplayInSide.OcxState")));
+            this.cogDisplayInSide.Size = new System.Drawing.Size(192, 166);
+            this.cogDisplayInSide.TabIndex = 374;
+            // 
+            // label4
+            // 
+            this.label4.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.label4.Location = new System.Drawing.Point(255, 8);
+            this.label4.Name = "label4";
+            this.label4.Size = new System.Drawing.Size(120, 48);
+            this.label4.TabIndex = 372;
+            this.label4.Text = "Masking Type";
+            this.label4.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            // 
+            // cbxDarkMaskingEdgeType
+            // 
+            this.cbxDarkMaskingEdgeType.DrawMode = System.Windows.Forms.DrawMode.OwnerDrawFixed;
+            this.cbxDarkMaskingEdgeType.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cbxDarkMaskingEdgeType.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Regular, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.cbxDarkMaskingEdgeType.FormattingEnabled = true;
+            this.cbxDarkMaskingEdgeType.Location = new System.Drawing.Point(377, 8);
+            this.cbxDarkMaskingEdgeType.Margin = new System.Windows.Forms.Padding(0);
+            this.cbxDarkMaskingEdgeType.Name = "cbxDarkMaskingEdgeType";
+            this.cbxDarkMaskingEdgeType.Size = new System.Drawing.Size(189, 34);
+            this.cbxDarkMaskingEdgeType.TabIndex = 373;
+            this.cbxDarkMaskingEdgeType.DrawItem += new System.Windows.Forms.DrawItemEventHandler(this.Combo_Polarity_DrawItem);
+            this.cbxDarkMaskingEdgeType.SelectedIndexChanged += new System.EventHandler(this.cbxDarkMaskingEdgeType_SelectedIndexChanged);
+            // 
+            // ckbUseDarkEdge
+            // 
+            this.ckbUseDarkEdge.AutoSize = true;
+            this.ckbUseDarkEdge.Location = new System.Drawing.Point(601, 14);
+            this.ckbUseDarkEdge.Name = "ckbUseDarkEdge";
+            this.ckbUseDarkEdge.Size = new System.Drawing.Size(104, 19);
+            this.ckbUseDarkEdge.TabIndex = 371;
+            this.ckbUseDarkEdge.Text = "Use Dark Edge";
+            this.ckbUseDarkEdge.UseVisualStyleBackColor = true;
+            this.ckbUseDarkEdge.CheckStateChanged += new System.EventHandler(this.ckbUseDarkEdge_CheckStateChanged);
             // 
             // lblIgnoreSize
             // 
             this.lblIgnoreSize.BackColor = System.Drawing.Color.White;
             this.lblIgnoreSize.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lblIgnoreSize.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblIgnoreSize.Location = new System.Drawing.Point(129, 308);
+            this.lblIgnoreSize.Location = new System.Drawing.Point(129, 208);
             this.lblIgnoreSize.Name = "lblIgnoreSize";
             this.lblIgnoreSize.Size = new System.Drawing.Size(120, 48);
             this.lblIgnoreSize.TabIndex = 370;
@@ -3403,7 +3566,7 @@
             // label84
             // 
             this.label84.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label84.Location = new System.Drawing.Point(7, 308);
+            this.label84.Location = new System.Drawing.Point(7, 208);
             this.label84.Name = "label84";
             this.label84.Size = new System.Drawing.Size(120, 48);
             this.label84.TabIndex = 369;
@@ -3428,7 +3591,7 @@
             this.lblMaskingValue.BackColor = System.Drawing.Color.White;
             this.lblMaskingValue.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.lblMaskingValue.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblMaskingValue.Location = new System.Drawing.Point(129, 258);
+            this.lblMaskingValue.Location = new System.Drawing.Point(129, 158);
             this.lblMaskingValue.Name = "lblMaskingValue";
             this.lblMaskingValue.Size = new System.Drawing.Size(120, 48);
             this.lblMaskingValue.TabIndex = 368;
@@ -3449,7 +3612,7 @@
             // label86
             // 
             this.label86.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label86.Location = new System.Drawing.Point(7, 258);
+            this.label86.Location = new System.Drawing.Point(7, 158);
             this.label86.Name = "label86";
             this.label86.Size = new System.Drawing.Size(120, 48);
             this.label86.TabIndex = 367;
@@ -3469,18 +3632,18 @@
             this.lblEdgeCaliperFilterSize.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblEdgeCaliperFilterSize.Click += new System.EventHandler(this.lblEdgeCaliperFilterSize_Click);
             // 
-            // lblBottomCutPixel
+            // lblInsideBottomCutPixel
             // 
-            this.lblBottomCutPixel.BackColor = System.Drawing.Color.White;
-            this.lblBottomCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblBottomCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblBottomCutPixel.Location = new System.Drawing.Point(129, 208);
-            this.lblBottomCutPixel.Name = "lblBottomCutPixel";
-            this.lblBottomCutPixel.Size = new System.Drawing.Size(120, 48);
-            this.lblBottomCutPixel.TabIndex = 366;
-            this.lblBottomCutPixel.Text = "0";
-            this.lblBottomCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblBottomCutPixel.Click += new System.EventHandler(this.lblBottomCutPixel_Click);
+            this.lblInsideBottomCutPixel.BackColor = System.Drawing.Color.White;
+            this.lblInsideBottomCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblInsideBottomCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblInsideBottomCutPixel.Location = new System.Drawing.Point(377, 108);
+            this.lblInsideBottomCutPixel.Name = "lblInsideBottomCutPixel";
+            this.lblInsideBottomCutPixel.Size = new System.Drawing.Size(120, 48);
+            this.lblInsideBottomCutPixel.TabIndex = 366;
+            this.lblInsideBottomCutPixel.Text = "0";
+            this.lblInsideBottomCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblInsideBottomCutPixel.Click += new System.EventHandler(this.lblInsideBottomCutPixel_Click);
             // 
             // lblEdgeThreshold
             // 
@@ -3495,37 +3658,37 @@
             this.lblEdgeThreshold.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             this.lblEdgeThreshold.Click += new System.EventHandler(this.lblEdgeThreshold_Click);
             // 
-            // lblTopCutPixel
+            // lblInsideTopCutPixel
             // 
-            this.lblTopCutPixel.BackColor = System.Drawing.Color.White;
-            this.lblTopCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.lblTopCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.lblTopCutPixel.Location = new System.Drawing.Point(129, 158);
-            this.lblTopCutPixel.Name = "lblTopCutPixel";
-            this.lblTopCutPixel.Size = new System.Drawing.Size(120, 48);
-            this.lblTopCutPixel.TabIndex = 365;
-            this.lblTopCutPixel.Text = "0";
-            this.lblTopCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
-            this.lblTopCutPixel.Click += new System.EventHandler(this.lblTopCutPixel_Click);
+            this.lblInsideTopCutPixel.BackColor = System.Drawing.Color.White;
+            this.lblInsideTopCutPixel.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            this.lblInsideTopCutPixel.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            this.lblInsideTopCutPixel.Location = new System.Drawing.Point(377, 58);
+            this.lblInsideTopCutPixel.Name = "lblInsideTopCutPixel";
+            this.lblInsideTopCutPixel.Size = new System.Drawing.Size(120, 48);
+            this.lblInsideTopCutPixel.TabIndex = 365;
+            this.lblInsideTopCutPixel.Text = "0";
+            this.lblInsideTopCutPixel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
+            this.lblInsideTopCutPixel.Click += new System.EventHandler(this.lblInsideTopCutPixel_Click);
             // 
             // label82
             // 
             this.label82.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label82.Location = new System.Drawing.Point(7, 208);
+            this.label82.Location = new System.Drawing.Point(255, 108);
             this.label82.Name = "label82";
             this.label82.Size = new System.Drawing.Size(120, 48);
             this.label82.TabIndex = 364;
-            this.label82.Text = "Bottom Cut Pixel";
+            this.label82.Text = "Inside\r\nEnd Cut Pixel";
             this.label82.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label79
             // 
             this.label79.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
-            this.label79.Location = new System.Drawing.Point(7, 158);
+            this.label79.Location = new System.Drawing.Point(255, 58);
             this.label79.Name = "label79";
             this.label79.Size = new System.Drawing.Size(120, 48);
             this.label79.TabIndex = 363;
-            this.label79.Text = "Top Cut Pixel";
+            this.label79.Text = "InSide\r\nStart Cut Pixel";
             this.label79.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
             // label90
@@ -3538,16 +3701,16 @@
             this.label90.Text = "FILTER SIZE";
             this.label90.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
-            // chkUseEdgeThreshold
+            // chkDarkAlgorithm
             // 
-            this.chkUseEdgeThreshold.AutoSize = true;
-            this.chkUseEdgeThreshold.Location = new System.Drawing.Point(3, 21);
-            this.chkUseEdgeThreshold.Name = "chkUseEdgeThreshold";
-            this.chkUseEdgeThreshold.Size = new System.Drawing.Size(131, 19);
-            this.chkUseEdgeThreshold.TabIndex = 360;
-            this.chkUseEdgeThreshold.Text = "Use Edge Threshold";
-            this.chkUseEdgeThreshold.UseVisualStyleBackColor = true;
-            this.chkUseEdgeThreshold.Click += new System.EventHandler(this.chkUseEdgeThreshold_Click);
+            this.chkDarkAlgorithm.AutoSize = true;
+            this.chkDarkAlgorithm.Location = new System.Drawing.Point(3, 21);
+            this.chkDarkAlgorithm.Name = "chkDarkAlgorithm";
+            this.chkDarkAlgorithm.Size = new System.Drawing.Size(109, 19);
+            this.chkDarkAlgorithm.TabIndex = 360;
+            this.chkDarkAlgorithm.Text = "Dark Algorithm";
+            this.chkDarkAlgorithm.UseVisualStyleBackColor = true;
+            this.chkDarkAlgorithm.Click += new System.EventHandler(this.chkUseEdgeThreshold_Click);
             // 
             // Chk_All_Select
             // 
@@ -3639,7 +3802,7 @@
             this.btn_Inspection_Test.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.btn_Inspection_Test.Font = new System.Drawing.Font("맑은 고딕", 9.75F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.btn_Inspection_Test.ForeColor = System.Drawing.Color.White;
-            this.btn_Inspection_Test.Location = new System.Drawing.Point(775, 869);
+            this.btn_Inspection_Test.Location = new System.Drawing.Point(767, 869);
             this.btn_Inspection_Test.Name = "btn_Inspection_Test";
             this.btn_Inspection_Test.Size = new System.Drawing.Size(120, 48);
             this.btn_Inspection_Test.TabIndex = 304;
@@ -3651,7 +3814,7 @@
             // 
             this.label61.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.label61.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.label61.Location = new System.Drawing.Point(564, 987);
+            this.label61.Location = new System.Drawing.Point(556, 987);
             this.label61.Name = "label61";
             this.label61.Size = new System.Drawing.Size(120, 48);
             this.label61.TabIndex = 309;
@@ -3663,7 +3826,7 @@
             this.Lab_Tact.BackColor = System.Drawing.Color.White;
             this.Lab_Tact.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.Lab_Tact.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
-            this.Lab_Tact.Location = new System.Drawing.Point(685, 987);
+            this.Lab_Tact.Location = new System.Drawing.Point(677, 987);
             this.Lab_Tact.Name = "Lab_Tact";
             this.Lab_Tact.Size = new System.Drawing.Size(120, 48);
             this.Lab_Tact.TabIndex = 310;
@@ -3677,7 +3840,7 @@
             this.GB_MOVE_.Controls.Add(this.BTN_DOWN);
             this.GB_MOVE_.Controls.Add(this.BTN_LEFT);
             this.GB_MOVE_.Controls.Add(this.BTN_RIGHT);
-            this.GB_MOVE_.Location = new System.Drawing.Point(540, 806);
+            this.GB_MOVE_.Location = new System.Drawing.Point(532, 806);
             this.GB_MOVE_.Name = "GB_MOVE_";
             this.GB_MOVE_.Size = new System.Drawing.Size(227, 177);
             this.GB_MOVE_.TabIndex = 129;
@@ -3778,7 +3941,7 @@
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_INC_H);
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_INC_V);
             this.GB_SIZE.Controls.Add(this.BTN_SIZE_DEC_V);
-            this.GB_SIZE.Location = new System.Drawing.Point(1368, 12658);
+            this.GB_SIZE.Location = new System.Drawing.Point(1368, 13115);
             this.GB_SIZE.Name = "GB_SIZE";
             this.GB_SIZE.Size = new System.Drawing.Size(229, 203);
             this.GB_SIZE.TabIndex = 132;
@@ -3868,7 +4031,7 @@
             this.BTN_PATTERN_COPY.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_PATTERN_COPY.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             this.BTN_PATTERN_COPY.Font = new System.Drawing.Font("맑은 고딕", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
-            this.BTN_PATTERN_COPY.Location = new System.Drawing.Point(254, 811);
+            this.BTN_PATTERN_COPY.Location = new System.Drawing.Point(246, 811);
             this.BTN_PATTERN_COPY.Name = "BTN_PATTERN_COPY";
             this.BTN_PATTERN_COPY.Size = new System.Drawing.Size(120, 48);
             this.BTN_PATTERN_COPY.TabIndex = 133;
@@ -3884,7 +4047,7 @@
             this.BTN_SAVE.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_SAVE.FlatAppearance.BorderSize = 2;
             this.BTN_SAVE.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_SAVE.Location = new System.Drawing.Point(1659, 932);
+            this.BTN_SAVE.Location = new System.Drawing.Point(1658, 935);
             this.BTN_SAVE.Name = "BTN_SAVE";
             this.BTN_SAVE.Size = new System.Drawing.Size(100, 101);
             this.BTN_SAVE.TabIndex = 14;
@@ -3901,7 +4064,7 @@
             this.BTN_EXIT.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_EXIT.FlatAppearance.BorderSize = 2;
             this.BTN_EXIT.Font = new System.Drawing.Font("Microsoft Sans Serif", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_EXIT.Location = new System.Drawing.Point(1759, 932);
+            this.BTN_EXIT.Location = new System.Drawing.Point(1758, 935);
             this.BTN_EXIT.Name = "BTN_EXIT";
             this.BTN_EXIT.Size = new System.Drawing.Size(100, 101);
             this.BTN_EXIT.TabIndex = 1;
@@ -3914,7 +4077,7 @@
             // 
             this.BTN_CAM_DIST.BackColor = System.Drawing.Color.DarkGray;
             this.BTN_CAM_DIST.Font = new System.Drawing.Font("Microsoft Sans Serif", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_CAM_DIST.Location = new System.Drawing.Point(1485, 12658);
+            this.BTN_CAM_DIST.Location = new System.Drawing.Point(1485, 13115);
             this.BTN_CAM_DIST.Name = "BTN_CAM_DIST";
             this.BTN_CAM_DIST.Size = new System.Drawing.Size(136, 43);
             this.BTN_CAM_DIST.TabIndex = 279;
@@ -3934,7 +4097,7 @@
             this.BTN_LIVEMODE.FlatAppearance.BorderColor = System.Drawing.Color.White;
             this.BTN_LIVEMODE.FlatAppearance.BorderSize = 2;
             this.BTN_LIVEMODE.Font = new System.Drawing.Font("맑은 고딕", 14.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
-            this.BTN_LIVEMODE.Location = new System.Drawing.Point(1659, 806);
+            this.BTN_LIVEMODE.Location = new System.Drawing.Point(1658, 809);
             this.BTN_LIVEMODE.Name = "BTN_LIVEMODE";
             this.BTN_LIVEMODE.Size = new System.Drawing.Size(200, 126);
             this.BTN_LIVEMODE.TabIndex = 342;
@@ -4038,22 +4201,6 @@
             this.pnlDisplay.Size = new System.Drawing.Size(896, 798);
             this.pnlDisplay.TabIndex = 365;
             // 
-            // txtOffsetX
-            // 
-            this.txtOffsetX.Location = new System.Drawing.Point(434, 876);
-            this.txtOffsetX.Name = "txtOffsetX";
-            this.txtOffsetX.Size = new System.Drawing.Size(100, 21);
-            this.txtOffsetX.TabIndex = 362;
-            this.txtOffsetX.Text = "1";
-            // 
-            // txtOffsetY
-            // 
-            this.txtOffsetY.Location = new System.Drawing.Point(434, 905);
-            this.txtOffsetY.Name = "txtOffsetY";
-            this.txtOffsetY.Size = new System.Drawing.Size(100, 21);
-            this.txtOffsetY.TabIndex = 363;
-            this.txtOffsetY.Text = "1";
-            // 
             // PT_DISPLAY_CONTROL
             // 
             this.PT_DISPLAY_CONTROL.BackColor = System.Drawing.Color.DarkGray;
@@ -4068,13 +4215,29 @@
             this.PT_DISPLAY_CONTROL.TabIndex = 278;
             this.PT_DISPLAY_CONTROL.UseCustomCross = false;
             // 
+            // txtOffsetX
+            // 
+            this.txtOffsetX.Location = new System.Drawing.Point(426, 966);
+            this.txtOffsetX.Name = "txtOffsetX";
+            this.txtOffsetX.Size = new System.Drawing.Size(100, 21);
+            this.txtOffsetX.TabIndex = 362;
+            this.txtOffsetX.Text = "1";
+            // 
+            // txtOffsetY
+            // 
+            this.txtOffsetY.Location = new System.Drawing.Point(426, 995);
+            this.txtOffsetY.Name = "txtOffsetY";
+            this.txtOffsetY.Size = new System.Drawing.Size(100, 21);
+            this.txtOffsetY.TabIndex = 363;
+            this.txtOffsetY.Text = "1";
+            // 
             // PatternTeachForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1905, 933);
+            this.ClientSize = new System.Drawing.Size(1869, 1013);
             this.ControlBox = false;
             this.Controls.Add(this.txtOffsetY);
             this.Controls.Add(this.txtOffsetX);
@@ -4155,6 +4318,9 @@
             this.pnlOrgParam.ResumeLayout(false);
             this.groupBox3.ResumeLayout(false);
             this.pnlEdgeParam.ResumeLayout(false);
+            this.pnlEdgeParam.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.cogDisplayOutSide)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.cogDisplayInSide)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.dataGridView_Result)).EndInit();
             this.GB_MOVE_.ResumeLayout(false);
             this.GB_SIZE.ResumeLayout(false);
@@ -4387,13 +4553,13 @@
         private System.Windows.Forms.DataGridViewTextBoxColumn Column5;
         private System.Windows.Forms.DataGridViewTextBoxColumn Column7;
         private System.Windows.Forms.CheckBox chkUseInspDirectionChange;
-        private System.Windows.Forms.CheckBox chkUseEdgeThreshold;
+        private System.Windows.Forms.CheckBox chkDarkAlgorithm;
         private System.Windows.Forms.Label label77;
         private System.Windows.Forms.Label lblEdgeThreshold;
         private System.Windows.Forms.Label lblMaskingValue;
         private System.Windows.Forms.Label label86;
-        private System.Windows.Forms.Label lblBottomCutPixel;
-        private System.Windows.Forms.Label lblTopCutPixel;
+        private System.Windows.Forms.Label lblInsideBottomCutPixel;
+        private System.Windows.Forms.Label lblInsideTopCutPixel;
         private System.Windows.Forms.Label label82;
         private System.Windows.Forms.Label label79;
         private System.Windows.Forms.Label lblIgnoreSize;
@@ -4444,5 +4610,16 @@
         private System.Windows.Forms.ComboBox Combo_Polarity2;
         private System.Windows.Forms.TextBox txtOffsetX;
         private System.Windows.Forms.TextBox txtOffsetY;
+        private System.Windows.Forms.CheckBox ckbUseDarkEdge;
+        private System.Windows.Forms.Label label4;
+        private System.Windows.Forms.ComboBox cbxDarkMaskingEdgeType;
+        private System.Windows.Forms.Label label5;
+        private System.Windows.Forms.Label label6;
+        public Cognex.VisionPro.CogRecordDisplay cogDisplayOutSide;
+        public Cognex.VisionPro.CogRecordDisplay cogDisplayInSide;
+        private System.Windows.Forms.Label lblOutsideBottomCutPixel;
+        private System.Windows.Forms.Label lblOutsideTopCutPixel;
+        private System.Windows.Forms.Label label9;
+        private System.Windows.Forms.Label label11;
     }
 }

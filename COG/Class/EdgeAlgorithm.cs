@@ -1,4 +1,6 @@
-﻿using Cognex.VisionPro;
+﻿using COG.Class.Data;
+using COG.Helper;
+using Cognex.VisionPro;
 using Cognex.VisionPro.Caliper;
 using Emgu.CV;
 using Emgu.CV.CvEnum;
@@ -14,328 +16,376 @@ using System.Threading.Tasks;
 
 namespace COG.Class
 {
-    /* Sample
-         * [Top] : 분주 상단
-         *  EdgeAlgorithm algo = new EdgeAlgorithm();
-         *  algo.Threshold = 30;
-         *  algo.IgnoreSize = 10;
-         *  algo.MaskingValue = 180;
-         *  algo.Inspect(cogImage, ref tool, EdgeDirection.Top);
-         *  
-         *  
-         * [Left] : 이미지 왼쪽 하단
-         *  EdgeAlgorithm algo = new EdgeAlgorithm();
-         *  algo.Threshold = 8;
-         *  algo.IgnoreSize = 10;
-         *  algo.MaskingValue = 180;
-         *  algo.Inspect(cogImage, ref tool, EdgeDirection.Left);
-         */
     public class EdgeAlgorithm
     {
-        // Top -> Threshold : 30, IgnoreSize : 10, MaskingValue : 180
-        // Left -> Threshold : 8 , IgnoreSize : 10
-
-        public int Threshold { get; set; } = 30;
-
-        public int IgnoreSize { get; set; } = 10;
-
-        public int MaskingValue { get; set; } = 180;
-
-        public Mat Inspect(CogImage8Grey cogImage, ref CogFindLineTool tool, EdgeDirection direction, CogTransform2DLinear transform, CogRectangle cropRect)
+        public Mat GetEdgeProcessingImage(Mat mat, GaloInspTool galoInspTool, bool isVertical, bool isInside, bool isDebug)
         {
-            Mat matImage = GetConvertMatImage(cogImage);
+            var inspParam = galoInspTool.DarkArea;
 
-            Mat edgeEnhanceCogImage = GetEdgeProcessingImage(matImage, direction, Threshold, IgnoreSize);
-            matImage.Dispose();
+            Mat tempMat = mat.Clone();
+            CvInvoke.GaussianBlur(mat, tempMat, new Size(5, 5), 2);
 
-
-            return edgeEnhanceCogImage;
-        }
-
-        //public Mat Inspect(CogImage8Grey cogImage, CogFindLineTool tool)
-        //{
-        //    Mat matImage = GetConvertMatImage(cogImage);
-
-
-        //}
-
-        void calcMovePoint(PointF point1, PointF point2, double distance, out PointF calcPoint1, out PointF calcPoint2)
-        {
-            // 직선의 방정식을 기준으로 직교하는 방향 벡터 계산
-            double deltaX = point2.X - point1.X;
-            double deltaY = point2.Y - point1.Y;
-            double magnitude = Math.Sqrt(deltaX * deltaX + deltaY * deltaY);
-
-            double unitVectorX = deltaX / magnitude;
-            double unitVectorY = deltaY / magnitude;
-
-            // 각 점에 대해 이동 벡터 계산 및 적용
-
-            calcPoint1 = new PointF();
-            calcPoint1.X = (float)(point1.X + (distance * unitVectorY));
-            calcPoint1.Y = (float)(point1.Y - (distance * unitVectorX));
-
-            calcPoint2 = new PointF();
-            calcPoint2.X = (float)(point2.X + (distance * unitVectorY));
-            calcPoint2.Y = (float)(point2.Y - (distance * unitVectorX));
-        }
-
-        //private Rectangle GetROI(CogFindLineTool tool)
-        //{
-        //    var lineSegment = tool.RunParams.ExpectedLineSegment;
-        //    lineSegment.GetStartEnd(out double startX, out double startY, out double endX, out double endY);
-        //    lineSegment.GetStartLengthRotation(out double startX_temp, out double startY_temp, out double length, out double rotation);
-
-        //    if(rotation > 0)
-        //    {
-
-        //    }
-        //    else
-        //    {
-        //        if(derection > 0)
-        //        {
-
-        //        }
-        //        else
-        //        {
-
-        //        }
-        //    }
-        //}
-
-
-        public List<int> GetVerticalMinEdgeTopPosY(Mat mat, int nTopCutpixel, int nBottomCutPixel)
-        {
-            int searchGap = 3;
-
-            unsafe
-            {
-                List<int> valueList = new List<int>();
-
-                IntPtr ptrData = mat.DataPointer;
-                int stride = mat.Step;
-                byte* data = (byte*)(void*)ptrData;
-
-                for (int w = 0; w < mat.Width; w += searchGap)
-                {
-                    for (int h = 0; h < mat.Height; h++)
-                    {
-                        int index = (stride * h) + w;
-                        int value = Convert.ToInt32(data[index]);
-                        if (h < nTopCutpixel)
-                            continue;
-
-                        if (h > mat.Height - nBottomCutPixel)
-                            continue;
-                        if (value == 0)
-                        {
-                            valueList.Add(h);
-                            break;
-                        }
-                    }
-                }
-                if (valueList.Count > 0)
-                {
-                    return valueList;
-                }
-                else
-                {
-                    return new List<int>();
-                }
-            }
-        }
-
-        public List<EdgePoint> GetVerticalEdgeBottomPos(Mat mat, int nTopCutpixel, int nBottomCutPixel)
-        {
-            int searchGap = 3;
-
-            unsafe
-            {
-                List<EdgePoint> pointList = new List<EdgePoint>();
-
-                IntPtr ptrData = mat.DataPointer;
-                int stride = mat.Step;
-                byte* data = (byte*)(void*)ptrData;
-
-                for (int w = 0; w < mat.Width; w += searchGap)
-                {
-                    for (int h = mat.Height - 1; h > 0; h--)
-                    {
-                        int index = (stride * h) + w;
-                        int value = Convert.ToInt32(data[index]);
-                        int temp = mat.Height - 1 - h;
-                        if (mat.Height - 1 - h < nBottomCutPixel)
-                            continue;
-
-                        if (h < nTopCutpixel)
-                            continue;
-                        if (value == 0)
-                        {
-                            pointList.Add(new EdgePoint(w, h));
-                            break;
-                        }
-                    }
-                }
-
-                return pointList;
-            }
-        }
-
-        public int GetHorizontalMinEdgePosY(Mat mat, int nTopCutpixel, int nBottomCutPixel)
-        {
-            int searchGap = 3;
-
-            unsafe
-            {
-                List<int> valueList = new List<int>();
-
-                IntPtr ptrData = mat.DataPointer;
-                int stride = mat.Step;
-                byte* data = (byte*)(void*)ptrData;
-
-                for (int h = 0; h < mat.Height; h += searchGap)
-                {
-                    for (int w = 0; w < mat.Width; w++)
-                    {
-                        int index = (stride * h) + w;
-                        int value = Convert.ToInt32(data[index]);
-                        if (w < nTopCutpixel)
-                            continue;
-
-                        if (w > mat.Width - nBottomCutPixel)
-                            continue;
-                        if (value == 0)
-                        {
-                            valueList.Add(w);
-                            break;
-                        }
-                    }
-                }
-                if (valueList.Count > 0)
-                {
-                    return valueList.Min();
-                }
-                else
-                {
-                    return -1;
-                }
-            }
-        }
-
-        public List<EdgePoint> GetHorizontalEdgePos(Mat mat, int nTopCutpixel, int nBottomCutPixel)
-        {
-            int searchGap = 3;
-
-            unsafe
-            {
-                List<EdgePoint> valueList = new List<EdgePoint>();
-
-                IntPtr ptrData = mat.DataPointer;
-                int stride = mat.Step;
-                byte* data = (byte*)(void*)ptrData;
-
-                for (int h = 0; h < mat.Height; h += searchGap)
-                {
-                    for (int w = mat.Width - 1; w > 0; w--)
-                    {
-                        int index = (stride * h) + w;
-                        int value = Convert.ToInt32(data[index]);
-
-                        int temp = mat.Width - 1 - w;
-                        if (mat.Width - 1 - w < nTopCutpixel)
-                            continue;
-
-                        if (w > mat.Width - nBottomCutPixel)
-                            continue;
-                        if (value == 0)
-                        {
-                            valueList.Add(new EdgePoint(w, h));
-                            break;
-                        }
-                    }
-                }
-                return valueList;
-            }
-        }
-
-        public Mat CropRoi(Mat mat, Rectangle roi)
-        {
-            int padLeft = 0 - roi.X;
-            int padTop = 0 - roi.Y;
-            int padRight = (roi.X + roi.Width) - mat.Width;
-            int padBottom = (roi.Y + roi.Height) - mat.Height;
-            Rectangle nonPadRect = new Rectangle(
-                roi.X + (padLeft > 0 ? padLeft : 0),
-                roi.Y + (padTop > 0 ? padTop : 0),
-                roi.Width - (padRight > 0 ? padRight : 0) - (padLeft > 0 ? padLeft : 0),
-                roi.Height - (padBottom > 0 ? padBottom : 0) - (padTop > 0 ? padTop : 0));
-
-            Rectangle matRect = new Rectangle(0, 0, mat.Width, mat.Height);
-            matRect.Intersect(nonPadRect);
-            if (matRect.IsEmpty)
-                return Mat.Zeros(roi.Height, roi.Width, DepthType.Cv8U, mat.NumberOfChannels);
-
-            Mat boundMatOrigin = new Mat(mat, nonPadRect).Clone();
-            if (padLeft > 0 || padTop > 0 || padRight > 0 || padBottom > 0)
-            {
-                CvInvoke.CopyMakeBorder(boundMatOrigin, boundMatOrigin,
-                    padTop > 0 ? padTop : 0,
-                    padBottom > 0 ? padBottom : 0,
-                    padLeft > 0 ? padLeft : 0,
-                    padRight > 0 ? padRight : 0,
-                    BorderType.Constant, new MCvScalar(0));
-            }
-            return boundMatOrigin;
-        }
-
-        private List<double> GetEdgeYPos(CogImage8Grey cogImage, CogFindLineTool tool, CogTransform2DLinear transform, CogRectangle cropRect)
-        {
-            CogFindLineTool mappingTool = new CogFindLineTool(tool);
-            List<double> foundPosYList = new List<double>();
-
-            double startX = tool.RunParams.ExpectedLineSegment.StartX;
-            double startY = tool.RunParams.ExpectedLineSegment.StartY;
-            double endX = tool.RunParams.ExpectedLineSegment.EndX;
-            double endY = tool.RunParams.ExpectedLineSegment.EndY;
-            var liner = mappingTool.RunParams.ExpectedLineSegment.GetParentFromChildTransform() as CogTransform2DLinear;
-            liner.MapPoint(startX, startY, out double mapX, out double mapY);
-
-            var liner2 = cogImage.PixelFromRootTransform as CogTransform2DLinear;
-            liner2.MapPoint(mapX, mapY, out double mapX33, out double mapY333);
-            transform.MapPoint(startX, startY, out double x1, out double x2);
-
-
-            mappingTool.InputImage = cogImage;
-            mappingTool.Run();
-
-            if (mappingTool.Results != null)
-            {
-                foreach (CogFindLineResult result in mappingTool.Results)
-                {
-                    if (result.Found)
-                        foundPosYList.Add(result.Y);
-                }
-            }
-
-            return foundPosYList;
-        }
-
-        public Mat GetEdgeProcessingImage(Mat mat, EdgeDirection direction, int threshold, int ignoreSize)
-        {
-            CvInvoke.GaussianBlur(mat, mat, new Size(5, 5), 2);
-
-            Mat shadowMat = AddShadow(mat, direction);
-            //shadowMat.Save(@"D:\shadowMat.bmp");
+            Mat shadowMat = AddShadow(tempMat, isVertical);
+            if (isDebug)
+                shadowMat.Save(@"D:\shadowMat.bmp");
 
             Mat dest = new Mat();
-            CvInvoke.Threshold(shadowMat, dest, threshold, 255, ThresholdType.Binary);
-            //dest.Save(@"D:\dest.bmp");
-            var maskImage = GetSizeFilterImage(dest, ignoreSize);
+            CvInvoke.Threshold(shadowMat, dest, inspParam.Threshold, 255, ThresholdType.Binary);
+            if (isDebug)
+                dest.Save(@"D:\dest.bmp");
 
+            var binaryImage = GetSizeFilterImage(dest, inspParam.IgnoreSize);
+            if (isDebug)
+                dest.Save(@"D:\binaryImage.bmp");
+
+            List<Point> searchedPoints = SearchEdge(binaryImage, galoInspTool, isVertical, isInside);
+            if(searchedPoints.Count > 0)
+            {
+                int MaskingValue = inspParam.MaskingValue;
+                //MCvScalar maskingColor = new MCvScalar(141);
+                MCvScalar maskingColor = new MCvScalar(MaskingValue);
+                CvInvoke.FillPoly(mat, new VectorOfPoint(searchedPoints.ToArray()), maskingColor);
+            }
+
+            binaryImage.Dispose();
             shadowMat.Dispose();
             dest.Dispose();
 
-            return maskImage;
+            return mat;
+        }
+
+        private List<Point> SearchEdge(Mat image, GaloInspTool galoInspTool, bool isVertical, bool isInside)
+        {
+            var inspParam = galoInspTool.DarkArea;
+            List<Point> searchedPointList = new List<Point>();
+            SetCutPixelValue(inspParam, isInside, out int startCutPixel, out int endCutPixel);
+            if (isVertical)
+            {
+                galoInspTool.FindLineTool.RunParams.ExpectedLineSegment.GetStartEnd(out double startX, out double startY, out double endX, out double endY);
+                if(startX < endX)
+                {
+                    double direction = galoInspTool.FindLineTool.RunParams.CaliperSearchDirection * (-1);
+                    if (direction < 0)
+                    {
+                        var edgePointList = GetHorizontalEdgePointList(image, startCutPixel, endCutPixel, true);
+                        searchedPointList.AddRange(edgePointList);
+
+
+                    }
+                    else
+                    {
+                        var edgePointList = GetHorizontalEdgePointList(image, startCutPixel, endCutPixel, false);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                }
+                else
+                {
+                    if (galoInspTool.FindLineTool.RunParams.CaliperSearchDirection < 0)
+                    {
+                        var edgePointList = GetHorizontalEdgePointList(image, startCutPixel, endCutPixel, true);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                    else
+                    {
+                        var edgePointList = GetHorizontalEdgePointList(image, startCutPixel, endCutPixel, false);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                }
+            }
+            else
+            {
+                galoInspTool.FindLineTool.RunParams.ExpectedLineSegment.GetStartEnd(out double startX, out double startY, out double endX, out double endY);
+
+                if (startY > endY)
+                {
+                    double direction = galoInspTool.FindLineTool.RunParams.CaliperSearchDirection * (-1);
+
+                    if(direction < 0)
+                    {
+                        var edgePointList = GetVerticalEdgePointList(image, startCutPixel, endCutPixel, true);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                    else
+                    {
+                        var edgePointList = GetVerticalEdgePointList(image, startCutPixel, endCutPixel, false);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                }
+                else
+                {
+                    if (galoInspTool.FindLineTool.RunParams.CaliperSearchDirection < 0)
+                    {
+                        var edgePointList = GetVerticalEdgePointList(image, startCutPixel, endCutPixel, true);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                    else
+                    {
+                        var edgePointList = GetVerticalEdgePointList(image, startCutPixel, endCutPixel, false);
+                        searchedPointList.AddRange(edgePointList);
+                    }
+                }
+                
+            }
+
+            return searchedPointList;
+        }
+
+        private List<Point> GetVerticalEdgePointList(Mat image, int startCutPixel, int endCutPixel, bool isLeftToRight)
+        {
+            List<Point> searchedPointList = GetVerticalMinEdgeTopPosX(image, startCutPixel, endCutPixel, isLeftToRight);
+
+            if (searchedPointList.Count > 0)
+            {
+                if(isLeftToRight)
+                {//확인OK
+                    if (searchedPointList[searchedPointList.Count - 1].Y != image.Height - 1)
+                    {
+                        if (searchedPointList.Count < 1)
+                            searchedPointList.Add(new Point(searchedPointList[0].X, image.Width - 1));
+                        else
+                            searchedPointList.Add(new Point(searchedPointList[searchedPointList.Count - 1].X, image.Height - 1));
+                    }
+
+                    if (searchedPointList[0].Y != 0)
+                        searchedPointList.Insert(0, new Point(searchedPointList[0].X, 0));
+
+                    searchedPointList.Add(new Point(0, image.Height - 1));
+                    searchedPointList.Add(new Point(0, 0));
+                }
+                else
+                {//확인OK
+                    if (searchedPointList[searchedPointList.Count - 1].Y != image.Height - 1)
+                    {
+                        if (searchedPointList.Count < 1)
+                            searchedPointList.Add(new Point(searchedPointList[0].X, image.Width - 1));
+                        else
+                            searchedPointList.Add(new Point(searchedPointList[searchedPointList.Count - 1].X, image.Height - 1));
+                    }
+
+                    if (searchedPointList[0].Y != 0)
+                        searchedPointList.Insert(0, new Point(searchedPointList[0].X, 0));
+
+                    searchedPointList.Add(new Point(image.Width - 1, image.Height - 1));
+                    searchedPointList.Add(new Point(image.Width - 1, 0));
+                }
+            }
+
+            return searchedPointList;
+        }
+
+        private List<Point> GetHorizontalEdgePointList(Mat image, int startCutPixel, int endCutPixel, bool isTopToBottom)
+        {
+            List<Point> searchedPointList = GetVerticalMinEdgeTopPosY(image, startCutPixel, endCutPixel, isTopToBottom);
+            if (searchedPointList.Count > 0)
+            {
+                if(isTopToBottom)
+                {//확인OK
+                    if (searchedPointList[searchedPointList.Count - 1].X != image.Width - 1)
+                    {
+                        if (searchedPointList.Count < 1)
+                            searchedPointList.Add(new Point(image.Width - 1, searchedPointList[0].Y));
+                        else
+                            searchedPointList.Add(new Point(image.Width - 1, searchedPointList[searchedPointList.Count - 1].Y));
+                    }
+
+                    if (searchedPointList[0].X != 0)
+                        searchedPointList.Insert(0, new Point(0, searchedPointList[0].Y));
+
+                    searchedPointList.Add(new Point(image.Width - 1, 0));
+                    searchedPointList.Add(new Point(0, 0));
+                }
+                else
+                {
+                    //확인OK
+                    if (searchedPointList[searchedPointList.Count - 1].X != image.Width - 1)
+                    {
+                        if (searchedPointList.Count < 1)
+                            searchedPointList.Add(new Point(image.Width - 1, searchedPointList[0].Y));
+                        else
+                            searchedPointList.Add(new Point(image.Width - 1, searchedPointList[searchedPointList.Count - 1].Y));
+                    }
+
+                    if (searchedPointList[0].X != 0)
+                        searchedPointList.Insert(0, new Point(0, searchedPointList[0].Y));
+
+                    searchedPointList.Add(new Point(image.Width - 1, image.Height - 1));
+                    searchedPointList.Add(new Point(0, image.Height - 1));
+                }
+            }
+            return searchedPointList;
+        }
+
+        private void SetCutPixelValue(DarkAreaInspParam inspParam, bool isInside, out int startCutPixel, out int endCutPixel)
+        {
+            if(isInside)
+            {
+                startCutPixel = inspParam.StartCutPixel;
+                endCutPixel = inspParam.EndCutPixel;
+            }
+            else
+            {
+                startCutPixel = inspParam.OutsideStartCutPixel;
+                endCutPixel = inspParam.OutsideEndCutPixel;
+            }
+        }
+        
+        public List<Point> GetVerticalMinEdgeTopPosY(Mat mat, int startCutpixel, int endCutPixel, bool isTopToBottom)
+        {
+            int searchGap = 3;
+            int temp = 2;
+            unsafe
+            {
+                List<Point> searchPointList = new List<Point>();
+
+                IntPtr ptrData = mat.DataPointer;
+                int stride = mat.Step;
+                byte* data = (byte*)(void*)ptrData;
+
+                for (int w = 0; w < mat.Width; w += searchGap)
+                {
+                    if(isTopToBottom)
+                    {
+                        for (int h = 0; h < mat.Height; h++)
+                        {
+                            int index = (stride * h) + w;
+                            int value = Convert.ToInt32(data[index]);
+                            if (h < startCutpixel)
+                                continue;
+
+                            if (h > mat.Height - endCutPixel)
+                                continue;
+                            if (value == 0)
+                            {
+                                if(searchPointList.Count != 0)
+                                {
+                                    var prevPoint = searchPointList.Last();
+                                    if(Math.Abs(prevPoint.Y - h) <= temp)
+                                    {
+                                        searchPointList.Add(new Point(w, h));
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    searchPointList.Add(new Point(w, h));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int h = mat.Height - 1; h >= 0; h--)
+                        {
+                            int index = (stride * h) + w;
+                            int value = Convert.ToInt32(data[index]);
+                            if (mat.Height -1 -h < startCutpixel)
+                                continue;
+
+                            if (h < endCutPixel)
+                                continue;
+                            if (value == 0)
+                            {
+                                if (searchPointList.Count != 0)
+                                {
+                                    var prevPoint = searchPointList.Last();
+                                    if (Math.Abs(prevPoint.Y - h) <= temp)
+                                    {
+                                        searchPointList.Add(new Point(w, h));
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    searchPointList.Add(new Point(w, h));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                return searchPointList;
+            }
+        }
+
+        public List<Point> GetVerticalMinEdgeTopPosX(Mat mat, int startCutpixel, int endCutPixel, bool isLeftToRight)
+        {
+            int searchGap = 3;
+            int temp = 2;
+            unsafe
+            {
+                List<Point> searchPointList = new List<Point>();
+
+                IntPtr ptrData = mat.DataPointer;
+                int stride = mat.Step;
+                byte* data = (byte*)(void*)ptrData;
+
+                for (int h = 0; h < mat.Height; h += searchGap)
+                {
+                    if (isLeftToRight)
+                    {
+                        for (int w = 0; w < mat.Width; w++)
+                        {
+                            int index = (stride * h) + w;
+                            int value = Convert.ToInt32(data[index]);
+                            if (w < startCutpixel)
+                                continue;
+
+                            if (w > mat.Width - endCutPixel)
+                                continue;
+                            if (value == 0)
+                            {
+                                if (searchPointList.Count != 0)
+                                {
+                                    var prevPoint = searchPointList.Last();
+                                    if (Math.Abs(prevPoint.X - w) <= temp)
+                                    {
+                                        searchPointList.Add(new Point(w, h));
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    searchPointList.Add(new Point(w, h));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        for (int w = mat.Width - 1; w >= 0; w--)
+                        {
+                            int index = (stride * h) + w;
+                            int value = Convert.ToInt32(data[index]);
+
+                            if (mat.Width - 1 - w < startCutpixel)
+                                continue;
+
+                            if (w < endCutPixel)
+                                continue;
+                            if (value == 0)
+                            {
+                                if (searchPointList.Count != 0)
+                                {
+                                    var prevPoint = searchPointList.Last();
+                                    if (Math.Abs(prevPoint.X - w) <= temp)
+                                    {
+                                        searchPointList.Add(new Point(w, h));
+                                        break;
+                                    }
+                                }
+                                else
+                                {
+                                    searchPointList.Add(new Point(w, h));
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                }
+                return searchPointList;
+            }
         }
 
         private Mat GetSizeFilterImage(Mat mat, int ignoreSize)
@@ -372,6 +422,7 @@ namespace COG.Class
 
             return filteredImage;
         }
+
         public float[] MatToFloatArray(Mat mat)
         {
             float[] floatArray = new float[mat.Width * mat.Height * mat.NumberOfChannels];
@@ -379,18 +430,19 @@ namespace COG.Class
             return floatArray;
         }
 
-        public Mat AddShadow(Mat mat, EdgeDirection direction)
+        public Mat AddShadow(Mat mat, bool isVertical)
         {
             Mat outputMat = new Mat(mat.Size, DepthType.Cv8U, 1);
-            CvInvoke.Filter2D(mat, outputMat, GetEdgeShadowKernel(direction), new Point(0, 0));
+            CvInvoke.Filter2D(mat, outputMat, GetEdgeShadowKernel(isVertical), new Point(0, 0));
 
             return outputMat;
         }
 
-        private ConvolutionKernelF GetEdgeShadowKernel(EdgeDirection direction)
+        private ConvolutionKernelF GetEdgeShadowKernel(bool isVertical)
         {
             float[,] matrix;
-            if (direction == EdgeDirection.Top)
+            
+            if (isVertical)
             {
                 matrix = new float[3, 3] {
                       { 1, 1, 1 },
@@ -398,7 +450,7 @@ namespace COG.Class
                       { -1, -1, -1 }
                     };
             }
-            else if (direction == EdgeDirection.Left)
+            else
             {
                 matrix = new float[3, 3] {
                       { 0, 1, 2 },
@@ -406,66 +458,15 @@ namespace COG.Class
                       { -2, -1, 0 }
                     };
             }
-            else
-            {
-                matrix = new float[3, 3] {
-                      { 1, 1, 1 },
-                      { 1, 1, -1},
-                      { -1, -1, -1 }
-                    };
-            }
-
+          
             return new ConvolutionKernelF(matrix);
         }
-        public CogImage8Grey GetConvertCogImage(Mat mat)
-        {
-            CogImage8Root root = new CogImage8Root();
-            root.Initialize(mat.Width, mat.Height, mat.DataPointer, mat.Step, null);
-            var cogImage = new CogImage8Grey();
-            cogImage.SetRoot(root);
-
-            return cogImage;
-        }
-
-        public Mat GetConvertMatImage(CogImage8Grey cogImage)
-        {
-            IntPtr cogIntptr = GetIntptr(cogImage, out int stride);
-            byte[] byteArray = new byte[stride * cogImage.Height];
-            Marshal.Copy(cogIntptr, byteArray, 0, byteArray.Length);
-            Mat matImage = new Mat(new Size(cogImage.Width, cogImage.Height), DepthType.Cv8U, 1, cogIntptr, stride);
-            //Marshal.Copy(byteArray, 0, matImage.DataPointer, matImage.Step * matImage.Height);
-
-            return matImage;
-        }
-
-        public IntPtr GetIntptr(CogImage8Grey image, out int stride)
-        {
-            unsafe
-            {
-                var cogPixelData = image.Get8GreyPixelMemory(CogImageDataModeConstants.Read, 0, 0, image.Width, image.Height);
-                IntPtr ptrData = cogPixelData.Scan0;
-                stride = cogPixelData.Stride;
-
-                return ptrData;
-            }
-        }
     }
 
-    public enum EdgeDirection
+    public enum DarkMaskingDirection
     {
-        Top,
-        Left,
-    }
-
-    public class EdgePoint
-    {
-        public int PointX;
-        public int PointY;
-
-        public EdgePoint(int x, int y)
-        {
-            PointX = x;
-            PointY = y;
-        }
+        InSide = 0,
+        OutSide = 1,
+        Both = 2,
     }
 }

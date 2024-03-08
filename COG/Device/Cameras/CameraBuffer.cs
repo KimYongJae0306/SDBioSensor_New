@@ -29,7 +29,6 @@ namespace COG.Device.Cameras
         public bool GrabRefresh_LiveView { get; set; } = false;
         public bool Grab_Flag_Start { get; set; } = false;
         public bool Grab_Flag_End { get; set; } = false;
-
-        public string CoordinateSpaceName { get; set; } = ""; //DisplayStatusBar 에서 마우스 좌표 표시 할때 이미지의 회전에 따라서 제대루된 좌표값 뿌릴때. 사용함 "*\\#\\"기본 ,"*\\#\\@"-> Y 반전시
+        //public string CoordinateSpaceName { get; set; } = ""; //DisplayStatusBar 에서 마우스 좌표 표시 할때 이미지의 회전에 따라서 제대루된 좌표값 뿌릴때. 사용함 "*\\#\\"기본 ,"*\\#\\@"-> Y 반전시
     }
 }

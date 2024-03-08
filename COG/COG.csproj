@@ -690,6 +690,9 @@
     <Compile Include="AppsStatus.cs" />
     <Compile Include="CameraBufferManager.cs" />
     <Compile Include="Class\Algorithm.cs" />
+    <Compile Include="Class\AlgorithmTool.cs" />
+    <Compile Include="Class\CircleAlgorithm.cs" />
+    <Compile Include="Class\Core\LineResult.cs" />
     <Compile Include="Class\Core\EnumType.cs" />
     <Compile Include="Class\Core\FilmAlignResult.cs" />
     <Compile Include="Class\Core\GaloCircleToolResult.cs" />
@@ -703,6 +706,7 @@
     <Compile Include="Class\EdgeAlgorithm.cs" />
     <Compile Include="Class\InspModel.cs" />
     <Compile Include="Class\InspModelService.cs" />
+    <Compile Include="Class\LineAlgorithm.cs" />
     <Compile Include="Class\TeachingData.cs" />
     <Compile Include="Class\Data\FilmAlignTool.cs" />
     <Compile Include="Class\Data\Mark.cs" />
@@ -725,6 +729,7 @@
     <Compile Include="Device\PLC\PlcControlManager.cs" />
     <Compile Include="Device\PLC\PlcScenarioManager.cs" />
     <Compile Include="Helper\DataFileHelper.cs" />
+    <Compile Include="Helper\ImageHelper.cs" />
     <Compile Include="Helper\LanguageHelper.cs" />
     <Compile Include="Helper\LoggerHelper.cs" />
     <Compile Include="Helper\MathHelper.cs" />

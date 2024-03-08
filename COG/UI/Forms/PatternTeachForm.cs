@@ -16,6 +16,7 @@ using Cognex.VisionPro.LineMax;
 using Cognex.VisionPro.PMAlign;
 using Cognex.VisionPro.SearchMax;
 using Cognex.VisionPro.ToolBlock;
+using Emgu.CV;
 using Emgu.CV.Flann;
 using System;
 using System.Collections.Generic;
@@ -48,7 +49,7 @@ namespace COG.UI.Forms
 
         private bool _isNotUpdate { get; set; } = false;
 
-        private Algorithm Algorithm { get; set; } = new Algorithm();
+        private AlgorithmTool AlgorithmTool { get; set; } = new AlgorithmTool();
 
         private TabPageType TabPageType = TabPageType.AmpMark;
 
@@ -165,6 +166,12 @@ namespace COG.UI.Forms
             }
 
             CB_SUB_PATTERN.SelectedIndex = 0;
+
+            cbxDarkMaskingEdgeType.Items.Clear();
+            foreach (DarkMaskingDirection type in Enum.GetValues(typeof(DarkMaskingDirection)))
+                cbxDarkMaskingEdgeType.Items.Add(type.ToString());
+
+            cbxDarkMaskingEdgeType.SelectedIndex = 0;
             #endregion
 
             #region Display
@@ -696,8 +703,7 @@ namespace COG.UI.Forms
             //    LABEL_MESSAGE(LB_MESSAGE, "", System.Drawing.Color.Red);
             //}
         }
- 
-   
+
         public void SetInteractiveGraphics(string groupName, ICogRecord record)
         {
             if (record == null)
@@ -845,7 +851,7 @@ namespace COG.UI.Forms
 
         private void DrawOriginMark()
         {
-            if (CogDisplayImage == null || CogDisplay.Image == null)
+            if (CogDisplayImage == null || CogDisplay.Image == null || OriginMarkPoint == null)
                 return;
 
             var markToolList = GetMarkToolList();
@@ -1005,7 +1011,7 @@ namespace COG.UI.Forms
             LoggerHelper.Save_SystemLog("Mark Search start", LogType.Cmd);
             Stopwatch sw = Stopwatch.StartNew();
 
-            var markResult = Algorithm.FindMark(CogDisplayImage as CogImage8Grey, markTool);
+            var markResult = AlgorithmTool.FindMark(CogDisplayImage as CogImage8Grey, markTool);
 
             sw.Stop();
             Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
@@ -1068,7 +1074,7 @@ namespace COG.UI.Forms
             LoggerHelper.Save_SystemLog("Amp Film Align start", LogType.Cmd);
             Stopwatch sw = Stopwatch.StartNew();
 
-            var alignResult = Algorithm.RunAmpFlimAlign(CogDisplayImage as CogImage8Grey, CurrentUnit.FilmAlign);
+            var alignResult = AlgorithmTool.RunAmpFlimAlign(CogDisplayImage as CogImage8Grey, CurrentUnit.FilmAlign);
 
             sw.Stop();
 
@@ -1104,7 +1110,6 @@ namespace COG.UI.Forms
             CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
         }
 
-        public static ICogRecord CogRecord;
         private void RunGaloInspectForTest()
         {
             if (CogDisplayImage == null | _prevSelectedRowIndex < 0)
@@ -1114,11 +1119,12 @@ namespace COG.UI.Forms
 
             if (GetCurrentInspParam() is GaloInspTool inspTool)
             {
+                CogImage8Grey binaryImage = CogDisplayImage.CopyBase(CogImageCopyModeConstants.CopyPixels) as CogImage8Grey;
                 if(inspTool.Type == GaloInspType.Line)
                 {
                     CogRectangleAffine rect = new CogRectangleAffine();
 
-                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool, ref rect);
+                    var lineResult = AlgorithmTool.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, binaryImage, inspTool, ref rect, true);
                     sw.Stop();
                     
                     Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
@@ -1126,15 +1132,10 @@ namespace COG.UI.Forms
 
                     CogGraphicInteractiveCollection resultGraphics = new CogGraphicInteractiveCollection();
 
-                    // pjh_test
-                    rect.Color = CogColorConstants.Red;
-                    resultGraphics.Add(rect);
-
-                    SetInteractiveGraphics("tool", CogRecord);
-                    foreach (var result in lineResult.Line0.ResultGraphics)
+                    foreach (var result in lineResult.InsideResult.GraphicsList)
                         resultGraphics.Add(result);
 
-                    foreach (var result in lineResult.Line1.ResultGraphics)
+                    foreach (var result in lineResult.OutsideResult.GraphicsList)
                         resultGraphics.Add(result);
 
                     CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
@@ -1150,11 +1151,18 @@ namespace COG.UI.Forms
                         strResultData[3] = string.Format("{0:F3}", distanceList[i]);
                         dataGridView_Result.Rows.Add(strResultData);
                     }
+
+                    VisionProHelper.DisposeDisplay(cogDisplayInSide);
+                    VisionProHelper.DisposeDisplay(cogDisplayOutSide);
+                    cogDisplayInSide.Image = null;
+                    cogDisplayOutSide.Image = null;
+
+                    cogDisplayInSide.Image = lineResult.InsideResult.EdgeEnhanceImage;
+                    cogDisplayOutSide.Image = lineResult.OutsideResult.EdgeEnhanceImage;
                 }
                 else
                 {
-
-                   var circleInspResult = Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                   var circleInspResult = AlgorithmTool.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool, true);
 
                     sw.Stop();
 
@@ -1180,9 +1188,10 @@ namespace COG.UI.Forms
                         dataGridView_Result.Rows.Add(strResultData);
                     }
                 }
+
+                VisionProHelper.Save(binaryImage, @"D:\InspectLine0_binary.bmp");
             }
         }
-
 
         private void DrawDisplayLabel(CogRecordDisplay display, string message, int index)
         {
@@ -2052,8 +2061,8 @@ namespace COG.UI.Forms
             Stopwatch sw = Stopwatch.StartNew();
 
             double score = CurrentUnit.Mark.Bonding.Score;
-            var upMarkResult = Algorithm.FindMark(inputImage, upMarkToolList, score);
-            var downMarkResult = Algorithm.FindMark(inputImage, downMarkToolList, score);
+            var upMarkResult = AlgorithmTool.FindMark(inputImage, upMarkToolList, score);
+            var downMarkResult = AlgorithmTool.FindMark(inputImage, downMarkToolList, score);
 
             sw.Stop();
 
@@ -2225,754 +2234,6 @@ namespace COG.UI.Forms
 
         private void btn_Param_Apply_Click(object sender, EventArgs e)
         {
-
-            //if (m_iGridIndex < 0) return;
-            //string strTemp = "";
-            //iCountClick += 1;
-            //PT_Display01.InteractiveGraphics.Clear();
-            //PT_Display01.StaticGraphics.Clear();
-            //m_iCount = DataGridview_Insp.Rows.Count;
-            //if (Chk_All_Select.Checked == false)
-            //{
-            //    var TempData = m_TeachParameter[m_iGridIndex];
-            //    double dEdgeWidth = Convert.ToDouble(LAB_EDGE_WIDTH.Text);
-            //    TempData.m_enumROIType = (Main.PatternTag.SDParameter.enumROIType)m_enumROIType;
-            //    if (m_enumROIType == enumROIType.Line)
-            //    {
-            //        strTemp = "Line";
-
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[1].Value = strTemp;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[2].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.StartX;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[3].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.StartY;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[4].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.EndX;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[5].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.EndY;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[6].Value = 0;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[7].Value = 0;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value = m_TempFindLineTool.RunParams.CaliperRunParams.ContrastThreshold;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value = m_TempFindLineTool.RunParams.NumCalipers;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperProjectionLength);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperSearchLength);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[12].Value = Convert.ToInt32(m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Polarity);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[13].Value = Convert.ToInt32(m_TempFindLineTool.RunParams.CaliperRunParams.Edge1Polarity);
-            //        if (m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position == 0)
-            //        {
-
-            //            m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position = -(dEdgeWidth / 2);
-            //            m_TempFindLineTool.RunParams.CaliperRunParams.Edge1Position = (dEdgeWidth / 2);
-            //        }
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value = string.Format("{0:F2}", m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[15].Value = m_dDist_ignore.ToString();
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[16].Value = string.Format("{0:F2}", m_SpecDist);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value = m_TempFindLineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[18].Value = string.Format("{0:F2}", m_SpecDistMax);
-
-            //        TempData.IDistgnore = m_dDist_ignore;
-            //        TempData.dSpecDistance = m_SpecDist;
-            //        TempData.dSpecDistanceMax = m_SpecDistMax;
-            //        TempData.m_FindLineTool = new CogFindLineTool();
-            //        TempData.m_FindLineTool = m_TempFindLineTool;
-            //        //}
-            //    }
-            //    else
-            //    {
-            //        strTemp = "Circle";
-
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[1].Value = strTemp;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[2].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterX;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[3].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterY;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[4].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.Radius;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[5].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleStart;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[6].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleSpan;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[7].Value = 0;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[8].Value = m_TempFindCircleTool.RunParams.CaliperRunParams.ContrastThreshold;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[9].Value = m_TempFindCircleTool.RunParams.NumCalipers;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[10].Value = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperProjectionLength);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[11].Value = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperSearchLength);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[12].Value = Convert.ToInt32(m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Polarity);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[13].Value = Convert.ToInt32(m_TempFindCircleTool.RunParams.CaliperRunParams.Edge1Polarity);
-            //        if (m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position == 0)
-            //        {
-            //            m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position = -(dEdgeWidth / 2);
-            //            m_TempFindCircleTool.RunParams.CaliperRunParams.Edge1Position = (dEdgeWidth / 2);
-            //        }
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[14].Value = string.Format("{0:F2}", m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[15].Value = m_dDist_ignore.ToString();
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[16].Value = string.Format("{0:F2}", m_SpecDist);
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value = m_TempFindCircleTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels;
-            //        DataGridview_Insp.Rows[m_iGridIndex].Cells[18].Value = string.Format("{0:F2}", m_SpecDistMax);
-            //        TempData.IDistgnore = m_dDist_ignore;
-            //        TempData.dSpecDistance = m_SpecDist;
-            //        TempData.dSpecDistanceMax = m_SpecDistMax;
-            //        TempData.m_FindCircleTool = m_TempFindCircleTool;
-            //        //}
-            //    }
-
-            //    m_TeachParameter[m_iGridIndex].bThresholdUse = chkUseEdgeThreshold.Checked;
-            //    m_TeachParameter[m_iGridIndex].iThreshold = Convert.ToInt16(lblEdgeThreshold.Text);
-            //    m_TeachParameter[m_iGridIndex].iEdgeCaliperThreshold = Convert.ToInt16(lblEdgeCaliperThreshold.Text);
-            //    m_TeachParameter[m_iGridIndex].iEdgeCaliperFilterSize = Convert.ToInt16(lblEdgeCaliperFilterSize.Text);
-            //    m_TeachParameter[m_iGridIndex].iTopCutPixel = Convert.ToInt16(lblTopCutPixel.Text);
-            //    m_TeachParameter[m_iGridIndex].iBottomCutPixel = Convert.ToInt16(lblBottomCutPixel.Text);
-            //    m_TeachParameter[m_iGridIndex].iMaskingValue = Convert.ToInt16(lblMaskingValue.Text);
-            //    m_TeachParameter[m_iGridIndex].iIgnoreSize = Convert.ToInt16(lblIgnoreSize.Text);
-
-
-            //    DataGridview_Insp.Rows[m_iGridIndex].Cells[19].Value = m_TeachParameter[m_iGridIndex].bThresholdUse;
-            //    DataGridview_Insp.Rows[m_iGridIndex].Cells[20].Value = m_TeachParameter[m_iGridIndex].iThreshold;
-
-            //    m_TeachParameter[m_iGridIndex] = TempData;
-            //    dInspPrevTranslationX = 0;
-            //    dInspPrevTranslationY = 0;
-            //}
-            //else
-            //{
-            //    chkUseRoiTracking.Checked = false;
-            //    Thread.Sleep(100);
-            //    for (int i = 0; i < m_TeachParameter.Count; i++)
-            //    {
-            //        var TempData = m_TeachParameter[i];
-            //        double dEdgeWidth = Convert.ToDouble(LAB_EDGE_WIDTH.Text);
-            //        double dThreshold = Convert.ToDouble(LAB_Insp_Threshold.Text);
-            //        if ((enumROIType)TempData.m_enumROIType == enumROIType.Line)
-            //        {
-
-            //            m_TempFindLineTool = TempData.m_FindLineTool;
-            //            strTemp = "Line";
-            //            if (_useROITracking)
-            //            {
-
-            //            }
-            //            else
-            //            {
-            //                DataGridview_Insp.Rows[i].Cells[1].Value = strTemp;
-            //                DataGridview_Insp.Rows[i].Cells[2].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.StartX;
-            //                DataGridview_Insp.Rows[i].Cells[3].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.StartY;
-            //                DataGridview_Insp.Rows[i].Cells[4].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.EndX;
-            //                DataGridview_Insp.Rows[i].Cells[5].Value = m_TempFindLineTool.RunParams.ExpectedLineSegment.EndY;
-            //                DataGridview_Insp.Rows[i].Cells[6].Value = 0;
-            //                DataGridview_Insp.Rows[i].Cells[7].Value = 0;
-            //                DataGridview_Insp.Rows[i].Cells[8].Value = m_TempFindLineTool.RunParams.CaliperRunParams.ContrastThreshold;
-            //                DataGridview_Insp.Rows[i].Cells[9].Value = m_TempFindLineTool.RunParams.NumCalipers;
-            //                DataGridview_Insp.Rows[i].Cells[10].Value = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperProjectionLength);
-            //                DataGridview_Insp.Rows[i].Cells[11].Value = string.Format("{0:F3}", m_TempFindLineTool.RunParams.CaliperSearchLength);
-            //                DataGridview_Insp.Rows[i].Cells[12].Value = Convert.ToInt32(m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Polarity);
-            //                DataGridview_Insp.Rows[i].Cells[13].Value = Convert.ToInt32(m_TempFindLineTool.RunParams.CaliperRunParams.Edge1Polarity);
-
-            //                m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position = -(dEdgeWidth / 2);
-            //                m_TempFindLineTool.RunParams.CaliperRunParams.Edge1Position = (dEdgeWidth / 2);
-            //                //}
-            //                DataGridview_Insp.Rows[i].Cells[14].Value = string.Format("{0:F2}", m_TempFindLineTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //                //DataGridview_Insp.Rows[i].Cells[15].Value = m_dDist_ignore.ToString();
-            //                DataGridview_Insp.Rows[i].Cells[16].Value = string.Format("{0:F2}", m_SpecDist);
-            //                DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value = m_TempFindLineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels;
-            //                DataGridview_Insp.Rows[i].Cells[18].Value = string.Format("{0:F2}", m_SpecDistMax);
-            //                // TempData.IDistgnore = m_dDist_ignore;
-            //                TempData.dSpecDistance = m_SpecDist;
-            //                TempData.dSpecDistanceMax = m_SpecDistMax;
-            //                TempData.m_FindLineTool = new CogFindLineTool();
-            //                TempData.m_FindLineTool = m_TempFindLineTool;
-            //            }
-            //        }
-            //        else
-            //        {
-            //            m_TempFindCircleTool = TempData.m_FindCircleTool;
-            //            strTemp = "Circle";
-
-            //            if (_useROITracking)
-            //            {
-
-            //            }
-            //            else
-            //            {
-            //                DataGridview_Insp.Rows[i].Cells[1].Value = strTemp;
-            //                DataGridview_Insp.Rows[i].Cells[2].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterX;
-            //                DataGridview_Insp.Rows[i].Cells[3].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.CenterY;
-            //                DataGridview_Insp.Rows[i].Cells[4].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.Radius;
-            //                DataGridview_Insp.Rows[i].Cells[5].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleStart;
-            //                DataGridview_Insp.Rows[i].Cells[6].Value = m_TempFindCircleTool.RunParams.ExpectedCircularArc.AngleSpan;
-            //                DataGridview_Insp.Rows[i].Cells[7].Value = 0;
-            //                DataGridview_Insp.Rows[i].Cells[8].Value = m_TempFindCircleTool.RunParams.CaliperRunParams.ContrastThreshold;
-            //                DataGridview_Insp.Rows[i].Cells[9].Value = m_TempFindCircleTool.RunParams.NumCalipers;
-            //                DataGridview_Insp.Rows[i].Cells[10].Value = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperProjectionLength);
-            //                DataGridview_Insp.Rows[i].Cells[11].Value = string.Format("{0:F3}", m_TempFindCircleTool.RunParams.CaliperSearchLength);
-            //                DataGridview_Insp.Rows[i].Cells[12].Value = Convert.ToInt32(m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Polarity);
-            //                DataGridview_Insp.Rows[i].Cells[13].Value = Convert.ToInt32(m_TempFindCircleTool.RunParams.CaliperRunParams.Edge1Polarity);
-
-            //                m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position = -(dEdgeWidth / 2);
-            //                m_TempFindCircleTool.RunParams.CaliperRunParams.Edge1Position = (dEdgeWidth / 2);
-            //                DataGridview_Insp.Rows[i].Cells[14].Value = string.Format("{0:F2}", m_TempFindCircleTool.RunParams.CaliperRunParams.Edge0Position * 2);
-            //                DataGridview_Insp.Rows[i].Cells[16].Value = string.Format("{0:F2}", m_SpecDist);
-            //                DataGridview_Insp.Rows[m_iGridIndex].Cells[17].Value = m_TempFindCircleTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels;
-            //                DataGridview_Insp.Rows[i].Cells[18].Value = string.Format("{0:F2}", m_SpecDistMax);
-            //                TempData.dSpecDistance = m_SpecDist;
-            //                TempData.dSpecDistanceMax = m_SpecDistMax;
-            //                TempData.m_FindCircleTool = m_TempFindCircleTool;
-            //            }
-            //        }
-            //        m_TeachParameter[i] = TempData;
-            //    }
-            //}
-            ////shkang_s
-            //if (iCountClick == 1)
-            //{
-            //    tempCaliperNum.Add(m_iGridIndex);
-            //}
-            //else
-            //{
-            //    if (tempCaliperNum[iCountClick - 2] == m_iGridIndex)
-            //    {
-            //        iCountClick = iCountClick - 1;
-            //    }
-            //    else
-            //    {
-            //        tempCaliperNum.Add(m_iGridIndex);
-            //    }
-            //}
-            ////shkang_e
-        }
-
-        private bool GaloOppositeInspection(int nROI, int toolType, object tool, CogImage8Grey cogImage, out double[] ResultData, ref CogGraphicInteractiveCollection GraphicData, out int NonCaliperCnt)
-        {
-            ResultData = new double[2];
-            NonCaliperCnt = 1;
-            return true;
-            //NonCaliperCnt = 0;
-            //if (toolType == (int)enumROIType.Line)
-            //{
-            //    bool MoveTypeY = false;
-            //    //2023 0130 YSH
-            //    bool bRes = true;
-            //    CogFindLineTool m_LineTool = tool as CogFindLineTool;
-
-            //    int[] nCaliperCount = new int[2];
-            //    CogFindLineTool[] SingleFindLine = new CogFindLineTool[2];
-            //    PointF[,] RawSearchData = new PointF[2, 100];
-            //    ResultData = new double[100];
-
-            //    CogDistancePointPointTool DistanceData = new CogDistancePointPointTool();
-            //    double startPosX = m_LineTool.RunParams.ExpectedLineSegment.StartX;
-            //    double startPosY = m_LineTool.RunParams.ExpectedLineSegment.StartY;
-            //    double EndPosX = m_LineTool.RunParams.ExpectedLineSegment.EndX;
-            //    double EndPosY = m_LineTool.RunParams.ExpectedLineSegment.EndY;
-            //    double MovePos1, MovePos2;
-            //    double Move = m_LineTool.RunParams.CaliperSearchLength / 2;
-            //    double diretion = m_LineTool.RunParams.CaliperSearchDirection;
-            //    double HalfSearchLength = m_LineTool.RunParams.CaliperSearchLength / 2;
-            //    double TempSearchLength = m_LineTool.RunParams.CaliperSearchLength;
-            //    double searchDirection = m_LineTool.RunParams.CaliperSearchDirection;
-            //    CogCaliperPolarityConstants edgePolarity = m_LineTool.RunParams.CaliperRunParams.Edge0Polarity;
-
-            //    double Cal_StartX = 0;
-            //    double Cal_StartY = 0;
-            //    double Cal_EndX = 0;
-            //    double Cal_EndY = 0;
-
-            //    double noneEdge_Threshold = 0;
-            //    int noeEdge_FilterSize = 0;
-
-            //    try
-            //    {
-            //        if (!m_bROIFinealignFlag)
-            //        {
-            //            if (Math.Abs(EndPosY - startPosY) < 100)
-            //            {
-            //                MoveTypeY = true;
-            //                if (startPosX > EndPosX)
-            //                {
-            //                    diretion *= -1;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                MoveTypeY = false;
-            //                if (startPosY > EndPosY)
-            //                {
-            //                    diretion *= -1;
-            //                }
-            //            }
-            //        }
-
-            //        #region FindLine Search
-            //        CogFixtureTool mCogFixtureTool2 = new CogFixtureTool();
-
-            //        bool isTwiceFixture = false;
-            //        double dist = 0;
-
-            //        for (int i = 0; i < 2; i++)
-            //        {
-            //            SingleFindLine[i] = new CogFindLineTool();
-            //            SingleFindLine[i] = m_LineTool;
-            //            noneEdge_Threshold = SingleFindLine[i].RunParams.CaliperRunParams.ContrastThreshold;
-            //            noeEdge_FilterSize = SingleFindLine[i].RunParams.CaliperRunParams.FilterHalfSizeInPixels;
-
-            //            if (i == 1)
-            //            {
-            //                //하나의 FindLineTool방향만 정반대로 돌려서 Search진행
-            //                dist = SingleFindLine[i].RunParams.CaliperSearchDirection;
-            //                SingleFindLine[i].RunParams.CaliperSearchDirection *= (-1);
-            //                SingleFindLine[i].RunParams.CaliperRunParams.Edge0Polarity = SingleFindLine[i].RunParams.CaliperRunParams.Edge1Polarity;
-
-            //                if (m_bROIFinealignFlag)
-            //                {
-            //                    double Calrotation = m_dTempFineLineAngle - SingleFindLine[i].RunParams.ExpectedLineSegment.Rotation;
-
-            //                    Main.AlignUnit[m_AlignNo].Position_Calculate(SingleFindLine[i].RunParams.ExpectedLineSegment.StartX, SingleFindLine[i].RunParams.ExpectedLineSegment.StartY,
-            //                            SingleFindLine[i].RunParams.CaliperSearchLength / 2, Calrotation, out Cal_StartX, out Cal_StartY);
-
-            //                    Main.AlignUnit[m_AlignNo].Position_Calculate(SingleFindLine[i].RunParams.ExpectedLineSegment.EndX, SingleFindLine[i].RunParams.ExpectedLineSegment.EndY,
-            //                            SingleFindLine[i].RunParams.CaliperSearchLength / 2, Calrotation, out Cal_EndX, out Cal_EndY);
-
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = Cal_StartX;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = Cal_EndX;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = Cal_StartY;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = Cal_EndY;
-            //                }
-            //                else
-            //                {
-            //                    if (!MoveTypeY)
-            //                    {
-            //                        if (diretion < 0)
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX + Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX + Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = MovePos2;
-            //                        }
-            //                        else
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX - Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX - Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = MovePos2;
-            //                        }
-            //                    }
-            //                    else
-            //                    {
-            //                        if (diretion < 0)
-            //                        {
-
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY - Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY - Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = MovePos2;
-            //                        }
-            //                        else
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY + Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY + Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = MovePos2;
-            //                        }
-            //                    }
-            //                }
-            //            }
-
-            //            SingleFindLine[i].RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
-            //            SingleFindLine[i].LastRunRecordDiagEnable = CogFindLineLastRunRecordDiagConstants.None;
-
-            //            if (m_TeachParameter[nROI].bThresholdUse == true && i == 1)
-            //            {
-            //                // Crop 처리
-            //                var transform = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].TempFixtureTrans;
-            //                var cropResult = GetCropImage(cogImage, SingleFindLine[i], transform, out CogRectangle cropRect);
-
-            //                EdgeAlgorithm edgeAlgorithm = new EdgeAlgorithm();
-            //                edgeAlgorithm.Threshold = m_TeachParameter[nROI].iThreshold;
-
-            //                var image = cropResult.Item1 as CogImage8Grey;
-            //                image.CoordinateSpaceTree = new CogCoordinateSpaceTree();
-            //                image.SelectedSpaceName = "@";
-
-            //                edgeAlgorithm.IgnoreSize = m_TeachParameter[nROI].iIgnoreSize;
-            //                Mat convertImage = edgeAlgorithm.Inspect(image, ref SingleFindLine[i], cropResult.Item2, transform, cropRect);
-
-            //                if (Main.machine.PermissionCheck == Main.ePermission.MAKER)
-            //                    convertImage.Save(@"D:\convertImage.bmp");
-
-            //                double lengthX = Math.Abs(SingleFindLine[i].RunParams.ExpectedLineSegment.StartX - SingleFindLine[i].RunParams.ExpectedLineSegment.EndX);
-            //                double lengthY = Math.Abs(SingleFindLine[i].RunParams.ExpectedLineSegment.StartY - SingleFindLine[i].RunParams.ExpectedLineSegment.EndY);
-
-            //                int searchedValue = -1;
-            //                List<Point> boundRectPointList = new List<Point>();
-
-            //                if (lengthX > lengthY) // 가로
-            //                {
-            //                    double startX = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX;
-            //                    double startY = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY;
-            //                    double endX = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX;
-            //                    double endY = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY;
-            //                    transform.MapPoint(startX, startY, out double orgStartX, out double orgStartY);
-            //                    transform.MapPoint(endX, endY, out double orgEndX, out double orgEndY);
-
-            //                    transform.MapPoint(cropRect.X, cropRect.Y, out double mappingStartX, out double mappingStartY);
-
-            //                    if (orgStartX > orgEndX) // 화살표 방향 아래에서 위
-            //                    {
-            //                        var minPosY = edgeAlgorithm.GetVerticalMinEdgeTopPosY(convertImage, m_TeachParameter[nROI].iTopCutPixel, m_TeachParameter[nROI].iBottomCutPixel);
-            //                        if (minPosY.Count > 0)
-            //                        {
-            //                            searchedValue = minPosY.Min();
-            //                            int maskX = (int)mappingStartX;
-            //                            int maskY = searchedValue + (int)mappingStartY;
-
-            //                            Rectangle rect = new Rectangle((int)mappingStartX, 0, convertImage.Width, maskY);
-
-            //                            int maskWidth = convertImage.Width;
-            //                            int maskHeight = rect.Height;
-
-            //                            boundRectPointList.Add(new Point(maskX, maskY));
-            //                            boundRectPointList.Add(new Point(maskX, maskY - convertImage.Height));
-            //                            boundRectPointList.Add(new Point(maskX + maskWidth, maskY - convertImage.Height));
-            //                            boundRectPointList.Add(new Point(maskX + maskWidth, maskY));
-            //                        }
-            //                    }
-            //                    else// 화살표 방향 위에서 아래
-            //                    {
-            //                        var edgePointList = edgeAlgorithm.GetVerticalEdgeBottomPos(convertImage, m_TeachParameter[nROI].iTopCutPixel, m_TeachParameter[nROI].iBottomCutPixel);
-            //                        if (edgePointList.Count > 0)
-            //                        {
-            //                            var target = edgePointList.OrderByDescending(edgePoint => edgePoint.PointY);
-            //                            var minEdge = target.Last();
-            //                            var maxEdge = target.First();
-
-            //                            int leftTopY = (int)mappingStartY;
-            //                            int rightTopY = (int)mappingStartY;
-
-            //                            int leftTopTempY = minEdge.PointY > maxEdge.PointY ? maxEdge.PointY : minEdge.PointY;
-            //                            int rightTopTempY = minEdge.PointY > maxEdge.PointY ? minEdge.PointY : maxEdge.PointY;
-
-            //                            leftTopY += leftTopTempY;
-            //                            rightTopY += rightTopTempY;
-
-            //                            searchedValue = 1;
-
-            //                            int maskX = (int)mappingStartX;
-            //                            int maskY = (int)mappingStartY; // Y 좌표 설정
-
-            //                            boundRectPointList.Add(new Point(maskX, leftTopY));
-            //                            boundRectPointList.Add(new Point(maskX + convertImage.Width, rightTopY));
-            //                            boundRectPointList.Add(new Point(maskX + convertImage.Width, rightTopY + convertImage.Height));
-            //                            boundRectPointList.Add(new Point(maskX, leftTopY + convertImage.Height));
-            //                        }
-            //                    }
-            //                }
-            //                else
-            //                {
-            //                    double startX = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX;
-            //                    double startY = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY;
-            //                    double endX = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX;
-            //                    double endY = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY;
-            //                    transform.MapPoint(startX, startY, out double orgStartX, out double orgStartY);
-            //                    transform.MapPoint(endX, endY, out double orgEndX, out double orgEndY);
-
-            //                    transform.MapPoint(cropRect.X, cropRect.Y, out double mappingStartX, out double mappingStartY);
-            //                    if (orgStartX > orgEndX) // 화살표 방향 오른쪽에서 왼쪽
-            //                    {
-            //                        searchedValue = edgeAlgorithm.GetHorizontalMinEdgePosY(convertImage, m_TeachParameter[nROI].iTopCutPixel, m_TeachParameter[nROI].iBottomCutPixel);
-            //                        if (searchedValue >= 0)
-            //                        {
-            //                            // 마스크를 그릴 영역의 X, Y 좌표 계산
-            //                            int maskX = searchedValue + (int)mappingStartX; // X 좌표 설정
-            //                            int maskY = (int)mappingStartY; // Y 좌표 설정
-
-            //                            Rectangle rect = new Rectangle((int)mappingStartX, 0, convertImage.Width, maskY);
-
-            //                            // 마스크를 그릴 영역의 너비와 높이 계산
-            //                            int maskWidth = convertImage.Width; // 너비 설정
-            //                            int maskHeight = convertImage.Height; // 높이 설정
-
-            //                            boundRectPointList.Add(new Point(maskX, maskY));
-            //                            boundRectPointList.Add(new Point(maskX - convertImage.Width, maskY));
-            //                            boundRectPointList.Add(new Point(maskX - convertImage.Width, maskY + maskHeight));
-            //                            boundRectPointList.Add(new Point(maskX, maskY + maskHeight));
-            //                        }
-            //                    }
-            //                    else // 화살표 방향 왼쪽에서 오른쪽
-            //                    {
-            //                        var edgePointList = edgeAlgorithm.GetHorizontalEdgePos(convertImage, m_TeachParameter[nROI].iTopCutPixel, m_TeachParameter[nROI].iBottomCutPixel);
-            //                        if (edgePointList.Count > 0)
-            //                        {
-            //                            var target = edgePointList.OrderByDescending(edgePoint => edgePoint.PointX);
-            //                            var minEdge = target.Last();
-            //                            var maxEdge = target.First();
-
-            //                            int leftTopTempX = minEdge.PointY > maxEdge.PointY ? maxEdge.PointX : minEdge.PointX;
-            //                            int leftBottomTempX = minEdge.PointY > maxEdge.PointY ? minEdge.PointX : maxEdge.PointX;
-
-            //                            int leftTopX = (int)mappingStartX;
-            //                            int leftBottomX = (int)mappingStartX;
-
-            //                            leftTopX += leftTopTempX;
-            //                            leftBottomX += leftBottomTempX;
-
-            //                            searchedValue = 1;
-
-            //                            //searchedValue = min;
-            //                            int maskX = (int)mappingStartX;
-            //                            int maskY = (int)mappingStartY; // Y 좌표 설정
-
-            //                            boundRectPointList.Add(new Point(leftTopX, maskY));
-            //                            boundRectPointList.Add(new Point(leftTopX + convertImage.Width, maskY));
-            //                            boundRectPointList.Add(new Point(leftBottomX + convertImage.Width, maskY + convertImage.Height));
-            //                            boundRectPointList.Add(new Point(leftBottomX, maskY + convertImage.Height));
-
-            //                        }
-            //                    }
-            //                    //   
-
-            //                }
-
-            //                if (searchedValue >= 0)
-            //                {
-            //                    int MaskingValue = m_TeachParameter[nROI].iMaskingValue; // UI 에 빼야함
-            //                    MCvScalar maskingColor = new MCvScalar(MaskingValue);
-
-            //                    Mat matImage = edgeAlgorithm.GetConvertMatImage(cogImage.CopyBase(CogImageCopyModeConstants.CopyPixels) as CogImage8Grey);
-            //                    CvInvoke.FillPoly(matImage, new VectorOfPoint(boundRectPointList.ToArray()), maskingColor);
-            //                    //matImage.Save(@"D:\matImage.bmp");
-
-            //                    var filterImage = edgeAlgorithm.GetConvertCogImage(matImage);
-
-            //                    SingleFindLine[i].RunParams.CaliperRunParams.ContrastThreshold = m_TeachParameter[nROI].iEdgeCaliperThreshold;
-            //                    SingleFindLine[i].RunParams.CaliperRunParams.FilterHalfSizeInPixels = m_TeachParameter[nROI].iEdgeCaliperFilterSize;
-            //                    SingleFindLine[i].InputImage = (CogImage8Grey)filterImage;
-            //                    List_NG.Items.Add("Found Gray Area.");
-
-            //                    if (Main.machine.PermissionCheck == Main.ePermission.MAKER)
-            //                    {
-            //                        CogImageFileBMP bmp3 = new CogImageFileBMP();
-            //                        bmp3.Open(@"D:\filterImage.bmp", CogImageFileModeConstants.Write);
-            //                        bmp3.Append(filterImage);
-            //                        bmp3.Close();
-            //                    }
-            //                }
-            //                else
-            //                {
-            //                    // Edge 못찾은 경우
-            //                    SingleFindLine[i].RunParams.CaliperRunParams.ContrastThreshold = noneEdge_Threshold;
-            //                    SingleFindLine[i].RunParams.CaliperRunParams.FilterHalfSizeInPixels = noeEdge_FilterSize;
-            //                    SingleFindLine[i].InputImage = cogImage;
-            //                    List_NG.Items.Add("Not Found Gray Area.");
-            //                }
-
-            //                if (cogImage.SelectedSpaceName == "@\\Fixture\\Fixture")
-            //                    isTwiceFixture = true;
-
-            //                if (searchedValue >= 0)
-            //                {
-            //                    mCogFixtureTool2.InputImage = SingleFindLine[i].InputImage;
-            //                    mCogFixtureTool2.RunParams.UnfixturedFromFixturedTransform = Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].TempFixtureTrans;
-            //                    mCogFixtureTool2.RunParams.FixturedSpaceNameDuplicateHandling = CogFixturedSpaceNameDuplicateHandlingConstants.Compatibility;
-            //                    mCogFixtureTool2.Run();
-
-            //                    SingleFindLine[i].InputImage = (CogImage8Grey)mCogFixtureTool2.OutputImage;
-            //                }
-            //                else
-            //                    isTwiceFixture = true;
-            //            }
-            //            else
-            //            {
-
-            //                SingleFindLine[i].InputImage = cogImage;
-            //            }
-
-            //            SingleFindLine[i].Run();
-
-            //            if (SingleFindLine[i].Results == null)
-            //            {
-            //                m_LineTool.RunParams.CaliperRunParams.ContrastThreshold = noneEdge_Threshold;
-            //                m_LineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels = noeEdge_FilterSize;
-            //                m_LineTool.RunParams.CaliperSearchDirection = searchDirection;
-            //                m_LineTool.RunParams.CaliperRunParams.Edge0Polarity = edgePolarity;
-            //                m_LineTool.RunParams.ExpectedLineSegment.StartX = startPosX;
-            //                m_LineTool.RunParams.ExpectedLineSegment.StartY = startPosY;
-            //                m_LineTool.RunParams.ExpectedLineSegment.EndX = EndPosX;
-            //                m_LineTool.RunParams.ExpectedLineSegment.EndY = EndPosY;
-            //                continue;
-            //            }
-
-            //            //Search OK
-            //            if (SingleFindLine[i].Results != null || SingleFindLine[i].Results.Count > 0)
-            //            {
-            //                ResultData = new double[SingleFindLine[i].Results.Count];
-            //                for (int j = 0; j < SingleFindLine[i].Results.Count; j++)
-            //                {
-            //                    if (isTwiceFixture)
-            //                    {
-            //                        var graphic = SingleFindLine[i].Results[j].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
-
-            //                        foreach (var item in graphic.Shapes)
-            //                        {
-            //                            if (item is CogLineSegment line)
-            //                            {
-            //                                cogImage.GetTransform("@", cogImage.SelectedSpaceName).MapPoint(line.StartX, line.StartY, out double mX, out double mY);
-            //                                mCogFixtureTool2.RunParams.UnfixturedFromFixturedTransform.MapPoint(line.StartX, line.StartY, out double mappingStartX, out double mappingStartY);
-            //                                line.StartX = mappingStartX;
-            //                                line.StartY = mappingStartY;
-
-            //                                mCogFixtureTool2.RunParams.UnfixturedFromFixturedTransform.MapPoint(line.EndX, line.EndY, out double mappingEndX, out double mappingEndY);
-            //                                line.EndX = mappingEndX;
-            //                                line.EndY = mappingEndY;
-            //                            }
-            //                        }
-
-            //                        GraphicData.Add(graphic);
-            //                    }
-            //                    else
-            //                    {
-            //                        //
-            //                        var graphic = SingleFindLine[i].Results[j].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge);
-            //                        GraphicData.Add(graphic);
-            //                    }
-
-            //                    if (SingleFindLine[i].Results[j].CaliperResults.Count == 1)
-            //                    {
-            //                        RawSearchData[i, j].X = (float)SingleFindLine[i].Results[j].CaliperResults[0].Edge0.PositionX;
-            //                        RawSearchData[i, j].Y = (float)SingleFindLine[i].Results[j].CaliperResults[0].Edge0.PositionY;
-            //                    }
-            //                    else
-            //                    {
-            //                        RawSearchData[i, j].X = 0;
-            //                        RawSearchData[i, j].Y = 0;
-            //                        NonCaliperCnt++;
-            //                    }
-            //                }
-
-            //            }
-            //            //Search NG
-            //            else
-            //            {
-            //                bRes = false;
-            //            }
-            //        }
-            //        #endregion
-
-            //        #region Result Data Calculate
-            //        for (int i = 0; i < SingleFindLine[0].Results.Count; i++)
-            //        {
-            //            //두 점 사이의 거리 
-            //            ResultData[i] = (Math.Sqrt((Math.Pow(RawSearchData[0, i].X - RawSearchData[1, i].X, 2) +
-            //            Math.Pow(RawSearchData[0, i].Y - RawSearchData[1, i].Y, 2)))) * 13.36 / 1000;
-            //        }
-            //        #endregion
-
-            //        m_LineTool.RunParams.CaliperRunParams.ContrastThreshold = noneEdge_Threshold;
-            //        m_LineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels = noeEdge_FilterSize;
-            //        m_LineTool.RunParams.CaliperSearchDirection = searchDirection;
-            //        m_LineTool.RunParams.CaliperRunParams.Edge0Polarity = edgePolarity;
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartX = startPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartY = startPosY;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndX = EndPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndY = EndPosY;
-
-            //        return bRes;
-            //    }
-            //    catch (Exception err)
-            //    {
-            //        m_LineTool.RunParams.CaliperRunParams.ContrastThreshold = noneEdge_Threshold;
-            //        m_LineTool.RunParams.CaliperRunParams.FilterHalfSizeInPixels = noeEdge_FilterSize;
-            //        m_LineTool.RunParams.CaliperSearchDirection = searchDirection;
-            //        m_LineTool.RunParams.CaliperRunParams.Edge0Polarity = edgePolarity;
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartX = startPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartY = startPosY;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndX = EndPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndY = EndPosY;
-
-            //        string LogMsg;
-            //        LogMsg = "Inspeciton Excetion NG"; LogMsg += "Error : " + err.ToString();
-            //        List_NG.Items.Add(LogMsg);
-            //        List_NG.Items.Add(nROI.ToString());
-            //        ResultData = new double[] { };
-            //        NonCaliperCnt = 0;
-            //        GraphicData = new CogGraphicInteractiveCollection();
-            //        return false;
-            //    }
-
-            //}
-            //else   //Circle Tool
-            //{
-            //    try
-            //    {
-            //        CogFindCircleTool m_CircleTool = tool as CogFindCircleTool;
-            //        bool bRes = true;
-            //        int nCaliperCount;
-            //        CogFindCircleTool[] SingleCircleLine = new CogFindCircleTool[2];
-            //        PointF[,] RawSearchData = new PointF[2, 100];
-            //        ResultData = new double[100];
-            //        /*GraphicData = new CogGraphicInteractiveCollection()*/
-            //        CogDistancePointPointTool DistanceData = new CogDistancePointPointTool();
-
-            //        #region FindLine Search
-            //        m_CircleTool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.Pair;
-            //        m_CircleTool.InputImage = cogImage;
-            //        m_CircleTool.Run();
-
-            //        if (m_CircleTool.Results != null)
-            //        {
-            //            nCaliperCount = m_CircleTool.Results.Count;
-            //            NonCaliperCnt = 0;
-
-            //        }
-            //        else
-            //        {
-            //            NonCaliperCnt = 0;
-            //            return false;
-            //        }
-            //        //Search OK
-            //        if (m_CircleTool.Results != null || m_CircleTool.Results.Count > 0)
-            //        {
-            //            ResultData = new double[m_CircleTool.Results.Count];
-            //            for (int j = 0; j < m_CircleTool.Results.Count; j++)
-            //            {
-
-            //                GraphicData.Add(m_CircleTool.Results[j].CreateResultGraphics(CogFindCircleResultGraphicConstants.CaliperEdge));
-            //                if (m_CircleTool.Results[j].CaliperResults.Count >= 1)
-            //                {
-            //                    RawSearchData[0, j].X = (float)m_CircleTool.Results[j].CaliperResults[0].Edge0.PositionX;
-            //                    RawSearchData[0, j].Y = (float)m_CircleTool.Results[j].CaliperResults[0].Edge0.PositionY;
-            //                    RawSearchData[1, j].X = (float)m_CircleTool.Results[j].CaliperResults[0].Edge1.PositionX;
-            //                    RawSearchData[1, j].Y = (float)m_CircleTool.Results[j].CaliperResults[0].Edge1.PositionY;
-            //                }
-            //                else
-            //                {
-            //                    RawSearchData[0, j].X = 0;
-            //                    RawSearchData[0, j].Y = 0;
-            //                    RawSearchData[1, j].X = 0;
-            //                    RawSearchData[1, j].Y = 0;
-            //                    NonCaliperCnt++;
-            //                }
-            //            }
-            //        }
-            //        //Search NG
-            //        else
-            //        {
-            //            bRes = false;
-            //        }
-            //        #endregion
-
-            //        #region Result Data Calculate
-            //        for (int i = 0; i < m_CircleTool.Results.Count; i++)
-            //        {
-            //            //두 점 사이의 거리 
-            //            ResultData[i] = (Math.Sqrt((Math.Pow(RawSearchData[0, i].X - RawSearchData[1, i].X, 2) +
-            //            Math.Pow(RawSearchData[0, i].Y - RawSearchData[1, i].Y, 2)))) * 13.36 / 1000;
-            //        }
-            //        #endregion
-
-            //        return bRes;
-            //    }
-            //    catch (Exception err)
-            //    {
-            //        string LogMsg;
-            //        LogMsg = "Inspeciton Excetion NG"; LogMsg += "Error : " + err.ToString();
-            //        List_NG.Items.Add(LogMsg);
-            //        List_NG.Items.Add(nROI.ToString());
-            //        ResultData = new double[] { };
-            //        NonCaliperCnt = 0;
-            //        GraphicData = new CogGraphicInteractiveCollection();
-            //        return false;
-            //    }
-            //}
         }
 
         public IntPtr GetIntptr(CogImage8Grey image, out int stride)
@@ -2986,503 +2247,6 @@ namespace COG.UI.Forms
                 return ptrData;
             }
         }
-
-        public enum EdgeDirection
-        {
-
-        }
-        //private Tuple<CogImage8Grey, EdgeDirection> GetCropImage(CogImage8Grey cogImage, CogFindLineTool tool, CogTransform2DLinear transform, out CogRectangle cropRect)
-        //{
-        //    //cropRect = new CogRectangle();
-        //    //EdgeDirection direction = EdgeDirection.Top;
-
-        //    //double MinLineDegreeStand = 1.396;
-        //    //double MaxLineDegreeStand = 1.745;
-
-        //    ////1.가로, 세로 확인                     
-        //    //if (Math.Abs(tool.RunParams.ExpectedLineSegment.Rotation) > MinLineDegreeStand &&
-        //    //   Math.Abs(tool.RunParams.ExpectedLineSegment.Rotation) < MaxLineDegreeStand)
-        //    //{
-        //    //    direction = EdgeDirection.Left;
-        //    //    //2.세로인 경우, 사분면 중 어디에 위치해 있는지 확인
-        //    //    if (tool.RunParams.ExpectedLineSegment.StartY < 0) //음수 1,4분면
-        //    //    {
-        //    //        //3.Start Y, End Y 중 어떤게 상단에 위치해 있는지 확인
-        //    //        if (tool.RunParams.ExpectedLineSegment.StartY <
-        //    //            tool.RunParams.ExpectedLineSegment.EndY)
-        //    //        {
-        //    //            //Start Y가 상단에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.StartX - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.StartY;
-        //    //            cropRect.Width = tool.RunParams.CaliperSearchLength;
-        //    //            cropRect.Height = tool.RunParams.ExpectedLineSegment.Length;
-        //    //        }
-        //    //        else
-        //    //        {
-        //    //            //End Y가 상단에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.EndX - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.EndY;
-        //    //            cropRect.Width = tool.RunParams.CaliperSearchLength;
-        //    //            cropRect.Height = tool.RunParams.ExpectedLineSegment.Length;
-        //    //        }
-        //    //    }
-        //    //    else //양수 2,3분면
-        //    //    {
-        //    //        //3.Start Y, End Y 중 어떤게 상단에 위치해 있는지 확인
-        //    //        if (tool.RunParams.ExpectedLineSegment.StartY <
-        //    //            tool.RunParams.ExpectedLineSegment.EndY)
-        //    //        {
-        //    //            //Start Y가 상단에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.StartX - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.StartY;
-        //    //            cropRect.Width = tool.RunParams.CaliperSearchLength;
-        //    //            cropRect.Height = tool.RunParams.ExpectedLineSegment.Length;
-        //    //        }
-        //    //        else
-        //    //        {
-        //    //            //End Y가 상단에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.EndX - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.EndY;
-        //    //            cropRect.Width = tool.RunParams.CaliperSearchLength;
-        //    //            cropRect.Height = tool.RunParams.ExpectedLineSegment.Length;
-        //    //        }
-        //    //    }
-        //    //}
-        //    //else
-        //    //{
-        //    //    direction = EdgeDirection.Top;
-        //    //    //2.가로인 경우, 사분면 중 어디에 위치해 있는지 확인
-        //    //    if (tool.RunParams.ExpectedLineSegment.StartX < 0) //음수 3,4분면
-        //    //    {
-        //    //        //3.Start X, End X 중 어떤게 좌측에 위치해 있는지 확인
-        //    //        if (tool.RunParams.ExpectedLineSegment.StartX <
-        //    //           tool.RunParams.ExpectedLineSegment.EndX)
-        //    //        {
-        //    //            //Start X가  좌측에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.StartX;
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.StartY - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Width = tool.RunParams.ExpectedLineSegment.Length;
-        //    //            cropRect.Height = tool.RunParams.CaliperSearchLength;
-        //    //        }
-        //    //        else
-        //    //        {
-        //    //            //End X가 좌측에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.EndX;
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.EndY - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Width = tool.RunParams.ExpectedLineSegment.Length;
-        //    //            cropRect.Height = tool.RunParams.CaliperSearchLength;
-        //    //        }
-
-        //    //    }
-        //    //    else //양수 1,2분면
-        //    //    {
-        //    //        //3.Start X, End X 중 어떤게 좌측에 위치해 있는지 확인
-        //    //        if (tool.RunParams.ExpectedLineSegment.StartX <
-        //    //           tool.RunParams.ExpectedLineSegment.EndX)
-        //    //        {
-        //    //            //Start X가 좌측에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.StartX;
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.StartY - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Width = tool.RunParams.ExpectedLineSegment.Length;
-        //    //            cropRect.Height = tool.RunParams.CaliperSearchLength;
-        //    //        }
-        //    //        else
-        //    //        {
-        //    //            //End X가 좌측에 있음
-        //    //            cropRect.X = tool.RunParams.ExpectedLineSegment.EndX;
-        //    //            cropRect.Y = tool.RunParams.ExpectedLineSegment.EndY - (tool.RunParams.CaliperSearchLength / 2);
-        //    //            cropRect.Width = tool.RunParams.ExpectedLineSegment.Length;
-        //    //            cropRect.Height = tool.RunParams.CaliperSearchLength;
-        //    //        }
-        //    //    }
-
-        //    //}
-
-        //    //EdgeAlgorithm edge = new EdgeAlgorithm();
-        //    //Mat mat = edge.GetConvertMatImage(cogImage);
-        //    ////mat.Save(@"D:\test.bmp");
-
-
-        //    //transform.MapPoint(cropRect.X, cropRect.Y, out double cropX, out double cropY);
-        //    //Rectangle rectFromMat = new Rectangle();
-        //    //rectFromMat.X = (int)cropX;
-        //    //rectFromMat.Y = (int)cropY;
-        //    //rectFromMat.Width = (int)cropRect.Width;
-        //    //rectFromMat.Height = (int)cropRect.Height;
-
-        //    //Mat cropMat = edge.CropRoi(mat, rectFromMat);
-
-        //    //if (Main.machine.PermissionCheck == Main.ePermission.MAKER)
-        //    //    cropMat.Save(@"D:\cropMat.bmp");
-
-        //    //mat.Dispose();
-
-        //    //return new Tuple<CogImage8Grey, EdgeDirection>(edge.GetConvertCogImage(cropMat), direction);
-        //}
-
-        private bool GaloDirectionConvertInspection(int nROI, int toolType, object tool, CogImage8Grey cogImage, out double[] ResultData, ref CogGraphicInteractiveCollection GraphicData, out int NonCaliperCnt)
-        {
-            ResultData = new double[2];
-            NonCaliperCnt = 1;
-            return true;
-            //try
-            //{
-            //    NonCaliperCnt = 0;
-            //    if (toolType == (int)enumROIType.Line)
-            //    {
-            //        bool MoveTypeY = false;
-            //        //2023 0130 YSH
-            //        bool bRes = true;
-            //        CogFindLineTool m_LineTool = tool as CogFindLineTool;
-
-            //        int[] nCaliperCount = new int[2];
-            //        CogFindLineTool[] SingleFindLine = new CogFindLineTool[2];
-            //        PointF[,] RawSearchData = new PointF[2, 100];
-            //        ResultData = new double[100];
-            //        CogDistancePointPointTool DistanceData = new CogDistancePointPointTool();
-            //        double startPosX = m_LineTool.RunParams.ExpectedLineSegment.StartX;
-            //        double startPosY = m_LineTool.RunParams.ExpectedLineSegment.StartY;
-            //        double EndPosX = m_LineTool.RunParams.ExpectedLineSegment.EndX;
-            //        double EndPosY = m_LineTool.RunParams.ExpectedLineSegment.EndY;
-            //        double MovePos1, MovePos2;
-            //        double Move = m_LineTool.RunParams.CaliperSearchLength / 2;
-            //        double diretion = m_LineTool.RunParams.CaliperSearchDirection;
-            //        double HalfSearchLength = m_LineTool.RunParams.CaliperSearchLength / 2;
-            //        double TempSearchLength = m_LineTool.RunParams.CaliperSearchLength;
-
-            //        double Cal_StartX = 0;
-            //        double Cal_StartY = 0;
-            //        double Cal_EndX = 0;
-            //        double Cal_EndY = 0;
-
-            //        if (!m_bROIFinealignFlag)
-            //        {
-            //            if (Math.Abs(EndPosY - startPosY) < 100)
-            //            {
-            //                MoveTypeY = true;
-            //                if (startPosX > EndPosX)
-            //                {
-            //                    diretion *= -1;
-            //                }
-            //            }
-            //            else
-            //            {
-            //                MoveTypeY = false;
-            //                if (startPosY > EndPosY)
-            //                {
-            //                    diretion *= -1;
-            //                }
-            //            }
-            //        }
-
-            //        #region FindLine Search
-            //        for (int i = 0; i < 2; i++) //Left, Right 의미
-            //        {
-            //            SingleFindLine[i] = new CogFindLineTool(m_LineTool);
-            //            //SingleFindLine[i] = m_LineTool;                     
-
-            //            //2023.06.15 YSH
-            //            //기존방식대로 Search 못했을 경우에만 방향 변경하여 재 Search 동작함.
-            //            if (m_bInspDirectionChange)
-            //            {
-            //                //Search 방향 변경
-            //                SingleFindLine[i].RunParams.CaliperSearchDirection *= (-1);
-            //                //극성 변경
-            //                SingleFindLine[i].RunParams.CaliperRunParams.Edge0Polarity = CogCaliperPolarityConstants.DarkToLight;
-            //                //Caliper Search Length 절반으로 줄임
-            //                SingleFindLine[i].RunParams.CaliperSearchLength = HalfSearchLength;
-            //            }
-
-            //            if (i == 1)
-            //            {
-            //                //하나의 FindLineTool방향만 정반대로 돌려서 Search진행
-            //                double dist = SingleFindLine[i].RunParams.CaliperSearchDirection;
-            //                SingleFindLine[i].RunParams.CaliperSearchDirection *= (-1);
-
-            //                if (m_bROIFinealignFlag)
-            //                {
-            //                    double Calrotation = m_dTempFineLineAngle - SingleFindLine[i].RunParams.ExpectedLineSegment.Rotation;
-
-            //                    Main.AlignUnit[m_AlignNo].Position_Calculate(SingleFindLine[i].RunParams.ExpectedLineSegment.StartX, SingleFindLine[i].RunParams.ExpectedLineSegment.StartY,
-            //                            SingleFindLine[i].RunParams.CaliperSearchLength, Calrotation, out Cal_StartX, out Cal_StartY);
-
-            //                    Main.AlignUnit[m_AlignNo].Position_Calculate(SingleFindLine[i].RunParams.ExpectedLineSegment.EndX, SingleFindLine[i].RunParams.ExpectedLineSegment.EndY,
-            //                            SingleFindLine[i].RunParams.CaliperSearchLength, Calrotation, out Cal_EndX, out Cal_EndY);
-
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = Cal_StartX;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = Cal_EndX;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = Cal_StartY;
-            //                    SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = Cal_EndY;
-            //                }
-            //                else
-            //                {
-            //                    if (!MoveTypeY)
-            //                    {
-            //                        if (diretion < 0)
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX + Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX + Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = MovePos2;
-            //                        }
-            //                        else
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartX - Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndX - Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartX = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndX = MovePos2;
-            //                        }
-            //                    }
-            //                    else
-            //                    {
-            //                        if (diretion < 0)
-            //                        {
-
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY - Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY - Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = MovePos2;
-            //                        }
-            //                        else
-            //                        {
-            //                            MovePos1 = SingleFindLine[i].RunParams.ExpectedLineSegment.StartY + Move;
-            //                            MovePos2 = SingleFindLine[i].RunParams.ExpectedLineSegment.EndY + Move;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.StartY = MovePos1;
-            //                            SingleFindLine[i].RunParams.ExpectedLineSegment.EndY = MovePos2;
-            //                        }
-            //                    }
-            //                }
-
-            //            }
-
-
-            //            SingleFindLine[i].RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
-            //            SingleFindLine[i].LastRunRecordDiagEnable = CogFindLineLastRunRecordDiagConstants.None;
-            //            SingleFindLine[i].InputImage = cogImage;
-            //            SingleFindLine[i].Run();
-
-            //            nCaliperCount[i] = SingleFindLine[i].Results.Count;
-            //            //Search OK
-            //            if (SingleFindLine[i].Results != null || SingleFindLine[i].Results.Count > 0)
-            //            {
-            //                ResultData = new double[SingleFindLine[i].Results.Count];
-            //                for (int j = 0; j < SingleFindLine[i].Results.Count; j++)
-            //                {
-            //                    GraphicData.Add(SingleFindLine[i].Results[j].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge));
-            //                    //GraphicData.Add(SingleFindLine[i].Results[j].CreateResultGraphics(CogFindLineResultGraphicConstants.CaliperEdge | CogFindLineResultGraphicConstants.CaliperRegion));
-            //                    if (SingleFindLine[i].Results[j].CaliperResults.Count == 1)
-            //                    {
-            //                        RawSearchData[i, j].X = (float)SingleFindLine[i].Results[j].CaliperResults[0].Edge0.PositionX;
-            //                        RawSearchData[i, j].Y = (float)SingleFindLine[i].Results[j].CaliperResults[0].Edge0.PositionY;
-            //                    }
-            //                    else
-            //                    {
-            //                        RawSearchData[i, j].X = 0;
-            //                        RawSearchData[i, j].Y = 0;
-            //                        NonCaliperCnt++;
-
-            //                    }
-            //                }
-
-            //            }
-            //            //Search NG
-            //            else
-            //            {
-            //                bRes = false;
-            //            }
-
-            //        }
-
-
-            //        #endregion
-
-            //        #region Result Data Calculate
-            //        //두 FindLine에서 찾은 Caliper 개수가 상이할때
-            //        if (nCaliperCount[0] != nCaliperCount[1])
-            //        {
-
-            //        }
-
-
-            //        //for (int i = 0; i < SingleFindLine[0].Results.Count; i++)
-            //        //{
-            //        //    //두 점 사이의 거리 
-            //        //    ResultData[i] = Math.Sqrt((Math.Pow(RawSearchData[0, i].X - RawSearchData[1, i].X, 2) +
-            //        //    Math.Pow(RawSearchData[0, i].Y - RawSearchData[1, i].Y, 2)));
-            //        //}
-
-            //        for (int i = 0; i < SingleFindLine[0].Results.Count; i++)
-            //        {
-            //            //두 점 사이의 거리 
-            //            ResultData[i] = (Math.Sqrt((Math.Pow(RawSearchData[0, i].X - RawSearchData[1, i].X, 2) +
-            //            Math.Pow(RawSearchData[0, i].Y - RawSearchData[1, i].Y, 2)))) * 13.36 / 1000;
-            //        }
-
-            //        #endregion
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartX = startPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.StartY = startPosY;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndX = EndPosX;
-            //        m_LineTool.RunParams.ExpectedLineSegment.EndY = EndPosY;
-            //        return bRes;
-            //    }
-            //    else   //Circle Tool
-            //    {
-            //        CogFindCircleTool m_CircleTool = tool as CogFindCircleTool;
-            //        bool bRes = true;
-            //        int nCaliperCount;
-            //        CogFindCircleTool[] SingleCircleLine = new CogFindCircleTool[2];
-            //        PointF[,] RawSearchData = new PointF[2, 100];
-            //        ResultData = new double[100];
-            //        /*GraphicData = new CogGraphicInteractiveCollection()*/
-            //        CogDistancePointPointTool DistanceData = new CogDistancePointPointTool();
-
-            //        #region FindLine Search
-            //        //for (int i = 0; i < 2; i++) //Left, Right 의미
-            //        //{
-            //        //    SingleCircleLine[i] = new CogFindCircleTool();
-            //        //    SingleCircleLine[i] = m_CircleTool;
-            //        //    if (i == 1) //하나의 FindLineTool방향만 정반대로 돌려서 Search진행
-            //        //    {
-            //        //        CogFindCircleSearchDirectionConstants DirType = SingleCircleLine[i].RunParams.CaliperSearchDirection;
-            //        //        if (DirType == CogFindCircleSearchDirectionConstants.Inward)
-            //        //            SingleCircleLine[i].RunParams.CaliperSearchDirection = CogFindCircleSearchDirectionConstants.Outward;
-            //        //        else
-            //        //            SingleCircleLine[i].RunParams.CaliperSearchDirection = CogFindCircleSearchDirectionConstants.Inward;
-            //        //        double MoveX;
-            //        //        if (SingleCircleLine[i].RunParams.CaliperSearchDirection == CogFindCircleSearchDirectionConstants.Inward)
-            //        //        {
-            //        //            if(dAngle >0)
-            //        //               MoveX = SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX - Move;
-            //        //            else
-            //        //               MoveX = SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX + Move;
-            //        //            SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX = MoveX;
-            //        //        }
-            //        //        else
-            //        //        {
-            //        //            if (dAngle > 0)
-            //        //                MoveX = SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX + Move;
-            //        //            else
-            //        //                MoveX = SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX - Move;
-            //        //            SingleCircleLine[i].RunParams.ExpectedCircularArc.CenterX = MoveX;
-            //        //        }
-            //        //    }
-            //        m_CircleTool.RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.Pair;
-            //        m_CircleTool.InputImage = cogImage;
-            //        m_CircleTool.Run();
-
-            //        //SingleCircleLine[i].RunParams.CaliperRunParams.EdgeMode = CogCaliperEdgeModeConstants.SingleEdge;
-
-
-            //        if (m_CircleTool.Results != null)
-            //        {
-            //            nCaliperCount = m_CircleTool.Results.Count;
-            //            NonCaliperCnt = 0;
-
-            //        }
-            //        else
-            //        {
-            //            NonCaliperCnt = 0;
-            //            return false;
-            //        }
-            //        //Search OK
-            //        if (m_CircleTool.Results != null || m_CircleTool.Results.Count > 0)
-            //        {
-            //            ResultData = new double[m_CircleTool.Results.Count];
-            //            for (int j = 0; j < m_CircleTool.Results.Count; j++)
-            //            {
-
-            //                GraphicData.Add(m_CircleTool.Results[j].CreateResultGraphics(CogFindCircleResultGraphicConstants.CaliperEdge));
-            //                if (m_CircleTool.Results[j].CaliperResults.Count >= 1)
-            //                {
-            //                    RawSearchData[0, j].X = (float)m_CircleTool.Results[j].CaliperResults[0].Edge0.PositionX;
-            //                    RawSearchData[0, j].Y = (float)m_CircleTool.Results[j].CaliperResults[0].Edge0.PositionY;
-            //                    RawSearchData[1, j].X = (float)m_CircleTool.Results[j].CaliperResults[0].Edge1.PositionX;
-            //                    RawSearchData[1, j].Y = (float)m_CircleTool.Results[j].CaliperResults[0].Edge1.PositionY;
-            //                }
-            //                else
-            //                {
-            //                    RawSearchData[0, j].X = 0;
-            //                    RawSearchData[0, j].Y = 0;
-            //                    RawSearchData[1, j].X = 0;
-            //                    RawSearchData[1, j].Y = 0;
-            //                    NonCaliperCnt++;
-            //                }
-            //            }
-            //        }
-            //        //Search NG
-            //        else
-            //        {
-            //            bRes = false;
-            //        }
-
-
-            //        #endregion
-            //        //double dx1 = SingleCircleLine[0].Results[0].CaliperResults[0].Edge0.PositionX;
-            //        //double dx2 = SingleCircleLine[1].Results[1].CaliperResults[0].Edge0.PositionX;
-            //        #region Result Data Calculate
-            //        //두 FindLine에서 찾은 Caliper 개수가 상이할때
-
-
-            //        for (int i = 0; i < m_CircleTool.Results.Count; i++)
-            //        {
-            //            //두 점 사이의 거리 
-            //            ResultData[i] = (Math.Sqrt((Math.Pow(RawSearchData[0, i].X - RawSearchData[1, i].X, 2) +
-            //            Math.Pow(RawSearchData[0, i].Y - RawSearchData[1, i].Y, 2)))) * 13.36 / 1000;
-            //        }
-
-            //        #endregion
-
-            //        return bRes;
-            //    }
-            //}
-            //catch (Exception err)
-            //{
-            //    // PAT[m_PatTagNo, 0].SetAllLight(Main.DEFINE.M_LIGHT_CNL);
-            //    string LogMsg;
-            //    //LogMsg = "Inspeciton Excetion NG Type:" + m_ROYTpe.ToString() + " " + "ROI No:" + nRoi.ToString() + "CaliperIndex:" + jCaliperIndex.ToString();
-            //    //LogdataDisplay(LogMsg, true);
-            //    LogMsg = "Inspeciton Excetion NG"; LogMsg += "Error : " + err.ToString();
-            //    //LogdataDisplay(LogMsg, true);
-            //    List_NG.Items.Add(LogMsg);
-            //    List_NG.Items.Add(nROI.ToString());
-            //    ResultData = new double[] { };
-            //    NonCaliperCnt = 0;
-            //    GraphicData = new CogGraphicInteractiveCollection();
-            //    return false;
-            //}
-
-
-        }
-
-        private void init_ComboPolarity()
-        {
-            ////기존 관로검사 : Combo_Polarity1,2,3 
-            //Combo_Polarity1.Items.Clear();
-            //Combo_Polarity2.Items.Clear();
-            //Combo_Polarity3.Items.Clear();
-            //cmbEdgePolarityType.Items.Clear();
-            //string[] strName = new string[3];
-            //strName[0] = "Dark -> Light";
-            //strName[1] = "Light -> Dark";
-            //strName[2] = "Don't Care";
-            //for (int i = 0; i < 3; i++)
-            //{
-            //    Combo_Polarity1.Items.Add(strName[i]);
-            //    Combo_Polarity2.Items.Add(strName[i]);
-            //    Combo_Polarity3.Items.Add(strName[i]);
-
-            //    //Bonding Area Align Polarity : cmbEdgePolarityType
-            //    cmbEdgePolarityType.Items.Add(strName[i]);
-            //}
-            //Combo_Polarity1.SelectedIndex = 2;
-            //Combo_Polarity2.SelectedIndex = 2;
-            //Combo_Polarity3.SelectedIndex = 2;
-
-            ////Bonding Area Align Polarity : cmbEdgePolarityType
-            //cmbEdgePolarityType.SelectedIndex = 2;
-
-        }
-      
         #endregion
 
         private void btn_Inspection_Test_Click(object sender, EventArgs e)
@@ -3493,51 +2257,67 @@ namespace COG.UI.Forms
             dataGridView_Result.Rows.Clear();
             List_NG.Items.Clear();
             Stopwatch sw = Stopwatch.StartNew();
+            CogImage8Grey binaryImage = CogDisplayImage.CopyBase(CogImageCopyModeConstants.CopyPixels) as CogImage8Grey;
             for (int i = 0; i < GetUnit().Insp.GaloInspToolList.Count; i++)
             {
+                if(i==78)
+                {
+                    int ga = 1;
+                }
                 var inspTool = GetUnit().Insp.GaloInspToolList[i];
 
                 if (inspTool.Type == GaloInspType.Line)
                 {
                     CogRectangleAffine rect = new CogRectangleAffine();
 
-                    var lineResult = Algorithm.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, inspTool, ref rect);
+                    var lineResult = AlgorithmTool.RunGaloLineInspection(CogDisplayImage as CogImage8Grey, binaryImage, inspTool, ref rect, false);
 
-                    rect.Color = CogColorConstants.Red;
-                    resultGraphics.Add(rect);
-
-                    foreach (var result in lineResult.Line0.ResultGraphics)
+                    foreach (var result in lineResult.InsideResult.GraphicsList)
                         resultGraphics.Add(result);
 
-                    foreach (var result in lineResult.Line1.ResultGraphics)
+                    foreach (var result in lineResult.OutsideResult.GraphicsList)
                         resultGraphics.Add(result);
 
                     if(lineResult.Judgement != Judgement.OK)
                     {
                         List_NG.Items.Add($"Inspection NG ROI:{i}");
 
-                        double dCenterX = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointX;
-                        double dCenterY = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointY;
-                        double dAngle = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Rotation;
-                        double dLenth = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Length;
                         CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
                         CogNGRectAffine.Color = CogColorConstants.Red;
-                        CogNGRectAffine.CenterX = dCenterX;
-                        CogNGRectAffine.CenterY = dCenterY;
-                        CogNGRectAffine.SideXLength = dLenth;
+                        CogNGRectAffine.CenterX = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointX;
+                        CogNGRectAffine.CenterY = inspTool.FindLineTool.RunParams.ExpectedLineSegment.MidpointY;
+                        CogNGRectAffine.SideXLength = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Length;
                         CogNGRectAffine.SideYLength = 100;
-                        CogNGRectAffine.Rotation = dAngle;
+                        CogNGRectAffine.Rotation = inspTool.FindLineTool.RunParams.ExpectedLineSegment.Rotation;
                         resultGraphics.Add(CogNGRectAffine);
                     }
                 }
                 else
                 {
-                    var circleInspResult = Algorithm.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool);
+                    var circleInspResult = AlgorithmTool.RunGaloCircleInspection(CogDisplayImage as CogImage8Grey, inspTool, false);
                     foreach (var result in circleInspResult.ResultGraphics)
                         resultGraphics.Add(result);
 
                     if (circleInspResult.Judgement != Judgement.OK)
+                    {
                         List_NG.Items.Add($"Inspection NG ROI:{i}");
+
+                        var toolRunparam = inspTool.FindCircleTool.RunParams;
+                        CogFindLineTool cogTempLine = new CogFindLineTool();
+                        cogTempLine.RunParams.ExpectedLineSegment.StartX = toolRunparam.ExpectedCircularArc.StartX;
+                        cogTempLine.RunParams.ExpectedLineSegment.StartY = toolRunparam.ExpectedCircularArc.StartY;
+                        cogTempLine.RunParams.ExpectedLineSegment.EndX = toolRunparam.ExpectedCircularArc.EndX;
+                        cogTempLine.RunParams.ExpectedLineSegment.EndY = toolRunparam.ExpectedCircularArc.EndY;
+
+                        CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
+                        CogNGRectAffine.Color = CogColorConstants.Red;
+                        CogNGRectAffine.CenterX = cogTempLine.RunParams.ExpectedLineSegment.MidpointX;
+                        CogNGRectAffine.CenterY = cogTempLine.RunParams.ExpectedLineSegment.MidpointY;
+                        CogNGRectAffine.SideXLength = cogTempLine.RunParams.ExpectedLineSegment.Length;
+                        CogNGRectAffine.SideYLength = 100;
+                        CogNGRectAffine.Rotation = cogTempLine.RunParams.ExpectedLineSegment.Rotation;
+                        resultGraphics.Add(CogNGRectAffine);
+                    }
                 }
             }
             sw.Stop();
@@ -3545,401 +2325,11 @@ namespace COG.UI.Forms
             Lab_Tact.Text = sw.ElapsedMilliseconds.ToString() + "ms";
             LoggerHelper.Save_SystemLog($"Inspection Full Tact Time : {sw.ElapsedMilliseconds}ms", LogType.Cmd);
 
+
+            VisionProHelper.Save(binaryImage, @"D:\InspectLine0_binary.bmp");
+
+
             CogDisplay.InteractiveGraphics.AddList(resultGraphics, "Result", false);
-            //
-            //try
-            //{
-            //    CogStopwatch Stopwatch = new CogStopwatch();
-
-            //    CogGraphicLabel[] Label;
-
-            //    float nFontSize = (float)((PT_Display01.Height / Main.DEFINE.FontSize) * PT_Display01.Zoom);
-            //    Stopwatch.Start();
-            //    PT_Display01.InteractiveGraphics.Clear();
-            //    PT_Display01.StaticGraphics.Clear();
-
-            //    resultGraphics.Clear();
-            //    //PT_Display01.Image = OriginImage;
-            //    PT_Display01.Image = Main.vision.CogCamBuf[m_CamNo];
-            //    //bool bSearchRes = Search_PATCNL();
-            //    bool[] bROIRes;
-            //    bool bRes = true;
-            //    double[] dDistance;
-            //    List_NG.Items.Clear();
-            //    bool bSearchRes = true;
-            //    int ignore = 0;
-            //    //Live Mode On상태일 시, Off로 변경
-            //    if (BTN_LIVEMODE.Checked)
-            //    {
-            //        BTN_LIVEMODE.Checked = false;
-            //        BTN_LIVEMODE.BackColor = Color.DarkGray;
-            //    }
-            //    if (bSearchRes == true)
-            //    {
-            //        if (!FinalTracking()) return;
-            //        dDistance = new double[m_TeachParameter.Count];
-            //        bROIRes = new bool[m_TeachParameter.Count];
-
-            //        //bsi ksh ex)
-            //        //Main.AlignUnit[m_AlignNo].PAT[m_PatTagNo, m_PatNo].
-
-            //        double[,,] InspData = new double[m_TeachParameter.Count, 100, 4];
-            //        for (int i = 0; i < m_TeachParameter.Count; i++)
-            //        //Parallel.For(0, m_TeachParameter.Count, i =>
-            //        {
-            //            if (i == 0)
-            //            {
-            //                for (int iHistogram = 0; iHistogram < m_TeachParameter[i].iHistogramROICnt; iHistogram++)
-            //                {
-            //                    CogGraphicLabel HistogramValue = new CogGraphicLabel();
-            //                    HistogramValue.Font = new Font(Main.DEFINE.FontStyle, 15);
-            //                    double ResulteCenterX, ResulteCenterY;
-            //                    CogHistogramTool InspeHistogramTool = m_TeachParameter[i].m_CogHistogramTool[iHistogram];
-            //                    CogRectangleAffine Rect = (CogRectangleAffine)InspeHistogramTool.Region;
-            //                    ResulteCenterX = Rect.CenterX;
-            //                    ResulteCenterY = Rect.CenterY;
-            //                    InspeHistogramTool.InputImage = (CogImage8Grey)PT_Display01.Image;
-            //                    InspeHistogramTool.Run();
-            //                    if (InspeHistogramTool.Result.Mean > m_TeachParameter[i].iHistogramSpec[iHistogram])
-            //                    {
-            //                        CogRectangleAffine Result = new CogRectangleAffine();
-            //                        Result = (CogRectangleAffine)InspeHistogramTool.Region;
-            //                        Result.Color = CogColorConstants.Red;
-            //                        HistogramValue.Color = CogColorConstants.Red;
-            //                        HistogramValue.X = ResulteCenterX;
-            //                        HistogramValue.Y = ResulteCenterY;
-            //                        HistogramValue.Text = string.Format("{0:F3}", InspeHistogramTool.Result.Mean);
-            //                        PT_Display01.StaticGraphics.Add(HistogramValue, "Histogram");
-            //                        PT_Display01.StaticGraphics.Add(Result, "Histogram1");
-            //                        string LogMsg;
-            //                        LogMsg = string.Format("Inspection NG Histogram ROI:{0:D}", iHistogram + 1); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                        LogMsg += "\n";
-            //                        List_NG.Items.Add(LogMsg);
-            //                    }
-            //                    else
-            //                    {
-            //                        CogRectangleAffine Result = new CogRectangleAffine();
-            //                        Result = (CogRectangleAffine)InspeHistogramTool.Region;
-            //                        Result.Color = CogColorConstants.Blue;
-            //                        HistogramValue.Color = CogColorConstants.Green;
-            //                        HistogramValue.X = ResulteCenterX;
-            //                        HistogramValue.Y = ResulteCenterY;
-            //                        HistogramValue.Text = string.Format("{0:F3}", InspeHistogramTool.Result.Mean);
-            //                        PT_Display01.StaticGraphics.Add(HistogramValue, "Histogram");
-            //                        PT_Display01.StaticGraphics.Add(Result, "Histogram1");
-            //                    }
-            //                }
-            //            }
-            //            m_enumROIType = (enumROIType)m_TeachParameter[i].m_enumROIType;
-            //            if (enumROIType.Line == m_enumROIType)
-            //            {
-            //                CogFindLineTool InspCogFindLine = new CogFindLineTool();
-            //                InspCogFindLine = m_TeachParameter[i].m_FindLineTool;
-            //                CogGraphicInteractiveCollection subresultGraphics = new CogGraphicInteractiveCollection();
-            //                double[] Result;
-            //                if (!GaloOppositeInspection(i, (int)enumROIType.Line, InspCogFindLine, (CogImage8Grey)PT_Display01.Image, out Result, ref subresultGraphics, out ignore))
-            //                {
-            //                    if (m_bInspDirectionChange)
-            //                    {
-            //                        subresultGraphics.Clear();
-            //                        bRes = GaloDirectionConvertInspection(0, (int)enumROIType.Line, InspCogFindLine, (CogImage8Grey)PT_Display01.Image, out Result, ref subresultGraphics, out ignore);
-            //                    }
-
-            //                    if (!bRes)
-            //                    {
-            //                        double dCenterX = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointX;
-            //                        double dCenterY = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointY;
-            //                        double dAngle = InspCogFindLine.RunParams.ExpectedLineSegment.Rotation;
-            //                        double dLenth = InspCogFindLine.RunParams.ExpectedLineSegment.Length;
-            //                        CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
-            //                        CogNGRectAffine.Color = CogColorConstants.Red;
-            //                        CogNGRectAffine.CenterX = dCenterX;
-            //                        CogNGRectAffine.CenterY = dCenterY;
-            //                        CogNGRectAffine.SideXLength = dLenth;
-            //                        CogNGRectAffine.SideYLength = 100;
-            //                        CogNGRectAffine.Rotation = dAngle;
-            //                        resultGraphics.Add(CogNGRectAffine);
-            //                        string LogMsg;
-            //                        LogMsg = string.Format("Inspection NG ROI:{0:D}", i); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                        LogMsg += "\n";
-            //                        List_NG.Items.Add(LogMsg);
-            //                        bRes = false;
-            //                        for (int k = 0; k < subresultGraphics.Count; k++)
-            //                        {
-            //                            resultGraphics.Add(subresultGraphics[k]);
-            //                        }
-            //                        continue;
-            //                    }
-
-            //                }
-            //                bROIRes[i] = InspResultData(Result, m_TeachParameter[i].dSpecDistance, m_TeachParameter[i].dSpecDistanceMax, m_TeachParameter[i].IDistgnore, ignore);
-            //                if (bROIRes[i] == false)
-            //                {
-            //                    if (m_bInspDirectionChange)
-            //                    {
-            //                        subresultGraphics.Clear();
-            //                        bRes = GaloDirectionConvertInspection(0, (int)enumROIType.Line, InspCogFindLine, (CogImage8Grey)PT_Display01.Image, out Result, ref subresultGraphics, out ignore);
-            //                    }
-
-            //                    if (!bRes)
-            //                    {
-            //                        double dCenterX = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointX;
-            //                        double dCenterY = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointY;
-            //                        double dAngle = InspCogFindLine.RunParams.ExpectedLineSegment.Rotation;
-            //                        double dLenth = InspCogFindLine.RunParams.ExpectedLineSegment.Length;
-            //                        CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
-            //                        CogNGRectAffine.Color = CogColorConstants.Red;
-            //                        CogNGRectAffine.CenterX = dCenterX;
-            //                        CogNGRectAffine.CenterY = dCenterY;
-            //                        CogNGRectAffine.SideXLength = dLenth;
-            //                        CogNGRectAffine.SideYLength = 100;
-            //                        CogNGRectAffine.Rotation = dAngle;
-            //                        resultGraphics.Add(CogNGRectAffine);
-            //                        string LogMsg;
-            //                        LogMsg = string.Format("Inspection NG ROI:{0:D}", i); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                        LogMsg += "\n";
-            //                        List_NG.Items.Add(LogMsg);
-            //                        bRes = false;
-            //                        for (int k = 0; k < subresultGraphics.Count; k++)
-            //                        {
-            //                            resultGraphics.Add(subresultGraphics[k]);
-            //                        }
-            //                        continue;
-            //                    }
-            //                    else
-            //                    {
-            //                        bROIRes[i] = InspResultData(Result, m_TeachParameter[i].dSpecDistance, m_TeachParameter[i].dSpecDistanceMax, m_TeachParameter[i].IDistgnore, ignore);
-            //                        if (bROIRes[i] == false)
-            //                        {
-            //                            double dCenterX = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointX;
-            //                            double dCenterY = InspCogFindLine.RunParams.ExpectedLineSegment.MidpointY;
-            //                            double dAngle = InspCogFindLine.RunParams.ExpectedLineSegment.Rotation;
-            //                            double dLenth = InspCogFindLine.RunParams.ExpectedLineSegment.Length;
-            //                            CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
-            //                            CogNGRectAffine.Color = CogColorConstants.Red;
-            //                            CogNGRectAffine.CenterX = dCenterX;
-            //                            CogNGRectAffine.CenterY = dCenterY;
-            //                            CogNGRectAffine.SideXLength = dLenth;
-            //                            CogNGRectAffine.SideYLength = 100;
-            //                            CogNGRectAffine.Rotation = dAngle;
-            //                            resultGraphics.Add(CogNGRectAffine);
-            //                            string LogMsg;
-            //                            LogMsg = string.Format("Inspection NG ROI:{0:D}", i); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                            LogMsg += "\n";
-            //                            List_NG.Items.Add(LogMsg);
-            //                            bRes = false;
-            //                            for (int k = 0; k < subresultGraphics.Count; k++)
-            //                            {
-            //                                resultGraphics.Add(subresultGraphics[k]);
-            //                            }
-            //                            continue;
-            //                        }
-            //                    }
-            //                }
-            //                for (int k = 0; k < subresultGraphics.Count; k++)
-            //                {
-            //                    resultGraphics.Add(subresultGraphics[k]);
-            //                }
-
-            //            }
-            //            else   //Circle
-            //            {
-            //                CogFindCircleTool InspCogCircleLine = new CogFindCircleTool();
-            //                InspCogCircleLine = m_TeachParameter[i].m_FindCircleTool;
-            //                double[] Result;
-            //                if (!GaloOppositeInspection(i, (int)enumROIType.Circle, InspCogCircleLine, (CogImage8Grey)PT_Display01.Image, out Result, ref resultGraphics, out ignore))
-            //                {
-            //                    double dStartX = InspCogCircleLine.RunParams.ExpectedCircularArc.StartX;
-            //                    double dStartY = InspCogCircleLine.RunParams.ExpectedCircularArc.StartY;
-            //                    double dEndX = InspCogCircleLine.RunParams.ExpectedCircularArc.EndX;
-            //                    double dEndY = InspCogCircleLine.RunParams.ExpectedCircularArc.EndY;
-
-            //                    CogFindLineTool cogTempLine = new CogFindLineTool();
-            //                    cogTempLine.RunParams.ExpectedLineSegment.StartX = dStartX;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.StartY = dStartY;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.EndX = dEndX;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.EndY = dEndY;
-
-            //                    CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
-            //                    CogNGRectAffine.Color = CogColorConstants.Red;
-            //                    CogNGRectAffine.CenterX = cogTempLine.RunParams.ExpectedLineSegment.MidpointX;
-            //                    CogNGRectAffine.CenterY = cogTempLine.RunParams.ExpectedLineSegment.MidpointY;
-            //                    CogNGRectAffine.SideXLength = cogTempLine.RunParams.ExpectedLineSegment.Length;
-            //                    CogNGRectAffine.SideYLength = 100;
-            //                    CogNGRectAffine.Rotation = cogTempLine.RunParams.ExpectedLineSegment.Rotation;
-            //                    resultGraphics.Add(CogNGRectAffine);
-            //                    string LogMsg;
-            //                    LogMsg = string.Format("Inspection NG ROI:{0:D}", i); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                    LogMsg += "\n";
-            //                    List_NG.Items.Add(LogMsg);
-            //                    bRes = false;
-            //                    continue;
-            //                }
-            //                bROIRes[i] = InspResultData(Result, m_TeachParameter[i].dSpecDistance, m_TeachParameter[i].dSpecDistanceMax, m_TeachParameter[i].IDistgnore, ignore);
-
-            //                if (bROIRes[i] == false)
-            //                {
-            //                    double dStartX = InspCogCircleLine.RunParams.ExpectedCircularArc.StartX;
-            //                    double dStartY = InspCogCircleLine.RunParams.ExpectedCircularArc.StartY;
-            //                    double dEndX = InspCogCircleLine.RunParams.ExpectedCircularArc.EndX;
-            //                    double dEndY = InspCogCircleLine.RunParams.ExpectedCircularArc.EndY;
-
-            //                    CogFindLineTool cogTempLine = new CogFindLineTool();
-            //                    cogTempLine.RunParams.ExpectedLineSegment.StartX = dStartX;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.StartY = dStartY;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.EndX = dEndX;
-            //                    cogTempLine.RunParams.ExpectedLineSegment.EndY = dEndY;
-
-            //                    CogRectangleAffine CogNGRectAffine = new CogRectangleAffine();
-            //                    CogNGRectAffine.Color = CogColorConstants.Red;
-            //                    CogNGRectAffine.CenterX = cogTempLine.RunParams.ExpectedLineSegment.MidpointX;
-            //                    CogNGRectAffine.CenterY = cogTempLine.RunParams.ExpectedLineSegment.MidpointY;
-            //                    CogNGRectAffine.SideXLength = cogTempLine.RunParams.ExpectedLineSegment.Length;
-            //                    CogNGRectAffine.SideYLength = 100;
-            //                    CogNGRectAffine.Rotation = cogTempLine.RunParams.ExpectedLineSegment.Rotation;
-            //                    resultGraphics.Add(CogNGRectAffine);
-            //                    string LogMsg;
-            //                    LogMsg = string.Format("Inspection NG ROI:{0:D}", i); // 실제로 Mark를 못찾는지 확인하는 Log 뿌려줌 - cyh
-            //                    LogMsg += "\n";
-            //                    List_NG.Items.Add(LogMsg);
-            //                    bRes = false;
-            //                    continue;
-            //                }
-
-            //            }
-            //        }
-            //        ReultView(bRes, bROIRes, dDistance);
-            //        if (bRes == true)
-            //        {
-            //            CogGraphicLabel LabelText = new CogGraphicLabel();
-            //            LabelText.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //            LabelText.Color = CogColorConstants.Green;
-            //            LabelText.Text = "OK";
-            //            if (m_bROIFinealignFlag == true) //기능 ON/OFF 시 Overlay 위치 구분 shkang
-            //            {
-            //                if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //                {
-            //                    if (Main.ProjectInfo == "_1WELL_VENT")
-            //                    {
-            //                        LabelText.X = 1500;
-            //                        LabelText.Y = 3100;
-            //                    }
-            //                    else
-            //                    {
-            //                        LabelText.X = 500;
-            //                        LabelText.Y = 3100;
-            //                    }
-            //                }
-            //                else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //                {
-            //                    if (Main.ProjectInfo == "_1WELL_PATH")
-            //                    {
-            //                        LabelText.X = 1000;
-            //                        LabelText.Y = 3000;
-            //                    }
-            //                    else
-            //                    {
-            //                        LabelText.X = 2000;
-            //                        LabelText.Y = 3000;
-            //                    }
-            //                }
-            //            }
-            //            else   //사용 X
-            //            {
-            //                if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //                {
-            //                    LabelText.X = 2000;
-            //                    LabelText.Y = 1000;
-            //                }
-            //                else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //                {
-            //                    LabelText.X = 0;
-            //                    LabelText.Y = 900;
-            //                }
-            //            }
-
-            //            if (resultGraphics == null)
-            //                resultGraphics = new CogGraphicInteractiveCollection();
-            //            resultGraphics.Add(LabelText);
-            //        }
-            //        else
-            //        {
-            //            CogGraphicLabel LabelText = new CogGraphicLabel();
-            //            LabelText.Font = new Font(Main.DEFINE.FontStyle, 20, FontStyle.Bold);
-            //            LabelText.Color = CogColorConstants.Red;
-            //            LabelText.Text = "NG";
-            //            if (m_bROIFinealignFlag == true) //기능 ON/OFF 시 Overlay 위치 구분 shkang
-            //            {
-            //                if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //                {
-            //                    if (Main.ProjectInfo == "_1WELL_VENT")
-            //                    {
-            //                        LabelText.X = 1500;
-            //                        LabelText.Y = 3100;
-            //                    }
-            //                    else
-            //                    {
-            //                        LabelText.X = 500;
-            //                        LabelText.Y = 3100;
-            //                    }
-            //                }
-            //                else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //                {
-            //                    if (Main.ProjectInfo == "_1WELL_PATH")
-            //                    {
-            //                        LabelText.X = 1000;
-            //                        LabelText.Y = 3000;
-            //                    }
-            //                    else
-            //                    {
-            //                        LabelText.X = 2000;
-            //                        LabelText.Y = 3000;
-            //                    }
-            //                }
-            //            }
-            //            else
-            //            {
-            //                if (Main.DEFINE.UNIT_TYPE == "VENT")
-            //                {
-            //                    LabelText.X = 2000;
-            //                    LabelText.Y = 1000;
-
-            //                }
-            //                else if (Main.DEFINE.UNIT_TYPE == "PATH")
-            //                {
-            //                    LabelText.X = 0;
-            //                    LabelText.Y = 900;
-            //                }
-            //            }
-            //            if (resultGraphics == null)
-            //                resultGraphics = new CogGraphicInteractiveCollection();
-            //            resultGraphics.Add(LabelText);
-            //        }
-            //        //PT_Display01.Image.SelectedSpaceName = "@";
-            //        PT_Display01.InteractiveGraphics.AddList(resultGraphics, "RESULT", false);
-            //        resultGraphics.Clear();
-            //        GC.Collect();
-            //        Stopwatch.Stop();
-            //        Lab_Tact.Text = string.Format("{0:F3}", Stopwatch.Seconds);
-
-            //    }
-
-            //}
-            ////             catch(System.Exception n) // cyh - 예외처리 메시지 띄우는거
-            ////             {
-            ////                 MessageBox.Show(n.ToString());
-            ////             }
-            //catch (Exception err)
-            //{
-            //    resultGraphics.Clear();
-            //    GC.Collect();
-
-            //    string LogMsg;
-            //    LogMsg = "Inspection Error = " + err.Message.ToString();
-            //    MessageBox.Show(LogMsg);
-            //}
-
-
         }
 
         private void ReultView(bool Res, bool[] bROIResult, double[] bDist)
@@ -4128,19 +2518,28 @@ namespace COG.UI.Forms
                 return;
 
             var param = GetUnit().Insp.GaloInspToolList[_prevSelectedRowIndex];
+            
+            ckbUseDarkEdge.Checked = param.DarkArea.ThresholdUse;
+            cbxDarkMaskingEdgeType.SelectedIndex = (int)param.DarkArea.MaskingDirection;
 
-            chkUseEdgeThreshold.Checked = param.DarkArea.ThresholdUse;
             lblEdgeThreshold.Text = param.DarkArea.Threshold.ToString();
             lblEdgeCaliperThreshold.Text = param.DarkArea.EdgeCaliperThreshold.ToString();
             lblEdgeCaliperFilterSize.Text = param.DarkArea.EdgeCaliperFilterSize.ToString();
-            lblTopCutPixel.Text = param.DarkArea.TopCutPixel.ToString();
-            lblBottomCutPixel.Text = param.DarkArea.BottomCutPixel.ToString();
+
+            lblInsideTopCutPixel.Text = param.DarkArea.StartCutPixel.ToString();
+            lblInsideBottomCutPixel.Text = param.DarkArea.EndCutPixel.ToString();
+            lblOutsideTopCutPixel.Text = param.DarkArea.OutsideStartCutPixel.ToString();
+            lblOutsideBottomCutPixel.Text = param.DarkArea.OutsideEndCutPixel.ToString();
+
             lblMaskingValue.Text = param.DarkArea.MaskingValue.ToString();
             lblIgnoreSize.Text = param.DarkArea.IgnoreSize.ToString();
 
             text_Dist_Ignre.Text = param.Distgnore.ToString();
             text_Spec_Dist.Text = param.SpecDistance.ToString();
             text_Spec_Dist_Max.Text = param.SpecDistanceMax.ToString();
+
+            cogDisplayInSide.Image = null;
+            cogDisplayOutSide.Image = null;
 
             CogCaliperPolarityConstants Polarity;
             int TmepIndex = 0;
@@ -4198,6 +2597,7 @@ namespace COG.UI.Forms
                 label58.Visible = true;
                 Combo_Polarity2.Visible = true;
             }
+
             UpdateParamUI();
         }
 
@@ -4341,7 +2741,7 @@ namespace COG.UI.Forms
             if (ModelManager.Instance().CurrentModel == null)
                 return;
 
-            var inputImage = CogDisplay.Image;
+            var inputImage = CogDisplay.Image;//.CopyBase(CogImageCopyModeConstants.CopyPixels);
 
             double score = CurrentUnit.Mark.Bonding.Score;
 
@@ -4356,7 +2756,7 @@ namespace COG.UI.Forms
             var upMarkToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
             var downMarkToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
 
-            var reuslt = Algorithm.FindBondingMark(inputImage as CogImage8Grey, upMarkToolList, downMarkToolList, score, CurrentUnit.FilmAlign.AlignSpec_T);
+            var reuslt = AlgorithmTool.FindBondingMark(inputImage as CogImage8Grey, upMarkToolList, downMarkToolList, score, CurrentUnit.FilmAlign.AlignSpec_T);
 
             if(reuslt.Judgement == Judgement.OK)
             {
@@ -4713,7 +3113,7 @@ namespace COG.UI.Forms
 
         private void UpdateParamUI()
         {
-            if (chkUseEdgeThreshold.Checked)
+            if (chkDarkAlgorithm.Checked)
             {
                 pnlOrgParam.Visible = false;
                 if (AppsStatus.Instance().CurrentUser == User.MAKER)
@@ -4760,7 +3160,7 @@ namespace COG.UI.Forms
 
             Stopwatch sw = Stopwatch.StartNew();
 
-            var markResult = Algorithm.FindMark(CogDisplayImage as CogImage8Grey, markTool);
+            var markResult = AlgorithmTool.FindMark(CogDisplayImage as CogImage8Grey, markTool);
 
             sw.Stop();
 
@@ -5224,7 +3624,7 @@ namespace COG.UI.Forms
             if (GetCurrentInspParam() is GaloInspTool inspTool)
             {
                 double nCurData = Convert.ToDouble(LAB_CALIPER_SEARCHLENTH.Text);
-                KeyPadForm KeyPad = new KeyPadForm(0, 255, nCurData, "Input Data", 1);
+                KeyPadForm KeyPad = new KeyPadForm(1, 255, nCurData, "Input Data", 1);
                 KeyPad.ShowDialog();
                 double CaliperSearchLenth = KeyPad.m_data;
                 if (inspTool.Type == GaloInspType.Line)
@@ -5405,6 +3805,13 @@ namespace COG.UI.Forms
                     inspTool.FindCircleTool.RunParams.CaliperRunParams.Edge1Polarity = (CogCaliperPolarityConstants)(index + 1);
             }
         }
+        private void ckbUseDarkEdge_CheckStateChanged(object sender, EventArgs e)
+        {
+            if (GetCurrentInspParam() is GaloInspTool inspTool)
+            {
+                inspTool.DarkArea.ThresholdUse = ckbUseDarkEdge.Checked;
+            }
+        }
 
         private void lblEdgeThreshold_Click(object sender, EventArgs e)
         {
@@ -5448,32 +3855,57 @@ namespace COG.UI.Forms
             }
         }
 
-        private void lblTopCutPixel_Click(object sender, EventArgs e)
+        private void lblInsideTopCutPixel_Click(object sender, EventArgs e)
         {
             if (GetCurrentInspParam() is GaloInspTool inspTool)
             {
-                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblTopCutPixel.Text.ToString()), "Input Data", 0);
+                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblInsideTopCutPixel.Text.ToString()), "Input Data", 0);
                 KeyPad.ShowDialog();
                 int topCutPixel = (int)KeyPad.m_data;
-                inspTool.DarkArea.TopCutPixel = topCutPixel;
+                inspTool.DarkArea.StartCutPixel = topCutPixel;
 
-                lblTopCutPixel.Text = topCutPixel.ToString();
+                lblInsideTopCutPixel.Text = topCutPixel.ToString();
             }
         }
 
-        private void lblBottomCutPixel_Click(object sender, EventArgs e)
+        private void lblInsideBottomCutPixel_Click(object sender, EventArgs e)
         {
             if (GetCurrentInspParam() is GaloInspTool inspTool)
             {
-                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblBottomCutPixel.Text.ToString()), "Input Data", 0);
+                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblInsideBottomCutPixel.Text.ToString()), "Input Data", 0);
                 KeyPad.ShowDialog();
                 int bottomCutPixel = (int)KeyPad.m_data;
-                inspTool.DarkArea.BottomCutPixel = bottomCutPixel;
+                inspTool.DarkArea.EndCutPixel = bottomCutPixel;
 
-                lblBottomCutPixel.Text = bottomCutPixel.ToString();
+                lblInsideBottomCutPixel.Text = bottomCutPixel.ToString();
             }
         }
 
+        private void lblOutsideTopCutPixel_Click(object sender, EventArgs e)
+        {
+            if (GetCurrentInspParam() is GaloInspTool inspTool)
+            {
+                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblOutsideTopCutPixel.Text.ToString()), "Input Data", 0);
+                KeyPad.ShowDialog();
+                int topCutPixel = (int)KeyPad.m_data;
+                inspTool.DarkArea.OutsideStartCutPixel = topCutPixel;
+
+                lblOutsideTopCutPixel.Text = topCutPixel.ToString();
+            }
+        }
+
+        private void lblOutsideBottomCutPixel_Click(object sender, EventArgs e)
+        {
+            if (GetCurrentInspParam() is GaloInspTool inspTool)
+            {
+                KeyPadForm KeyPad = new KeyPadForm(0, 255, Convert.ToInt16(lblOutsideBottomCutPixel.Text.ToString()), "Input Data", 0);
+                KeyPad.ShowDialog();
+                int bottomCutPixel = (int)KeyPad.m_data;
+                inspTool.DarkArea.OutsideEndCutPixel = bottomCutPixel;
+
+                lblOutsideBottomCutPixel.Text = bottomCutPixel.ToString();
+            }
+        }
         private void lblMaskingValue_Click(object sender, EventArgs e)
         {
             if (GetCurrentInspParam() is GaloInspTool inspTool)
@@ -5854,5 +4286,57 @@ namespace COG.UI.Forms
             //}
             this.Hide();
         }
+
+        private void DataGridview_Insp_KeyPress(object sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == Convert.ToChar(Keys.Down) || e.KeyChar == Convert.ToChar(Keys.Up))
+            {
+
+            }
+            else
+            {
+                e.Handled = true;
+            }
+        }
+
+        private void DataGridview_Insp_KeyDown(object sender, KeyEventArgs e)
+        {
+            int currentRowIndex = ((DataGridView)sender).CurrentCell.RowIndex;
+            if (e.KeyCode == Keys.Down)
+            {
+                if (currentRowIndex + 1 > DataGridview_Insp.Rows.Count - 1)
+                    return;
+                ((DataGridView)sender).Rows[currentRowIndex + 1].Selected = true;
+
+                _prevSelectedRowIndex = currentRowIndex;
+                AddRoiType = AddRoiType.None;
+
+                UpdateInspParam();
+                DrawInspParam();
+            }
+            if (e.KeyCode == Keys.Up)
+            {
+                if (currentRowIndex - 1 < 0)
+                    return;
+                ((DataGridView)sender).Rows[currentRowIndex - 1].Selected = true;
+
+                _prevSelectedRowIndex = currentRowIndex;
+                AddRoiType = AddRoiType.None;
+
+                UpdateInspParam();
+                DrawInspParam();
+            }
+        }
+
+        private void cbxDarkMaskingEdgeType_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (GetCurrentInspParam() is GaloInspTool inspTool)
+            {
+                int index = cbxDarkMaskingEdgeType.SelectedIndex;
+                if(index >= 0)
+                    inspTool.DarkArea.MaskingDirection = (DarkMaskingDirection)index;
+            }
+        }
+
     }
 }

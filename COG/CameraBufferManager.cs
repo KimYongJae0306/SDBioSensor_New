@@ -5,6 +5,7 @@ using COG.UI.Forms;
 using Cognex.VisionPro;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Windows.Forms;
 
 namespace COG
@@ -65,6 +66,8 @@ namespace COG
                         buffer.IMAGE_CENTER_X = buffer.IMAGE_SIZE_X / 2;
                         buffer.IMAGE_CENTER_Y = buffer.IMAGE_SIZE_Y / 2;
                         buffer.USE_CUSTOM_CROSS = false;
+
+                        CameraBufferList.Add(buffer);
                     }
                     catch (Exception ex)
                     {
@@ -74,6 +77,41 @@ namespace COG
             }
 
             form.Dispose();
+        }
+
+        public void Release()
+        {
+            if (StaticConfig.VirtualMode == false)
+            {
+                try
+                {
+                    CogFrameGrabbers frameGrabbers = new CogFrameGrabbers();
+                    foreach (ICogFrameGrabber fg in frameGrabbers)
+                        fg.Disconnect(false);
+
+                    foreach (var buffer in CameraBufferList)
+                        buffer.CogImageBlock?.Dispose();
+                }
+                catch (System.Exception ex)
+                {
+                    MessageBox.Show(ex.Source + ex.Message + ex.StackTrace);
+                }
+            }
+        }
+
+        public void ImageGrab(int camNo)
+        {
+            var buffer = GetCameraBuffer(camNo);
+
+            if(buffer != null)
+            {
+                buffer.CogImageBlock.Run();
+            }
+        }
+
+        public CameraBuffer GetCameraBuffer(int camNo)
+        {
+            return CameraBufferList.Where(x => x.Index == camNo).FirstOrDefault();
         }
     }
 }

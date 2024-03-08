@@ -56,9 +56,14 @@ namespace COG.Class.Data
                 galo.SpecDistanceMax = StaticConfig.ModelFile.GetFData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString());
 
                 galo.DarkArea.ThresholdUse = StaticConfig.ModelFile.GetBData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString());
+                galo.DarkArea.MaskingDirection = (DarkMaskingDirection)StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Edge_MaskingDirection" + i.ToString());
                 galo.DarkArea.Threshold = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Edge_Threshold" + i.ToString());
-                galo.DarkArea.TopCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Top_Cut_Pixel" + i.ToString());
-                galo.DarkArea.BottomCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Bottom_Cut_Pixel" + i.ToString());
+
+                galo.DarkArea.StartCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Start_Cut_Pixel" + i.ToString());
+                galo.DarkArea.EndCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_End_Cut_Pixel" + i.ToString());
+                galo.DarkArea.OutsideStartCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Outside_Start_Cut_Pixel" + i.ToString());
+                galo.DarkArea.OutsideEndCutPixel = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Outside_End_Cut_Pixel" + i.ToString());
+
                 galo.DarkArea.IgnoreSize = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Ignore_Size" + i.ToString());
                 galo.DarkArea.MaskingValue = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Masking_Value" + i.ToString());
                 galo.DarkArea.EdgeCaliperThreshold = StaticConfig.ModelFile.GetIData(newModelSection, "Insp_Edge_Caliper_TH" + i.ToString());
@@ -100,9 +105,14 @@ namespace COG.Class.Data
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Spec_Dist_Max" + i.ToString(), galo.SpecDistanceMax);
 
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Threshold_Use" + i.ToString(), galo.DarkArea.ThresholdUse);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_MaskingDirection" + i.ToString(), (int)galo.DarkArea.MaskingDirection);
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Threshold" + i.ToString(), galo.DarkArea.Threshold);
-                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Top_Cut_Pixel" + i.ToString(), galo.DarkArea.TopCutPixel);
-                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Bottom_Cut_Pixel" + i.ToString(), galo.DarkArea.BottomCutPixel);
+
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Start_Cut_Pixel" + i.ToString(), galo.DarkArea.StartCutPixel);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_End_Cut_Pixel" + i.ToString(), galo.DarkArea.EndCutPixel);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Outside_Start_Cut_Pixel" + i.ToString(), galo.DarkArea.OutsideStartCutPixel);
+                StaticConfig.ModelFile.SetData(newModelSection, "Insp_Outside_End_Cut_Pixel" + i.ToString(), galo.DarkArea.OutsideEndCutPixel);
+
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Ignore_Size" + i.ToString(), galo.DarkArea.IgnoreSize);
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Masking_Value" + i.ToString(), galo.DarkArea.MaskingValue);
                 StaticConfig.ModelFile.SetData(newModelSection, "Insp_Edge_Caliper_TH" + i.ToString(), galo.DarkArea.EdgeCaliperThreshold);

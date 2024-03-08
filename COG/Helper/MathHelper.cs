@@ -100,5 +100,23 @@ namespace COG.Helper
 
             return centerPoint;
         }
+
+        public static List<double> GetDistance(List<PointF> points1, List<PointF> points2)
+        {
+            if (points1.Count <= 0 || points2.Count <= 0)
+                return new List<double>();
+
+            List<double> distanceList = new List<double>();
+            for (int i = 0; i < points1.Count; i++)
+            {
+                var point1 = points1[i];
+                var point2 = points2[i];
+
+                var distance = GetDistance(point1, point2);
+                distance *= (Settings.StaticConfig.PixelResolution / 1000);
+                distanceList.Add(distance);
+            }
+            return distanceList;
+        }
     }
 }

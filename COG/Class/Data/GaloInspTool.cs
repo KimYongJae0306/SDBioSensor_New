@@ -1,4 +1,5 @@
-﻿using Cognex.VisionPro.Caliper;
+﻿using Cognex.VisionPro;
+using Cognex.VisionPro.Caliper;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -65,13 +66,19 @@ namespace COG.Class.Data
     {
         public bool ThresholdUse { get; set; }
 
+        public DarkMaskingDirection MaskingDirection { get; set; } = DarkMaskingDirection.InSide;
+
         public int Threshold { get; set; } = 32;
 
-        public int TopCutPixel { get; set; } = 15;
+        public int StartCutPixel { get; set; } = 15; // Inside
+
+        public int EndCutPixel { get; set; } = 10; // Inside
+
+        public int OutsideStartCutPixel { get; set; } = 15; // Inside
+
+        public int OutsideEndCutPixel { get; set; } = 10; // Inside
 
         public int IgnoreSize { get; set; } = 20;
-
-        public int BottomCutPixel { get; set; } = 10;
 
         public int MaskingValue { get; set; } = 210;
 
@@ -82,10 +89,13 @@ namespace COG.Class.Data
         public DarkAreaInspParam DeepCopy()
         {
             DarkAreaInspParam param = new DarkAreaInspParam();
+            param.MaskingDirection = MaskingDirection;
             param.Threshold = Threshold;
-            param.TopCutPixel = TopCutPixel;
+            param.StartCutPixel = StartCutPixel;
+            param.EndCutPixel = EndCutPixel;
+            param.OutsideStartCutPixel = OutsideStartCutPixel;
+            param.OutsideEndCutPixel = OutsideEndCutPixel;
             param.IgnoreSize = IgnoreSize;
-            param.BottomCutPixel = BottomCutPixel;
             param.MaskingValue = MaskingValue;
             param.EdgeCaliperThreshold = EdgeCaliperThreshold;
             param.EdgeCaliperFilterSize = EdgeCaliperFilterSize;

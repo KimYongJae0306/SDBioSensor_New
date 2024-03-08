@@ -1,6 +1,7 @@
 ﻿using COG.Helper;
 using COG.Settings;
 using Cognex.VisionPro;
+using Emgu.CV;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -14,26 +15,32 @@ namespace COG.Class.Core
     {
         public Judgement Judgement { get; set; } = Judgement.FAIL;
 
-        public GaloLineCaliperResult Line0 { get; set; } = new GaloLineCaliperResult();
+        public LineResult InsideResult { get; set; } = new LineResult();
 
-        public GaloLineCaliperResult Line1 { get; set; } = new GaloLineCaliperResult();
+        public LineResult OutsideResult { get; set; } = new LineResult();
 
         public List<double> GetDistance()
         {
-            if (Line0.Edge0PointList.Count <= 0 || Line1.Edge0PointList.Count <= 0)
+            if (InsideResult.PointList.Count <= 0 || OutsideResult.PointList.Count <= 0)
                 return new List<double>();
 
             List<double> distanceList = new List<double>();
-            for (int i = 0; i < Line0.Edge0PointList.Count; i++)
+            for (int i = 0; i < InsideResult.PointList.Count; i++)
             {
-                var point1 = Line0.Edge0PointList[i];
-                var point2 = Line1.Edge0PointList[i];
+                var point1 = InsideResult.PointList[i];
+                var point2 = OutsideResult.PointList[i];
 
                 var distance = MathHelper.GetDistance(point1, point2);
                 distance *= (Settings.StaticConfig.PixelResolution / 1000);
                 distanceList.Add(distance);
             }
             return distanceList;
+        }
+
+        public void Dispose()
+        {
+            InsideResult?.Dispose();
+            OutsideResult?.Dispose();
         }
     }
 
@@ -42,7 +49,6 @@ namespace COG.Class.Core
         public List<PointF> Edge0PointList { get; set; } = new List<PointF>();
 
         public List<CogCompositeShape> ResultGraphics { get; set; } = new List<CogCompositeShape>();
-
        
         public void Dispose()
         {
