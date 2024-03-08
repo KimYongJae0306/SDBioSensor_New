@@ -37,9 +37,23 @@ namespace COG.Helper
             return regionTool.OutputImage;
         }
 
+        public static CogRectangleAffine GetBoundingRect(CogImage8Grey cogImage, CogFindCircleTool cogFindCircleTool)
+        {
+            CogRectangleAffine boundingBox = new CogRectangleAffine();
+
+            //boundingBox.CenterX = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointX;
+            //boundingBox.CenterY = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointY;
+            //boundingBox.Rotation = cogFindLineTool.RunParams.ExpectedLineSegment.Rotation;// + CogMisc.DegToRad(90);
+            //boundingBox.SideXLength = cogFindLineTool.RunParams.ExpectedLineSegment.Length;
+            //boundingBox.SideYLength = cogFindLineTool.RunParams.CaliperSearchLength;
+
+            return boundingBox;
+        }
+
         public static CogRectangleAffine GetBoundingRect(CogImage8Grey cogImage, CogFindLineTool cogFindLineTool)
         {
             CogRectangleAffine boundingBox = new CogRectangleAffine();
+
             boundingBox.CenterX = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointX;
             boundingBox.CenterY = cogFindLineTool.RunParams.ExpectedLineSegment.MidpointY;
             boundingBox.Rotation = cogFindLineTool.RunParams.ExpectedLineSegment.Rotation;// + CogMisc.DegToRad(90);
