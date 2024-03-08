@@ -55,6 +55,7 @@ namespace COG
         {
             CurrentModelChangedEvent?.Invoke(CurrentModel);
         }
+       
         #endregion
     }
 }

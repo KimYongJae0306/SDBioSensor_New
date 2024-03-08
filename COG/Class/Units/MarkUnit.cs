@@ -63,6 +63,7 @@ namespace COG.Class.Units
 
             #region Bonding Mark
             Bonding.Score = StaticConfig.ModelFile.GetFData(Bonding.ModelSection, "ROIFinealign_MarkScore");
+            Bonding.AlignSpec_T = StaticConfig.ModelFile.GetFData(Bonding.ModelSection, "ROIFinealign_T_Spec");
 
             foreach (var upMarkTool in Bonding.UpMarkToolList)
             {
@@ -90,6 +91,7 @@ namespace COG.Class.Units
         {
             #region Amp Mark
             StaticConfig.ModelFile.SetData(Amp.ModelSection, "ACCEPT_SCORE", Amp.Score);
+            StaticConfig.ModelFile.SetData(Bonding.ModelSection, "ROIFinealign_T_Spec", Bonding.AlignSpec_T);
 
             for (int i = 0; i < StaticConfig.PATTERN_MAX_COUNT; i++)
             {
@@ -167,6 +169,9 @@ namespace COG.Class.Units
 
         public List<MarkTool> DownMarkToolList { get; set; } = new List<MarkTool>();
 
+        public double AlignSpec_T { get; set; } = 0;
+
+
         public void Dispose()
         {
             UpMarkToolList.ForEach(x => x.Dispose());
@@ -185,6 +190,7 @@ namespace COG.Class.Units
             mark.CamNo = CamNo;
             mark.AlignType = AlignType;
             mark.Score = Score;
+            mark.AlignSpec_T = AlignSpec_T;
 
             for (int i = 0; i < UpMarkToolList.Count(); i++)
                 mark.UpMarkToolList.Add(UpMarkToolList[i].DeepCopy());

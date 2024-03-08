@@ -15,9 +15,13 @@ namespace COG.Device.PLC
         private DeviceName _deviceName = DeviceName.R;
 
         private bool _alive = false;
+
+        private object _lock = new object();
         #endregion
 
         #region 속성
+        private int[] ReadData { get; set; } = new int[StaticConfig.PLC_READ_SIZE];
+
         private PlcControl MCClient_READ = new PlcControl();
 
         private PlcControl MCClient_WRITE = new PlcControl();
@@ -51,37 +55,47 @@ namespace COG.Device.PLC
             StartReadTask();
         }
 
-        public int[] ReadDevice(int size/*, out int[] lplData*/)
+        public void ReadDevice()
         {
-            //int[] returnValue = new int[lSize];
-            //try
-            //{
-            //    returnValue = _plcControl.ReadDeviceBlock(SubCommand.Word, _deviceName, AddressMap.PLC_BaseAddress.ToString(), lSize);
-            //}
-            //catch (Exception ex)
-            //{
-            //    MessageBox.Show(ex.Source + ex.Message + ex.StackTrace);
-            //    _plcControl.WriteLogFile("PLC READ DISCONNECT");
-            //}
-            //finally
-            //{
-            //    lplData = returnValue;
-            //}
-
-            if (MCClient_READ == null)
-                return null;
-
-			return MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, StaticConfig.PLC_BaseAddress.ToString(), size);
+            if (StaticConfig.VirtualMode)
+                return;
+            int size = StaticConfig.PLC_READ_SIZE;
+            int[] returnValue = new int[size];
+            try
+            {
+                returnValue = MCClient_READ.ReadDeviceBlock(DataType.Word, _deviceName, StaticConfig.BASE_ADDR.ToString(), size);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Source + ex.Message + ex.StackTrace);
+                MCClient_READ.WriteLogFile("PLC READ DISCONNECT");
+            }
+            finally
+            {
+                lock(_lock)
+                    ReadData = returnValue;
+            }
         }
 
-        public void WriteDevice(int device, int lplData)
+        public int[] GetReadData()
         {
+            int[] value = null;
+            lock (_lock)
+                value = ReadData;
+
+            return value;
+        }
+
+        public void WriteDevice(int address, int lplData)
+        {
+            if (StaticConfig.VirtualMode)
+                return;
             try
             {
                 int[] Data = new int[1];
                 Data[0] = lplData;
 
-                MCClient_WRITE.WriteDeviceBlock(DataType.Word, _deviceName, device.ToString(), Data);
+                MCClient_WRITE.WriteDeviceBlock(DataType.Word, _deviceName, address.ToString(), Data);
             }
             catch (Exception ex)
             {
@@ -92,6 +106,8 @@ namespace COG.Device.PLC
 
         private void StartReadTask()
         {
+            if (StaticConfig.VirtualMode)
+                return;
             if (PlcActionTask != null)
                 return;
 
@@ -102,6 +118,9 @@ namespace COG.Device.PLC
 
         public void ThreadPLC_Read()
         {
+            if (StaticConfig.VirtualMode)
+                return;
+
             Stopwatch alive = new Stopwatch();
 
             while (true)
@@ -112,7 +131,7 @@ namespace COG.Device.PLC
                 if (alive.ElapsedMilliseconds > 1000)
                 {
                     _alive = !_alive;
-                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.Alive);
+                    int address = StaticConfig.BASE_ADDR + Convert.ToInt16(PlcCommonMap.Alive);
                     WriteVisionAlive(_alive);
                     alive.Restart();
                 }
@@ -120,13 +139,7 @@ namespace COG.Device.PLC
                 {
                     try
                     {
-                        var readData = ReadDevice(StaticConfig.PLC_READ_SIZE);
-
-                        if (readData.Length == StaticConfig.PLC_READ_SIZE)
-                        {
-                            //_plcControl.ReadDatas = readData;
-                            PlcScenarioManager.Instance().AddCommand(readData);
-                        }
+                        ReadDevice();
                     }
                     catch (Exception ex)
                     {
@@ -140,41 +153,69 @@ namespace COG.Device.PLC
 
         public void Open(int readLocalPort, int writeLocalPort, string remoteIp, int timeOut)
         {
-            if (StaticConfig.VirtualMode == true /*false*/)
+            if (StaticConfig.VirtualMode)
+                return;
+            try
             {
-                try
-                {
-                    MCClient_READ.SetPLCProperties(remoteIp, readLocalPort, timeOut);
+                MCClient_READ.SetPLCProperties(remoteIp, readLocalPort, timeOut);
 
-                    if (MCClient_READ.Open() == false)
-                        MessageBox.Show("READ PORT OPEN ERROR:" + readLocalPort.ToString());
+                if (MCClient_READ.Open() == false)
+                    MessageBox.Show("READ PORT OPEN ERROR:" + readLocalPort.ToString());
 
 
-                    MCClient_WRITE.SetPLCProperties(remoteIp, writeLocalPort, timeOut);
+                MCClient_WRITE.SetPLCProperties(remoteIp, writeLocalPort, timeOut);
 
-                    if (MCClient_WRITE.Open() == false)
-                        MessageBox.Show("WRITE PORT OPEN ERROR:" + writeLocalPort.ToString());
-                }
-                catch (Exception ex)
-                {
-                    MessageBox.Show("PLC OPEN ERROR " + ex.ToString());
-                }
+                if (MCClient_WRITE.Open() == false)
+                    MessageBox.Show("WRITE PORT OPEN ERROR:" + writeLocalPort.ToString());
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("PLC OPEN ERROR " + ex.ToString());
             }
         }
 
         public void Close()
         {
+            if (StaticConfig.VirtualMode)
+                return;
+
             MCClient_READ.Close();
         }
 
         public void WriteCurrentModel(string modelName)
         {
-            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PC_Model_No);
-            WriteDevice(address, Convert.ToInt16(modelName));
+            if (StaticConfig.VirtualMode)
+                return;
+
+            var currentModel = AppsConfig.Instance().ProjectInfo;
+
+            try
+            {
+                int address = StaticConfig.BASE_ADDR + Convert.ToInt16(currentModel);
+
+                WriteDevice(address, Convert.ToInt16(modelName));
+            }
+            catch (Exception err)
+            {
+                MessageBox.Show("Model Name is Incorrect");
+            }
         }
+
+        public void WritePlcCommand(int value)
+        {
+            if (StaticConfig.VirtualMode)
+                return;
+
+            int address = StaticConfig.BASE_ADDR + PlcAddressMap.PLC_Command;
+
+            WriteDevice(address, value);
+        }
+
 
         public void WriteVisionReady(bool isReady)
         {
+            if (StaticConfig.VirtualMode)
+                return;
             int value = -1;
 
             if (isReady)
@@ -182,26 +223,35 @@ namespace COG.Device.PLC
             else
                 value = 0;
 
-            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.Vision_Ready);
+            int address = StaticConfig.BASE_ADDR + Convert.ToInt16(PlcCommonMap.Vision_Ready);
 
             WriteDevice(address, value);
         }
 
         public void WriteVisionStatus(int command)
         {
-            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PC_Status);
+            if (StaticConfig.VirtualMode)
+                return;
+
+            int address = StaticConfig.BASE_ADDR + PlcAddressMap.PC_Status;
             WriteDevice(address, command);
         }
 
         public void WriteVisionAlive(bool isAlive)
         {
-            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.Alive);
+            if (StaticConfig.VirtualMode)
+                return;
+
+            int address = StaticConfig.BASE_ADDR + Convert.ToInt16(PlcCommonMap.Alive);
             WriteDevice(address, isAlive == true ? 1 : 0);
         }
 
         public void ClearPlcCommand()
         {
-            int address = StaticConfig.PC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Command);
+            if (StaticConfig.VirtualMode)
+                return;
+
+            int address = StaticConfig.BASE_ADDR + PlcAddressMap.PLC_Command;
             WriteDevice(address, 0);
         }
         #endregion

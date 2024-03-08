@@ -6,39 +6,34 @@ using System.Threading.Tasks;
 
 namespace COG.Device.PLC
 {
-    public class PlcAddressMap
+    public static class PlcAddressMap
     {
-    }
+        public const int PC_Status = 6;
 
-    public enum BaseAddressMap
-    {
+        public const int PLC_ModelNo = 100;
 
+        public const int PLC_Time_Year = 100;
+        public const int PLC_Time_Month = 101;
+        public const int PLC_Time_Day = 102;
+        public const int PLC_Time_Hour = 103;
+        public const int PLC_Time_Minute = 104;
+        public const int PLC_Time_Second = 105;
+
+        public const int PLC_Command = 106;
     }
 
     public enum PlcCommonMap
     {
         PC_Model_No = 0,
-        PLC_Model_No = 100,
-
         Vision_Ready = 4,
-
-        PC_Status = 6,
-        PLC_Command = 106,
         Alive = 200,
-
-        PLC_Time = 300,
     }
-
-    //public enum PlcCommonCommand
-    //{
-    //    Time_Change = 6000,
-    //    Model_Change = 8000,
-    //}
 
     public enum PlcCommand
     {
         StartInspection = 1100,
         Time_Change = 6000,
         Model_Change = 8000,
+        Cmd_Clear = 9000,
     }
 }

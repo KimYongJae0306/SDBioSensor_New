@@ -394,8 +394,6 @@ namespace COG.Device.PLC
                 {
                     if (receivedSW.ElapsedMilliseconds > timeOut)
                     {
-                        Console.WriteLine("여기??");
-
                         if (retryCount >= 0)
                         {
                             WriteLogFile("PLC Read TimeOut Retry Send:" + timeOut.ToString());

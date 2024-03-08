@@ -27,7 +27,7 @@ namespace COG.Settings
         public const int FILM_ALIGN_MAX_COUNT = 4;
 
         public const int PLC_READ_SIZE = 310;
-
+        public const int CMD_CHECK_TIMEOUT = 1000;
 #if GALO_PC1_MODE
         public const string PROGRAM_TYPE = "ATT_AREA_PC1";
         public const int CAM_COUNT  = 2;
@@ -41,11 +41,10 @@ namespace COG.Settings
         public const int LIGHT_COUNT = 1;
 #endif
 #if SDBIO_VENT
-        public const int PLC_BaseAddress = 27000;
-        public const int PC_BaseAddress = 27000;
+        public const int BASE_ADDR = 27000;
 #endif
 #if SDBIO_PATH
-        public const int PLC_BaseAddress = 28000;
+        public const int PLC_RW_ADDR = 28000;
         public const int PC_BaseAddress = 28000;
 #endif
 
@@ -61,6 +60,9 @@ namespace COG.Settings
 
         public const string FontStyle = "test";
         public const float FontSize = 35.0f;
+
+        public const int MX_ARRAY_RSTAT_OFFSET = 200;
+        public const int MODULED_NUM = 80;
     }
 
 

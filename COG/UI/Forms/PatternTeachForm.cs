@@ -314,7 +314,7 @@ namespace COG.UI.Forms
             else
             {
                 score = CurrentUnit.Mark.Bonding.Score;
-                LBL_ROI_FINEALIGN_SPEC_T.Text = CurrentUnit.FilmAlign.AlignSpec_T.ToString();
+                LBL_ROI_FINEALIGN_SPEC_T.Text = CurrentUnit.Mark.Bonding.AlignSpec_T.ToString();
                 lblObjectDistanceXValue.Text = CurrentUnit.FilmAlign.AmpModuleDistanceX.ToString();
                 lblObjectDistanceXSpecValue.Text = CurrentUnit.FilmAlign.FilmAlignSpecX.ToString();
             }
@@ -2193,7 +2193,6 @@ namespace COG.UI.Forms
                     return;
             }
         }
-      
 
         private void DataGridview_Insp_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -2260,10 +2259,6 @@ namespace COG.UI.Forms
             CogImage8Grey binaryImage = CogDisplayImage.CopyBase(CogImageCopyModeConstants.CopyPixels) as CogImage8Grey;
             for (int i = 0; i < GetUnit().Insp.GaloInspToolList.Count; i++)
             {
-                if(i==78)
-                {
-                    int ga = 1;
-                }
                 var inspTool = GetUnit().Insp.GaloInspToolList[i];
 
                 if (inspTool.Type == GaloInspType.Line)
@@ -2756,7 +2751,7 @@ namespace COG.UI.Forms
             var upMarkToolList = CurrentUnit.Mark.Bonding.UpMarkToolList;
             var downMarkToolList = CurrentUnit.Mark.Bonding.DownMarkToolList;
 
-            var reuslt = AlgorithmTool.FindBondingMark(inputImage as CogImage8Grey, upMarkToolList, downMarkToolList, score, CurrentUnit.FilmAlign.AlignSpec_T);
+            var reuslt = AlgorithmTool.FindBondingMark(inputImage as CogImage8Grey, upMarkToolList, downMarkToolList, score, CurrentUnit.Mark.Bonding.AlignSpec_T);
 
             if(reuslt.Judgement == Judgement.OK)
             {
@@ -2807,7 +2802,7 @@ namespace COG.UI.Forms
 
             double dTheta = KeyPad.m_data;
 
-            CurrentUnit.FilmAlign.AlignSpec_T = dTheta;
+            CurrentUnit.Mark.Bonding.AlignSpec_T = dTheta;
             LBL_ROI_FINEALIGN_SPEC_T.Text = dTheta.ToString();
         }
 

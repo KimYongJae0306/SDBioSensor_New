@@ -42,7 +42,6 @@ namespace COG.Core
                 {
                     StageUnit stageUnit = new StageUnit();
                     stageUnit.Name = "INSPECTION_" + (i + 1).ToString();
-
                     #region Amp Mark
                     var leftAmpMarkTool = CreateMarkTool();
                     stageUnit.Left.Mark.Amp.ModelSection = stageUnit.Name + "_0_CAMERA___UP";
@@ -123,9 +122,6 @@ namespace COG.Core
 
             ModelPath = buf;
 
-            //ToDo: PLC
-            //Main.WriteDevice(PLCDataTag.BASE_RW_ADDR + DEFINE.CURRENT_MODEL_CODE, Convert.ToInt16(Main.ProjectName));
-
             SystemManager.Instance().ShowProgerssBar(StaticConfig.STAGE_COUNT, true, 0);
 
             string modelDir = modelPath + AppsConfig.Instance().ProjectName;
@@ -137,6 +133,9 @@ namespace COG.Core
             }
 
             ModelManager.Instance().CurrentModel = this;
+
+
+            PlcControlManager.Instance().WriteCurrentModel(ModelName);
 
             return true;
         }

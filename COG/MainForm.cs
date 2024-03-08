@@ -1,5 +1,6 @@
 ﻿using COG.Class;
 using COG.Core;
+using COG.Device.PLC;
 using COG.Helper;
 using COG.Settings;
 using COG.UI.Forms;
@@ -15,62 +16,11 @@ namespace COG
 {
     public partial class MainForm : Form
     {
-        //private static int nDisMax = 4;//갯수는 메인화면 디스플레이 갯수랑 통일
-
-        //private List<DataGridView> GridView_Log = new List<DataGridView>();
-        //private DataGridView[] InspecGridView = new DataGridView[Main.DEFINE.AlignUnit_Max];
-
-        //private List<ListBox> ListBox_Log = new List<ListBox>();
-        //private List<ListBox> ListBox_Length = new List<ListBox>();
-
-        //private List<CogRecordDisplay> cogDisplay = new List<CogRecordDisplay>();
-        //private List<Button> cogDisplayButton = new List<Button>();
-
-        //private static int[] cogDisplayCamNo = new int[nDisMax];
-        //private List<CogDisplayToolbarV2> cogDiToolBar = new List<CogDisplayToolbarV2>();
-        //private List<CogDisplayStatusBarV2> cogDisStatuBar = new List<CogDisplayStatusBarV2>();
-        //private bool threadFlag;
-        //private Thread ThreadProcM;
-        //private int nSelectStageNum = 0;
-
-        //private Form_PatternSelect Pattern_Select = new Form_PatternSelect();
-        //private Form_LogView Formlogview = new Form_LogView();
-        //private Form_Melsec Melsec = new Form_Melsec();
-        //private Form_CalDisplay formCalDis = new Form_CalDisplay();
-        //private Form_Message formMessage = new Form_Message();
-        //private Form_SetUp form_setup = new Form_SetUp();
-        //public Form_Permission FormPermission = new Form_Permission();
-
-
-        //private Form_RCS form_RCS = new Form_RCS();
-
-        //private Form_TrayDataView form_trayDataview = new Form_TrayDataView();
-
-        //private Main.MTickTimer timerTemp = new Main.MTickTimer();
-
-        //private Form_LiveView[] formLiveview = new Form_LiveView[Main.DEFINE.CAM_MAX];
-
-        //private DateTime mCurrentTime = new DateTime();
-
-        //private Form_ManualSet[] FormManualSet = new Form_ManualSet[Main.DEFINE.AlignUnit_Max];
-        //private Form_Chart[] formChart = new Form_Chart[Main.DEFINE.AlignUnit_Max];
-        //private Form_NGMonitor[] FormNgMonitor = new Form_NGMonitor[Main.DEFINE.AlignUnit_Max];
-        ////  private Form_Chart formChart = new Form_Chart();
-
-        //private List<Label>[] LB_INSP = new List<Label>[8];
-
-        //private List<Label> LIST_LB_PROC_TIME = new List<Label>();
-        //private List<Label> LIST_LB_POINT_NG_CNT = new List<Label>();
-        //private List<PictureBox> LIST_PB_CAM_CONSTAT = new List<PictureBox>();
-        //private List<PictureBox> LIST_PB_CAM_DISCONSTAT = new List<PictureBox>();
-        //private List<PictureBox> LIST_PB_LIGHT_CONSTAT = new List<PictureBox>();
-        //private List<PictureBox> LIST_PB_LIGHT_DISCONSTAT = new List<PictureBox>();
-
-        //private int[] nMainLiveFlag = new int[Main.DEFINE.CAM_MAX];
-
-        //private int nModelChangeTime = 0;
-
         public List<CogRecordDisplay> CogDisplayList = new List<CogRecordDisplay>();
+
+        public List<DataGridView> DataGridViewList = new List<DataGridView>();
+
+        public List<ListBox> LogListBoxList { get; set; } = new List<ListBox>();
 
         public List<Button> CogDisplayButtonList = new List<Button>();
 
@@ -116,10 +66,19 @@ namespace COG
             StaticConfig.Initialize();
             AppsConfig.Instance().Initialize();
 
+            for (int i = 0; i < StaticConfig.STAGE_COUNT; i++)
+                AppsStatus.Instance().StageAddress[i] = 10 + (i * 10);
+
             SystemManager.Instance().Initialize();
             CameraBufferManager.Instance().Initialize();
+            PlcControlManager.Instance().Initialize();
 
             InitializeUI();
+
+            if (ModelManager.Instance().CurrentModel is InspModel inspModel)
+                PlcControlManager.Instance().WriteCurrentModel(inspModel.ModelName);
+
+            LoggerHelper.Save_Command($"RunGaloInspection Error :", LogType.Error, 0);
         }
 
         private void AddSystemInfo()
@@ -152,6 +111,7 @@ namespace COG
             }
 
             InitDisplay();
+            InitLogBox();
             InitTabControl();
         }
 
@@ -202,35 +162,67 @@ namespace COG
             DisplayViewLocation(displayCount);
         }
 
+        private void InitLogBox()
+        {
+            for (int i = 0; i < StaticConfig.STAGE_COUNT; i++)
+            {
+                string nTempName;
+                int nNum;
+                nNum = i + 1;
+
+                nTempName = "LB_Lisi_" + nNum.ToString("00");
+                ListBox nType1 = (ListBox)this.Controls["TAB_LOGDISPLAY"].Controls["tabPage" + i.ToString()].Controls[nTempName];
+                LogListBoxList.Add(nType1);
+
+                nTempName = "DG_VIEW_" + nNum.ToString("00");
+                DataGridView nType2 = (DataGridView)this.Controls["TAB_LOGDISPLAY"].Controls["tabPage" + i.ToString()].Controls[nTempName];
+                DataGridViewList.Add(nType2);
+            }
+        }
 
         private void ReadModuleID()
         {
-        //    string LogMsg = "";
-        //    string m_data;
-        //    char m_CharData;
-        //    long dataNum;
-        //    int Cellid_READ_Address = 0;
+            string logMsg = "";
+            string data;
+            char charData;
+            long dataNum;
+            int Cellid_READ_Address  = StaticConfig.MX_ARRAY_RSTAT_OFFSET + StaticConfig.MODULED_NUM;
 
-        //    Cellid_READ_Address = Main.DEFINE.MX_ARRAY_RSTAT_OFFSET + Main.DEFINE.MODULED_NUM;
-        //    Main.machine.m_strModuleID = "";
+            AppsStatus.Instance().CurrentModuleID = "";
+            var readData = PlcControlManager.Instance().GetReadData();
+            for (int i = 0; i < 10; i++)
+            {
+                dataNum = readData[Cellid_READ_Address + i] & 0x00ff;       //RData 1개 = 2byte => 한글자 1byte 
+                charData = Convert.ToChar(dataNum);
+                data = charData.ToString();
+                if (data == "\0")
+                    break;
 
-        //    for (int i = 0; i < 10; i++)
-        //    {
-        //        dataNum = PLCDataTag.RData[Cellid_READ_Address + i] & 0x00ff;       //RData 1개 = 2byte => 한글자 1byte 
-        //        m_CharData = Convert.ToChar(dataNum);
-        //        m_data = m_CharData.ToString();
-        //        if (m_data == "\0") break;
-        //        Main.machine.m_strModuleID += m_CharData.ToString();     //하위 글자
+                AppsStatus.Instance().CurrentModuleID += charData.ToString();     //하위 글자
 
-        //        dataNum = (PLCDataTag.RData[Cellid_READ_Address + i] >> 8) & 0x00ff;
-        //        m_CharData = Convert.ToChar(dataNum);
-        //        m_data = m_CharData.ToString();
-        //        if (m_data == "\0") break;
-        //        Main.machine.m_strModuleID += m_CharData.ToString();     //상위 글자
-        //    }
+                dataNum = (readData[Cellid_READ_Address + i] >> 8) & 0x00ff;
+                charData = Convert.ToChar(dataNum);
+                data = charData.ToString();
+                if (data == "\0")
+                    break;
+                AppsStatus.Instance().CurrentModuleID += charData.ToString();     //상위 글자
+            }
 
-        //    LogMsg = "Module_ID" + " <- " + Main.machine.m_strModuleID;
-        //    Main.AlignUnit[0].LogdataDisplay(LogMsg, true);
+            logMsg = "Module_ID" + " <- " + AppsStatus.Instance().CurrentModuleID;
+
+            AddLogDisplay(0, logMsg, true);
+        }
+
+        public void AddLogDisplay(int stageNo, string message, bool timeDisplay)
+        {
+            string date = DateTime.Now.ToString("[MM_dd HH:mm:ss:fff] ");
+            if (timeDisplay)
+                message = date + message;
+
+            if (AppsConfig.Instance().LogMsg_Onf)
+                LoggerHelper.Save_Command(message, LogType.Cmd, stageNo);
+
+            LogListBoxList[stageNo].Items.Add(message);
         }
 
         private void DisplayViewLocation(int totalDisplayCount)
@@ -386,7 +378,8 @@ namespace COG
         }
         private void LiveFormHide()
         {
-            //Melsec.BTN_EXIT_Click(null, null);
+            MelsecForm.BTN_EXIT_Click(null, null);
+            // Todo:
             //for (int i = 0; i < Main.DEFINE.CAM_MAX; i++)
             //{
             //    try
@@ -645,38 +638,22 @@ namespace COG
         }
         private void BTN_START_Click(object sender, EventArgs e)
         {
-            //if (Main.DEFINE.OPEN_F)
-            //{
-            //    for (int i = 0; i < Main.DEFINE.DISPLAY_MAX; i++)
-            //    {
-            //        Main.DisplayClear(cogDisplay[i]);
-            //    }
-             
-            //    for (int i = 0; i < Main.DEFINE.AlignUnit_Max; i++)
-            //    {
-            //        Main.AlignUnit[i].m_UnitBusy = false;
-            //        Main.AlignUnit[i].WriteCSVLogFile("111.222,333.444", Main.DEFINE.CAM_SELECT_INSPECT);
-            //        Main.AlignUnit[i].WriteCSVLogFile("555.666,777.888", Main.DEFINE.CAM_SELECT_ALIGN);
-            //    }
-            //}
+            LiveFormHide();
+            this.BTN_STOP.Visible = true;
+            this.BTN_START.Visible = false;
 
-            //LiveFormHide();
-            //this.BTN_STOP.Visible = true;
-            //this.BTN_START.Visible = false;
+            //Todo :
+            //LightOn();
 
-            //if (Main.Status.MC_LIGHT == Main.DEFINE.MC_LIGHT_OFF)
-            //{
-            //    BTN_LIGHT_ON_Click(null, null);
-            //}
+            AppsStatus.Instance().MC_STATUS = MC_STATUS.RUN;
 
-            //Main.Status.MC_STATUS = Main.DEFINE.MC_RUN;
+            PlcControlManager.Instance().WriteVisionReady(true);
 
-            //Main.WriteDevice(PLCDataTag.BASE_RW_ADDR + Main.DEFINE.VIS_READY, 9000);
-       
-            //BTN_FIT_IMAGE_Click(null, null);
+            BTN_FIT_IMAGE_Click(null, null);
 
-            //ReadModuleID();
+            ReadModuleID();
         }
+
         private void BTN_STOP_Click(object sender, EventArgs e)
         {
             //this.BTN_START.Visible = true;
@@ -1686,10 +1663,9 @@ namespace COG
 
         private void BTN_FIT_IMAGE_Click(object sender, EventArgs e)
         {
-            //for (int i = 0; i < Main.DEFINE.DISPLAY_MAX; i++)
-            //{
-            //    cogDisplay[i].Fit(false);
-            //}
+            int displayCount = StaticConfig.CAM_COUNT * StaticConfig.STAGE_COUNT;
+            for (int i = 0; i < displayCount; i++)
+                CogDisplayList[i].Fit(false);
         }
 
         private void timerStatus_Tick(object sender, EventArgs e)

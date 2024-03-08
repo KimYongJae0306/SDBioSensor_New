@@ -68,6 +68,8 @@ namespace COG
                         buffer.USE_CUSTOM_CROSS = false;
 
                         CameraBufferList.Add(buffer);
+
+                        buffer.Initialize();
                     }
                     catch (Exception ex)
                     {

@@ -28,6 +28,10 @@ namespace COG.Class
 
             var boundingBox = VisionProHelper.GetBoundingRect(cogImage, inspTool.FindLineTool);
             var cropCogImage = VisionProHelper.CropImage(cogImage, boundingBox, 255);
+
+            if (cropCogImage == null)
+                return result;
+
             Mat cropMat = ImageHelper.GetConvertMatImage(cropCogImage as CogImage8Grey);
             var cropLeftTopPoint = VisionProHelper.GetCropLeftTop(boundingBox);
 

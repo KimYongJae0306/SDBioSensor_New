@@ -2,6 +2,7 @@
 using JAS.Interface.localtime;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -64,16 +65,21 @@ namespace COG.Device.PLC
                 if (CommandTaskCancellationTokenSource.IsCancellationRequested)
                     break;
 
-                if (GetCommand() is int[] command)
+                if (AppsStatus.Instance().MC_STATUS == MC_STATUS.RUN)
                 {
-                    if (command.Count() > 0)
-                    {
-                        int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Command);
-                        PlcCommandReceived((PlcCommand)command[address]);
-                    }
+                    var readData = PlcControlManager.Instance().GetReadData();
+
+                    int cmdIndex = Convert.ToInt16(readData[PlcAddressMap.PLC_Command]);
+                    int cmd = readData[cmdIndex];
+
+                    int pcStatusIndex = Convert.ToInt16(readData[PlcAddressMap.PC_Status]);
+                    int status = readData[pcStatusIndex];
+
+                    if(cmd != 0 && status == 0 && cmd != 9000)
+                        PlcCommandReceived((PlcCommand)cmd, readData);
                 }
 
-                Thread.Sleep(100);
+                Thread.Sleep(50);
             }
         }
 
@@ -86,125 +92,138 @@ namespace COG.Device.PLC
             CommandTask = null;
         }
 
-        public void AddCommand(int[] command)
-        {
-            if (command.Count() >= 0)
-            {
-                lock (PlcCommandQueue)
-                    PlcCommandQueue.Enqueue(command);
-            }
-        }
-
         public void Release()
         {
             StopScenarioTask();
             PlcCommandQueue.Clear();
         }
 
-        public int[] GetCommand()
-        {
-            lock (PlcCommandQueue)
-            {
-                if (PlcCommandQueue.Count() > 0)
-                    return PlcCommandQueue.Dequeue();
-                else
-                    return null;
-            }
-        }
-
-        private void PlcCommandReceived(PlcCommand command)
+        private void PlcCommandReceived(PlcCommand command, int[] readData)
         {
             switch (command)
             {
-                case PlcCommand.StartInspection:
-                    StartInspection();
-                    break;
-
                 case PlcCommand.Time_Change:
-                    ChangeTime();
+                    ChangeTime(readData);
                     break;
 
                 case PlcCommand.Model_Change:
-                    ChangeModel();
+                    ChangeModel(readData);
                     break;
-
+                case PlcCommand.Cmd_Clear:
+                    ClearCmd(readData);
+                    break;
                 default:
                     break;
             }
         }
 
-        private void ChangeTime()
+        private void ClearCmd(int[] readData)
         {
-            int dateTime;
+            throw new NotImplementedException();
+        }
 
-            if (GetCommand() is int[] command)
+        private void ChangeTime(int[] readData)
+        {
+            SetlocalTime.SYSTEMTIME systemTime = new SetlocalTime.SYSTEMTIME();
+
+            systemTime = SetlocalTime.GetTime();
+            systemTime.wYear = (ushort)readData[PlcAddressMap.PLC_Time_Year];
+            systemTime.wMonth = (ushort)readData[PlcAddressMap.PLC_Time_Year + 1];
+            systemTime.wDay = (ushort)readData[PlcAddressMap.PLC_Time_Year + 2];
+            systemTime.wHour = (ushort)readData[PlcAddressMap.PLC_Time_Year + 3];
+            systemTime.wMinute = (ushort)readData[PlcAddressMap.PLC_Time_Year + 4];
+            systemTime.wSecond = (ushort)readData[PlcAddressMap.PLC_Time_Year + 5];
+
+            string logMessage = string.Empty;
+            int errorCode = 0;
+            if (SetlocalTime.SetLocalTime_(systemTime, ref errorCode))
             {
-                if (command.Count() > 0)
-                {
-                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Time);
-
-                    SetlocalTime.SYSTEMTIME systemTime = new SetlocalTime.SYSTEMTIME();
-                    systemTime.wYear = (ushort)command[address];
-                    systemTime.wMonth = (ushort)command[address + 1];
-                    systemTime.wDay = (ushort)command[address + 2];
-                    systemTime.wHour = (ushort)command[address + 3];
-                    systemTime.wMinute = (ushort)command[address + 4];
-                    systemTime.wSecond = (ushort)command[address + 5];
-
-                    string logMessage = string.Empty;
-                    int errorCode = 0;
-                    if (SetlocalTime.SetLocalTime_(systemTime, ref errorCode))
-                    {
-                        logMessage = "LocalTiem Changed OK";
-                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change);
-                    }
-                    else
-                    {
-                        logMessage = $"LocalTime Changed NG, Error Code : {errorCode}";
-                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
-                    }
-
-                    PlcControlManager.Instance().ClearPlcCommand();
-                }
-                else
-                    PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
+                logMessage = "LocalTiem Changed OK";
+                PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change);
             }
             else
+            {
+                logMessage = $"LocalTime Changed NG, Error Code : {errorCode}";
                 PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Time_Change * -1);
+            }
+
+            SystemManager.Instance().AddLogDisplay(0, logMessage, true);
+            PlcControlManager.Instance().ClearPlcCommand();
+            ClearCmdCheck();
         }
 
-        private void ChangeModel()
+        private void ClearCmdCheck()
         {
-            int modelNo;
+            int seq = 0;
+            bool LoopFlag = true;
 
-            if (GetCommand() is int[] command)
+            Stopwatch sw = new Stopwatch();
+            while (LoopFlag)
             {
-                if (command.Count() > 0)
+                var readData = PlcControlManager.Instance().GetReadData();
+                switch (seq)
                 {
-                    int address = StaticConfig.PLC_BaseAddress + Convert.ToInt16(PlcCommonMap.PLC_Model_No);
-                    modelNo = command[address];
+                    case 0:
+                        sw.Restart();
+                        seq++;
+                        break;
 
-                    // TODO : 용재형 ㄱㄱ
-                    if (true) // model change
-                    {
-                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change);
-                        PlcControlManager.Instance().ClearPlcCommand();
-                    }
-                    else
-                        PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
+                    case 1:
+                        if (sw.ElapsedMilliseconds > StaticConfig.CMD_CHECK_TIMEOUT)
+                        {
+                            seq++;
+                            break;
+                        }
+                        if (readData[PlcAddressMap.PLC_Command] != 0)
+                            break;
+                        else
+                            seq++;
+                        break;
 
+                    case 2:
+                        LoopFlag = false;
+                        break;
                 }
-                else
-                    PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
+                Thread.Sleep(50);
+            }
+        }
+
+        private void ChangeModel(int[] readData)
+        {
+            int address = StaticConfig.BASE_ADDR + PlcAddressMap.PLC_ModelNo;
+            string modelNo = readData[address].ToString("000");
+            string logMessage = "";
+            if(SystemManager.Instance().LoadModel(modelNo))
+            {
+                var inspModel = ModelManager.Instance().CurrentModel;
+                PlcControlManager.Instance().ClearPlcCommand();
+                PlcControlManager.Instance().WritePlcCommand((int)PlcCommand.Model_Change);
+                logMessage = "MODEL: " + inspModel.ModelName + inspModel.ModelInfo + " LOAD OK";
             }
             else
-                PlcControlManager.Instance().WriteVisionStatus((int)PlcCommand.Model_Change * -1);
+            {
+                PlcControlManager.Instance().ClearPlcCommand();
+                PlcControlManager.Instance().WritePlcCommand((int)PlcCommand.Model_Change * -1);
+                logMessage = "MODEL: " + modelNo + " LOAD NG";
+            }
+            logMessage = "<- " + logMessage;
+
+            SystemManager.Instance().AddLogDisplay(0, logMessage, true);
+            PlcControlManager.Instance().ClearPlcCommand();
+            ClearCmdCheck();
         }
 
-        private void StartInspection()
+        private void StartInspection(int stageNo)
         {
+            if(stageNo == 0)
+            {
+                string logMessage = "===== INSPECTION 1 =====";
+                SystemManager.Instance().AddLogDisplay(stageNo, logMessage, true);
 
+            }
         }
+
+      
         #endregion
     }
 }

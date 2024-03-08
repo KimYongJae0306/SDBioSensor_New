@@ -12,19 +12,87 @@ namespace COG.Helper
     {
         private static object _syncLock_Log = new object();
 
-        public static void Save_SystemLog(string nMessage, LogType loggerType)
+        public static void Save_SystemLog(string message, LogType loggerType)
         {
-            string nFolder;
-            string nFileName = "";
-            nFolder = StaticConfig.LogDataPath + DateTime.Now.ToString("yyyyMMdd") + "\\";
+            string fileName = "";
+            string folder = StaticConfig.LogDataPath + DateTime.Now.ToString("yyyyMMdd") + "\\";
             if (!Directory.Exists(StaticConfig.LogDataPath))
                 Directory.CreateDirectory(StaticConfig.LogDataPath);
 
+            if (!Directory.Exists(folder))
+                Directory.CreateDirectory(folder);
+
+            string Date = DateTime.Now.ToString("[MM_dd HH:mm:ss:fff] ");
+            lock (_syncLock_Log)
+            {
+                try
+                {
+                    switch (loggerType)
+                    {
+                        case LogType.Cmd:
+                            fileName = "CMD.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.Inspection:
+                            fileName = "INSPECTION.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.Pixel:
+                            fileName = "PIXEL_ROBOT.txt";
+                            message = Date + message;
+                            break;
+
+                        case LogType.Align:
+                            fileName = "ALIGN.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.Error:
+                            fileName = "ERROR.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.TabLength:
+                            fileName = "TABLENGTH.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.MarkSocre:
+                            fileName = "MARK_SCORE.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.LightCtrl:
+                            fileName = "LIGHT_CTRL.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.ChangeParam:
+                            fileName = "ChangePara.txt";
+                            message = Date + message;
+                            break;
+                        case LogType.Data:
+                            fileName = "Data.csv";
+                            message = Date + message;
+                            break;
+                   
+                    }
+
+                    StreamWriter SW = new StreamWriter(folder + fileName, true, Encoding.Unicode);
+                    SW.WriteLine(message);
+                    SW.Close();
+                }
+                catch
+                {
+
+                }
+            }
+        }
+
+        public static void Save_Command(string message, LogType loggerType, int stageNo)
+        {
+            string nFileName = "";
+            string nFolder = Path.Combine(StaticConfig.LogDataPath, DateTime.Now.ToString("yyyyMMdd"));
+
+            if (!Directory.Exists(StaticConfig.LogDataPath))
+                Directory.CreateDirectory(StaticConfig.LogDataPath);
             if (!Directory.Exists(nFolder))
                 Directory.CreateDirectory(nFolder);
-
-            string Date;
-            Date = DateTime.Now.ToString("[MM_dd HH:mm:ss:fff] ");
 
             lock (_syncLock_Log)
             {
@@ -33,51 +101,33 @@ namespace COG.Helper
                     switch (loggerType)
                     {
                         case LogType.Cmd:
-                            nFileName = "CMD.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_Command.txt";
                             break;
                         case LogType.Inspection:
-                            nFileName = "INSPECTION.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_GapResult.txt";
                             break;
                         case LogType.Pixel:
-                            nFileName = "PIXEL_ROBOT.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_PIXEL_ROBOT.txt";
                             break;
-
                         case LogType.Align:
-                            nFileName = "ALIGN.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_AlignResult.txt";
                             break;
                         case LogType.Error:
-                            nFileName = "ERROR.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_ErrorList.txt";
                             break;
                         case LogType.TabLength:
-                            nFileName = "TABLENGTH.txt";
-                            nMessage = Date + nMessage;
-                            break;
-                        case LogType.MarkSocre:
-                            nFileName = "MARK_SCORE.txt";
-                            nMessage = Date + nMessage;
-                            break;
-                        case LogType.LightCtrl:
-                            nFileName = "LIGHT_CTRL.txt";
-                            nMessage = Date + nMessage;
-                            break;
-                        case LogType.ChangeParam:
-                            nFileName = "ChangePara.txt";
-                            nMessage = Date + nMessage;
+                            nFileName = "_Length.txt";
                             break;
                         case LogType.Data:
-                            nFileName = "Data.csv";
-                            nMessage = Date + nMessage;
+                            nFileName = "_Data.csv";
                             break;
-                   
+                        //case LogType.MARKSCORE:
+                        //    nFileName = "_MarkScore.txt";
+                            break;
                     }
-
-                    StreamWriter SW = new StreamWriter(nFolder + nFileName, true, Encoding.Unicode);
-                    SW.WriteLine(nMessage);
+                    string path = nFolder + $"\\INSPECTION_{stageNo + 1}" + nFileName;
+                    StreamWriter SW = new StreamWriter(path, true, Encoding.UTF8);
+                    SW.WriteLine(message);
                     SW.Close();
                 }
                 catch

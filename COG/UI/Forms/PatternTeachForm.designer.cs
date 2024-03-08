@@ -312,9 +312,9 @@
             this.groupBox5 = new System.Windows.Forms.GroupBox();
             this.groupBox6 = new System.Windows.Forms.GroupBox();
             this.pnlDisplay = new System.Windows.Forms.Panel();
-            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.txtOffsetX = new System.Windows.Forms.TextBox();
             this.txtOffsetY = new System.Windows.Forms.TextBox();
+            this.PT_DISPLAY_CONTROL = new JAS.Controls.Display.Display();
             this.groupBoxLightSetting.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)(this.TBAR_LIGHT)).BeginInit();
             this.gbxToolSetting.SuspendLayout();
@@ -1749,9 +1749,9 @@
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox9);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.groupBox8);
             this.PANEL_MATERIAL_ALIGN.Controls.Add(this.btn_FilmAlignTest);
-            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(39, 72);
+            this.PANEL_MATERIAL_ALIGN.Location = new System.Drawing.Point(381, 72);
             this.PANEL_MATERIAL_ALIGN.Name = "PANEL_MATERIAL_ALIGN";
-            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(747, 589);
+            this.PANEL_MATERIAL_ALIGN.Size = new System.Drawing.Size(405, 305);
             this.PANEL_MATERIAL_ALIGN.TabIndex = 399;
             // 
             // groupBox7
@@ -4201,20 +4201,6 @@
             this.pnlDisplay.Size = new System.Drawing.Size(896, 798);
             this.pnlDisplay.TabIndex = 365;
             // 
-            // PT_DISPLAY_CONTROL
-            // 
-            this.PT_DISPLAY_CONTROL.BackColor = System.Drawing.Color.DarkGray;
-            this.PT_DISPLAY_CONTROL.CustomCross = ((System.Drawing.PointF)(resources.GetObject("PT_DISPLAY_CONTROL.CustomCross")));
-            this.PT_DISPLAY_CONTROL.DisplayManuConstants = JAS.Controls.Display.DisplayEnableConstants.All;
-            this.PT_DISPLAY_CONTROL.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.PT_DISPLAY_CONTROL.Image = null;
-            this.PT_DISPLAY_CONTROL.Location = new System.Drawing.Point(0, 0);
-            this.PT_DISPLAY_CONTROL.Name = "PT_DISPLAY_CONTROL";
-            this.PT_DISPLAY_CONTROL.Resuloution = 1D;
-            this.PT_DISPLAY_CONTROL.Size = new System.Drawing.Size(896, 798);
-            this.PT_DISPLAY_CONTROL.TabIndex = 278;
-            this.PT_DISPLAY_CONTROL.UseCustomCross = false;
-            // 
             // txtOffsetX
             // 
             this.txtOffsetX.Location = new System.Drawing.Point(426, 966);
@@ -4231,13 +4217,27 @@
             this.txtOffsetY.TabIndex = 363;
             this.txtOffsetY.Text = "1";
             // 
+            // PT_DISPLAY_CONTROL
+            // 
+            this.PT_DISPLAY_CONTROL.BackColor = System.Drawing.Color.DarkGray;
+            this.PT_DISPLAY_CONTROL.CustomCross = ((System.Drawing.PointF)(resources.GetObject("PT_DISPLAY_CONTROL.CustomCross")));
+            this.PT_DISPLAY_CONTROL.DisplayManuConstants = JAS.Controls.Display.DisplayEnableConstants.All;
+            this.PT_DISPLAY_CONTROL.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.PT_DISPLAY_CONTROL.Image = null;
+            this.PT_DISPLAY_CONTROL.Location = new System.Drawing.Point(0, 0);
+            this.PT_DISPLAY_CONTROL.Name = "PT_DISPLAY_CONTROL";
+            this.PT_DISPLAY_CONTROL.Resuloution = 1D;
+            this.PT_DISPLAY_CONTROL.Size = new System.Drawing.Size(896, 798);
+            this.PT_DISPLAY_CONTROL.TabIndex = 278;
+            this.PT_DISPLAY_CONTROL.UseCustomCross = false;
+            // 
             // PatternTeachForm
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.Silver;
-            this.ClientSize = new System.Drawing.Size(1869, 1013);
+            this.ClientSize = new System.Drawing.Size(1865, 1009);
             this.ControlBox = false;
             this.Controls.Add(this.txtOffsetY);
             this.Controls.Add(this.txtOffsetX);

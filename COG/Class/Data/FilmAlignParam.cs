@@ -17,8 +17,6 @@ namespace COG.Class.Data
 
         public string VppTitleName { get; set; } = "";
 
-        public double AlignSpec_T { get; set; } = 0;
-
         public double AmpModuleDistanceX { get; set; } = 0;
 
         public double FilmAlignSpecX { get; set; } = 0;
@@ -39,7 +37,6 @@ namespace COG.Class.Data
         public FilmAlignParam DeepCopy()
         {
             FilmAlignParam filmAlign = new FilmAlignParam();
-            filmAlign.AlignSpec_T = AlignSpec_T;
             filmAlign.AmpModuleDistanceX = AmpModuleDistanceX;
             filmAlign.FilmAlignSpecX = FilmAlignSpecX;
 
@@ -51,7 +48,7 @@ namespace COG.Class.Data
 
         public void Load(string modelDir)
         {
-            AlignSpec_T = StaticConfig.ModelFile.GetFData(ModelSection, "ROIFinealign_T_Spec");
+          
             AmpModuleDistanceX = StaticConfig.ModelFile.GetFData(ModelSection, "Object_Distance_X");
             FilmAlignSpecX = StaticConfig.ModelFile.GetFData(ModelSection, "Object_Distance_X_Spec");
 
@@ -68,7 +65,6 @@ namespace COG.Class.Data
 
         public void Save(string modelDir)
         {
-            StaticConfig.ModelFile.SetData(ModelSection, "ROIFinealign_T_Spec", AlignSpec_T);
             StaticConfig.ModelFile.SetData(ModelSection, "Object_Distance_X", AmpModuleDistanceX);
             StaticConfig.ModelFile.SetData(ModelSection, "Object_Distance_X_Spec", FilmAlignSpecX);
 

@@ -49,6 +49,11 @@ namespace COG
             ProgressBarForm.Hide();
         }
 
+        public void AddLogDisplay(int stageNo, string message, bool timeDisplay)
+        {
+            _mainForm.AddLogDisplay(stageNo, message, timeDisplay);
+        }
+
         delegate void ShowProgerssBarDelegate(int nMaxValue, bool nSelect, int nValue);
         public void ShowProgerssBar(int nMaxValue, bool nSelect, int nValue)
         {

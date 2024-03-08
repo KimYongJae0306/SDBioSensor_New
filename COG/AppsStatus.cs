@@ -1,4 +1,5 @@
-﻿using System;
+﻿using COG.Settings;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -20,7 +21,11 @@ namespace COG
 
         public User CurrentUser { get; set; } = User.OPERATOR;
 
+        public int[] StageAddress { get; set; } = new int[StaticConfig.STAGE_COUNT];
+
         public bool LiveStop { get; set; } = true;
+
+        public string CurrentModuleID { get; set; } = "";
         #endregion
 
         #region 메서드

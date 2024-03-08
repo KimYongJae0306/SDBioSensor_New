@@ -51,7 +51,7 @@ namespace COG.UI.Forms
             keypadForm.ShowDialog();
 
             nValue = Convert.ToInt16(keypadForm.m_data);
-            nAddress = StaticConfig.PC_BaseAddress + m_Number;
+            nAddress = StaticConfig.BASE_ADDR + m_Number;
 
             //2022 05 09 YSH
             PlcControlManager.Instance().WriteDevice(nAddress, nValue);
@@ -118,7 +118,7 @@ namespace COG.UI.Forms
 
                 m_Number = i;
 
-                nLavel_Dis[i].Text = (StaticConfig.PLC_BaseAddress + m_Number).ToString();
+                nLavel_Dis[i].Text = (StaticConfig.BASE_ADDR + m_Number).ToString();
                 nLavel_Dis[i].AutoSize = false;
                 nLavel_Dis[i].BorderStyle = BorderStyle.None;
                 nLavel_Dis[i].BackColor = Color.DarkGray;

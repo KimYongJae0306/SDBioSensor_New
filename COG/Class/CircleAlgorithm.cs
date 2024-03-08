@@ -26,9 +26,12 @@ namespace COG.Class
             var cropCogImage = VisionProHelper.CropImage(cogImage, cogPolygonBoundingBox, 255);
             var cropLeftTopPoint = VisionProHelper.GetCropLeftTop(cogPolygonBoundingBox);
 
+            if (cropCogImage == null)
+                return resultGraphicsList;
+
             SetCogPolygonOffset(ref cogPolygonBoundingBox, new Point(-cropLeftTopPoint.X, -cropLeftTopPoint.Y));
             var binaryImage = GetBinaryImage(cropCogImage as CogImage8Grey, cogPolygonBoundingBox);
-            VisionProHelper.Save(binaryImage, @"D:\123.bmp");
+            //VisionProHelper.Save(binaryImage, @"D:\123.bmp");
             CogCircularArc arc = tool.RunParams.ExpectedCircularArc;
             SetCogCircularArcOffset(ref arc, new PointF(-cropLeftTopPoint.X, -cropLeftTopPoint.Y));
 
